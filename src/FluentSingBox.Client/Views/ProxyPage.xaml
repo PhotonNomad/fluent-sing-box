@@ -1,0 +1,91 @@
+<Page
+    x:Class="FluentSingBox.Client.Views.ProxyPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:FluentSingBox.Client.Models"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:local="using:FluentSingBox.Client.Views">
+    <Grid>
+        <local:PageLayout x:Name="OverviewPanel">
+            <local:PageLayout.HeaderContent>
+                <TextBlock
+                    Text="代理"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Style="{StaticResource TitleTextBlockStyle}"
+                    AutomationProperties.HeadingLevel="Level1" />
+            </local:PageLayout.HeaderContent>
+            <local:PageLayout.PageContent>
+                <StackPanel Spacing="0">
+                    <TextBlock Text="系统代理使用默认服务器；每个应用组可以选择自己的服务器。" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBlock Text="应用代理使用 TUN。可识别来源的 DNS 请求随应用组服务器解析；Windows 汇总后无法识别来源的 DNS 请求默认使用本地解析。未选中应用的业务连接默认直连。" TextWrapping="Wrap" Margin="0,8,0,0" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                    <local:SettingsSection Header="系统代理">
+                        <local:SettingsSection.SectionContent>
+                            <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
+                                <controls:SettingsCard Header="默认服务器" Description="系统代理未命中地址规则时使用此服务器。">
+                                    <controls:SettingsCard.HeaderIcon>
+                                        <FontIcon Glyph="&#xE968;" />
+                                    </controls:SettingsCard.HeaderIcon>
+                                    <ComboBox x:Name="DefaultServerComboBox" MinWidth="{StaticResource SettingActionControlMinWidth}" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="DefaultServer_SelectionChanged" PlaceholderText="选择服务器" />
+                                </controls:SettingsCard>
+                                <local:SystemProxySettingsControl />
+                            </StackPanel>
+                        </local:SettingsSection.SectionContent>
+                    </local:SettingsSection>
+
+                    <local:SettingsSection Header="应用代理" Description="一个应用组可包含多个程序，并独立选择代理服务器。">
+                        <local:SettingsSection.SectionContent>
+                            <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
+                                <TextBlock x:Name="EmptyApplicationsMessage" Text="还没有添加应用。" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <ListView x:Name="ApplicationList" SelectionMode="None" IsItemClickEnabled="False" Padding="0">
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate x:DataType="models:ApplicationProxyProfile">
+                                            <controls:SettingsExpander AutomationProperties.AutomationId="{x:Bind ExpanderAutomationId}" Header="{x:Bind Name, Mode=OneWay}" Description="{x:Bind RowDescription, Mode=OneWay}" IsExpanded="False">
+                                                <controls:SettingsExpander.HeaderIcon>
+                                                    <FontIcon Glyph="&#xE77B;" />
+                                                </controls:SettingsExpander.HeaderIcon>
+                                                <controls:SettingsExpander.Items>
+                                                    <controls:SettingsCard Header="启用应用代理" Description="启用后，这组程序使用所选服务器。">
+                                                        <ToggleSwitch IsOn="{x:Bind IsEnabled, Mode=OneWay}" Toggled="ApplicationProxySwitch_Toggled" AutomationProperties.Name="启用应用代理" />
+                                                    </controls:SettingsCard>
+                                                    <controls:SettingsCard Header="代理服务器">
+                                                        <ComboBox AutomationProperties.AutomationId="{x:Bind ServerAutomationId}" ItemsSource="{x:Bind AvailableServers}" DisplayMemberPath="Name" SelectedValuePath="Id" SelectedValue="{x:Bind ServerId, Mode=OneWay}" SelectionChanged="ApplicationServer_SelectionChanged" MinWidth="220" PlaceholderText="选择服务器" />
+                                                    </controls:SettingsCard>
+                                                    <controls:SettingsCard Header="包含的程序" ContentAlignment="Left">
+                                                        <ItemsControl ItemsSource="{x:Bind ExecutablePaths}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </controls:SettingsCard>
+                                                    <controls:SettingsCard Header="管理应用组">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <Button AutomationProperties.AutomationId="{x:Bind EditAutomationId}" Content="编辑" Click="EditApplication_Click" />
+                                                            <Button AutomationProperties.AutomationId="{x:Bind DeleteAutomationId}" Content="删除" Click="DeleteApplication_Click" />
+                                                        </StackPanel>
+                                                    </controls:SettingsCard>
+                                                </controls:SettingsExpander.Items>
+                                            </controls:SettingsExpander>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+                                <controls:SettingsCard Header="添加应用组" Description="选择一个或多个程序，并为这组程序选择服务器。">
+                                    <controls:SettingsCard.HeaderIcon>
+                                        <FontIcon Glyph="&#xE710;" />
+                                    </controls:SettingsCard.HeaderIcon>
+                                    <Button Content="选择程序" Click="AddApplication_Click" Style="{StaticResource AccentButtonStyle}" />
+                                </controls:SettingsCard>
+                            </StackPanel>
+                        </local:SettingsSection.SectionContent>
+                    </local:SettingsSection>
+
+                    <TextBlock Margin="1,32,0,0" Text="启用应用组会启动 sing-box TUN 并请求管理员权限。未配置的程序默认直连。" TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </local:PageLayout.PageContent>
+        </local:PageLayout>
+
+    </Grid>
+</Page>

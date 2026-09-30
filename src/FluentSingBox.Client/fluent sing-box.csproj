@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <RootNamespace>FluentSingBox.Client</RootNamespace>
+    <AssemblyName>fluent sing-box</AssemblyName>
+    <Product>fluent sing-box</Product>
+    <Title>fluent sing-box</Title>
+    <PackageId>fluent-sing-box</PackageId>
+    <ApplicationIcon>Assets\fluent-sing-box.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>preview</LangVersion>
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
+    <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Assets\fluent-sing-box.png" CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Assets\empty-rule-set.srs">
+      <LogicalName>FluentSingBox.Client.Resources.empty-rule-set.srs</LogicalName>
+    </EmbeddedResource>
+    <None Remove="ThirdParty\SingBox\sing-box-1.14.2-windows-amd64.zip" />
+    <EmbeddedResource Include="ThirdParty\SingBox\sing-box-1.14.2-windows-amd64.zip">
+      <LogicalName>FluentSingBox.Client.Resources.sing-box-1.14.2-windows-amd64.zip</LogicalName>
+    </EmbeddedResource>
+    <None Update="ThirdParty\SingBox\sing-box-1.14.2-source.zip" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="ThirdParty\SingBox\LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="ThirdParty\SingBox\GPL-3.0.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="ThirdParty\SingBox\NOTICE.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,86 @@
+<Page
+    x:Class="FluentSingBox.Client.Views.ServersPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:FluentSingBox.Client.Models"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:local="using:FluentSingBox.Client.Views">
+    <local:PageLayout>
+        <local:PageLayout.HeaderContent>
+            <TextBlock
+                Text="服务器"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Style="{StaticResource TitleTextBlockStyle}"
+                AutomationProperties.HeadingLevel="Level1" />
+        </local:PageLayout.HeaderContent>
+        <local:PageLayout.PageContent>
+            <StackPanel Spacing="0">
+                <TextBlock Text="管理 sing-box 服务器；可粘贴分享链接，也可导入 outbound JSON。" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <InfoBar x:Name="OperationMessage" IsOpen="False" IsClosable="True" AutomationProperties.AutomationId="Servers_Status" />
+
+                <local:SettingsSection Header="添加服务器">
+                    <local:SettingsSection.SectionContent>
+                        <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
+                            <controls:SettingsCard Header="从分享链接或配置添加服务器" Description="支持粘贴服务器分享链接、导入 outbound JSON，或手动添加。">
+                                <controls:SettingsCard.HeaderIcon>
+                                    <FontIcon Glyph="&#xE710;" />
+                                </controls:SettingsCard.HeaderIcon>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button Content="导入" Click="ImportServer_Click" AutomationProperties.AutomationId="Servers_Import" AutomationProperties.Name="导入服务器链接或配置" />
+                                    <Button AutomationProperties.AutomationId="Servers_Add" Content="添加服务器" Click="AddServer_Click" Style="{StaticResource AccentButtonStyle}" />
+                                </StackPanel>
+                            </controls:SettingsCard>
+                        </StackPanel>
+                    </local:SettingsSection.SectionContent>
+                </local:SettingsSection>
+
+                <local:SettingsSection Header="服务器列表">
+                    <local:SettingsSection.SectionContent>
+                        <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
+                            <TextBlock x:Name="EmptyMessage" Text="还没有服务器。可导入分享链接、outbound JSON，或按类型手动添加。" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <ListView x:Name="ServerList" SelectionMode="None" IsItemClickEnabled="False" Padding="0">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="models:ServerProfile">
+                                        <controls:SettingsExpander Header="{x:Bind Name, Mode=OneWay}" IsExpanded="False" AutomationProperties.AutomationId="{x:Bind ExpanderAutomationId}">
+                                            <controls:SettingsExpander.HeaderIcon>
+                                                <FontIcon Glyph="&#xE968;" />
+                                            </controls:SettingsExpander.HeaderIcon>
+                                            <controls:SettingsExpander.Description>
+                                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                                    <TextBlock Text="{x:Bind Endpoint, Mode=OneWay}" />
+                                                    <TextBlock Text="·" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                    <TextBlock Text="{x:Bind ProtocolSummary, Mode=OneWay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <TextBlock Text="· 默认" Visibility="{x:Bind IsDefault, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </StackPanel>
+                                            </controls:SettingsExpander.Description>
+                                            <controls:SettingsExpander.Items>
+                                                <controls:SettingsCard Header="服务器地址" Description="{x:Bind Endpoint, Mode=OneWay}" />
+                                                <controls:SettingsCard Header="协议" Description="{x:Bind ProtocolSummary, Mode=OneWay}" />
+                                                <controls:SettingsCard Header="传输方式" Description="{x:Bind TransportSummary, Mode=OneWay}" />
+                                                <controls:SettingsCard Header="传输安全" Description="{x:Bind SecuritySummary, Mode=OneWay}" />
+                                                <controls:SettingsCard Header="默认服务器" Description="系统代理使用默认服务器；应用组可单独选择。">
+                                                    <Button Content="设为默认" Click="SetDefault_Click" AutomationProperties.AutomationId="{x:Bind DefaultAutomationId}" />
+                                                </controls:SettingsCard>
+                                                <controls:SettingsCard Header="连接测试" Description="通过此服务器请求 Google HTTPS 204。">
+                                                    <Button Content="测试连接" Click="ProbeServer_Click" AutomationProperties.AutomationId="{x:Bind ProbeAutomationId}" />
+                                                </controls:SettingsCard>
+                                                <controls:SettingsCard Header="管理服务器">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <Button Content="编辑" Click="EditServer_Click" AutomationProperties.AutomationId="{x:Bind EditAutomationId}" />
+                                                        <Button Content="复制" Click="CopyServer_Click" AutomationProperties.AutomationId="{x:Bind CopyAutomationId}" />
+                                                        <Button Content="删除" Click="DeleteServer_Click" AutomationProperties.AutomationId="{x:Bind DeleteAutomationId}" />
+                                                    </StackPanel>
+                                                </controls:SettingsCard>
+                                            </controls:SettingsExpander.Items>
+                                        </controls:SettingsExpander>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </StackPanel>
+                    </local:SettingsSection.SectionContent>
+                </local:SettingsSection>
+            </StackPanel>
+        </local:PageLayout.PageContent>
+    </local:PageLayout>
+</Page>
