@@ -10,11 +10,21 @@ public sealed partial class App : Application
     public static AppState State => AppState.Current;
     public static ThemeService ThemeService { get; } = new();
     public static SingBoxCoreService CoreService { get; } = new();
-    public static ProxyCoordinator ProxyCoordinator { get; } = new(State, CoreService);
+    public static ProxyCoordinator ProxyCoordinator { get; } = new(State);
 
     public App()
     {
         InitializeComponent();
+        UnhandledException += (_, eventArgs) =>
+        {
+            try
+            {
+                Directory.CreateDirectory(AppPaths.DataDirectory);
+                File.AppendAllText(Path.Combine(AppPaths.DataDirectory, "client-errors.log"), $"[{DateTimeOffset.Now:O}] {LogReader.Redact(eventArgs.Exception.ToString(), State.Settings)}\n");
+            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        };
     }
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
@@ -23,9 +33,11 @@ public sealed partial class App : Application
         {
             try { await SingBoxCoreHost.RunAsync(executablePath, configPath, pipeName, proxyPort); }
             catch { }
+            finally { Exit(); }
             return;
         }
 
+        if (!AppInstanceGuard.TryAcquire()) { Exit(); return; }
         try
         {
             await State.LoadAsync();
@@ -38,20 +50,26 @@ public sealed partial class App : Application
             MainWindow = new MainWindow();
             if (AppPaths.HasDataOverride && Environment.GetEnvironmentVariable("FLUENTSINGBOX_TEST_BACKGROUND") == "1") MainWindow.AppWindow.Show(activateWindow: false);
             else MainWindow.Activate();
+            await MainWindow.CheckStartupAsync();
         }
         catch (Exception exception)
         {
             var dialog = new ContentDialog
             {
-                Title = "fluent sing-box 无法启动",
+                Title = Localization.Get("App_FluentSingBoxCouldNotStart"),
                 Content = exception.Message,
-                CloseButtonText = "关闭"
+                CloseButtonText = Localization.Get("App_Close")
             };
 
+            if (MainWindow is null)
+            {
+                MainWindow = new MainWindow();
+                MainWindow.Activate();
+            }
             if (MainWindow is not null)
             {
                 dialog.XamlRoot = MainWindow.Content.XamlRoot;
-                await dialog.ShowAsync();
+                await DialogService.ShowAsync(dialog);
             }
         }
     }

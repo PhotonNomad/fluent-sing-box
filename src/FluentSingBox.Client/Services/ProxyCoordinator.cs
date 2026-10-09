@@ -2,24 +2,33 @@ using FluentSingBox.Client.Models;
 
 namespace FluentSingBox.Client.Services;
 
-public sealed class ProxyCoordinator(AppState state, SingBoxCoreService coreService)
+// Proxy preferences never own the core lifetime. MainWindow owns the explicit core switch.
+public sealed class ProxyCoordinator(AppState state)
 {
+    private bool _shuttingDown;
+    private readonly SemaphoreSlim _applicationGate = new(1, 1);
+    public bool IsApplyingApplication => _applicationGate.CurrentCount == 0;
+    public void BeginShutdown() => _shuttingDown = true;
+    public void CancelShutdown() => _shuttingDown = false;
+
     public async Task SetSystemProxyEnabledAsync(bool enabled)
     {
         if (enabled)
         {
-            await coreService.StartAsync(state.Settings);
             try
             {
+                if (_shuttingDown) throw new OperationCanceledException(Localization.Get("ProxyCoordinator_TheClientIsExiting"));
                 WindowsProxyService.Capture(state.Settings);
                 await state.SaveAsync();
+                if (_shuttingDown) throw new OperationCanceledException(Localization.Get("ProxyCoordinator_TheClientIsExiting"));
                 WindowsProxyService.Enable(state.Settings);
                 state.Settings.SystemProxyEnabled = true;
             }
             catch
             {
                 WindowsProxyService.Restore(state.Settings);
-                if (state.Settings.Applications.All(item => !item.IsEnabled)) coreService.Stop();
+                state.Settings.SystemProxyEnabled = false;
+                await state.SaveAsync();
                 throw;
             }
         }
@@ -27,93 +36,55 @@ public sealed class ProxyCoordinator(AppState state, SingBoxCoreService coreServ
         {
             WindowsProxyService.Restore(state.Settings);
             state.Settings.SystemProxyEnabled = false;
-            if (state.Settings.Applications.All(item => !item.IsEnabled))
-            {
-                coreService.Stop();
-            }
         }
-
         await state.SaveAsync();
     }
 
     public async Task ApplySystemProxySettingsAsync()
     {
-        var anyProxyEnabled = state.Settings.SystemProxyEnabled || state.Settings.Applications.Any(item => item.IsEnabled);
-        if (anyProxyEnabled)
-        {
-            if (coreService.IsRunning) await coreService.RestartAsync(state.Settings);
-            else await coreService.StartAsync(state.Settings);
-        }
-
         if (state.Settings.SystemProxyEnabled)
         {
+            if (_shuttingDown) return;
             WindowsProxyService.Capture(state.Settings);
             await state.SaveAsync();
+            if (_shuttingDown) return;
             WindowsProxyService.Enable(state.Settings);
         }
-
         await state.SaveAsync();
     }
 
-    public async Task ApplyConfigurationChangesAsync()
+    public Task ApplyConfigurationChangesAsync() => state.SaveAsync();
+
+    public async Task SetGlobalTunEnabledAsync(bool enabled)
     {
-        var anyProxyEnabled = state.Settings.SystemProxyEnabled || state.Settings.Applications.Any(item => item.IsEnabled);
-        if (!anyProxyEnabled)
-        {
-            coreService.Stop();
-        }
-        else if (coreService.IsRunning)
-        {
-            await coreService.RestartAsync(state.Settings);
-        }
-        await state.SaveAsync();
+        if (enabled && state.Settings.Configuration.NativeEnabled)
+            throw new InvalidOperationException(Localization.Get("ProxyCoordinator_TUNIsManagedByTheLegacyJSONConfiguration"));
+        var previous = state.Settings.GlobalTunEnabled;
+        state.Settings.GlobalTunEnabled = enabled;
+        try { await state.SaveAsync(); }
+        catch { state.Settings.GlobalTunEnabled = previous; throw; }
     }
 
     public async Task SetApplicationProxyEnabledAsync(ApplicationProxyProfile profile, bool enabled)
     {
-        var previous = profile.IsEnabled;
-        profile.IsEnabled = enabled;
+        if (enabled && state.Settings.Configuration.NativeEnabled)
+            throw new InvalidOperationException(Localization.Get("ProxyCoordinator_ApplicationRoutingIsManagedByTheLegacyJSON"));
+        await _applicationGate.WaitAsync();
         try
         {
-        if (!state.Settings.SystemProxyEnabled && state.Settings.Applications.All(item => !item.IsEnabled))
-        {
-            coreService.Stop();
+            var previous = profile.IsEnabled;
+            profile.IsEnabled = enabled;
+            try { await state.SaveAsync(); }
+            catch { profile.IsEnabled = previous; throw; }
         }
-        else if (!coreService.IsRunning)
-        {
-            await coreService.StartAsync(state.Settings);
-        }
-        else
-        {
-            await ApplyConfigurationChangesAsync();
-        }
-        await state.SaveAsync();
-        }
-        catch
-        {
-            profile.IsEnabled = previous;
-            await state.SaveAsync();
-            throw;
-        }
+        finally { _applicationGate.Release(); }
     }
 
-    public async Task RefreshApplicationProfileAsync(ApplicationProxyProfile profile)
-    {
-        if (profile.IsEnabled) await ApplyConfigurationChangesAsync();
-        else await state.SaveAsync();
-    }
+    public Task RefreshApplicationProfileAsync(ApplicationProxyProfile profile) => state.SaveAsync();
 
     public async Task SetApplicationServerAsync(ApplicationProxyProfile profile, string serverId)
     {
         profile.ServerId = serverId;
-        if (profile.IsEnabled && !coreService.IsRunning)
-        {
-            await coreService.StartAsync(state.Settings);
-        }
-        else if (profile.IsEnabled)
-        {
-            await ApplyConfigurationChangesAsync();
-        }
         await state.SaveAsync();
     }
 }

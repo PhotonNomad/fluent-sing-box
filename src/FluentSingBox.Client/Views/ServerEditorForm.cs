@@ -14,7 +14,7 @@ public sealed class ServerEditorForm : Grid
     private readonly Dictionary<string, string> _rawDrafts = new(StringComparer.Ordinal);
     private readonly StackPanel _fields = new() { Spacing = 12 };
     private readonly TextBox _name;
-    private readonly ComboBox _type = new() { Header = "服务器类型", HorizontalAlignment = HorizontalAlignment.Stretch };
+    private readonly ComboBox _type = new() { Header = Localization.Get("ServerEditorForm_ServerType"), HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly InfoBar _error = new() { Severity = InfoBarSeverity.Error, IsClosable = false, IsOpen = false };
     private readonly List<(ServerField Field, FrameworkElement Control)> _controls = [];
     private readonly ScrollViewer _scroll;
@@ -22,16 +22,18 @@ public sealed class ServerEditorForm : Grid
     private TextBox? _raw;
     private TextBox? _preview;
     private CheckBox? _advancedMode;
+    private readonly string _sourceId;
 
     public ServerEditorForm(ServerProfile source, bool isNew, double availableHeight)
     {
+        _sourceId = source.Id;
         RowDefinitions.Add(new() { Height = GridLength.Auto });
         RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         RowDefinitions.Add(new() { Height = GridLength.Auto });
         RowSpacing = 12;
         _current = new ServerEditorDraft(ServerEditorDraft.FromProfile(source), isNew);
         _drafts[_current.Type] = _current;
-        _name = new TextBox { Header = "名称", Text = source.Name, PlaceholderText = "例如：HK-A" };
+        _name = new TextBox { Header = Localization.Get("ServerEditorForm_Name"), Text = source.Name, PlaceholderText = Localization.Get("ServerEditorForm_ForExampleHKA") };
         AutomationProperties.SetAutomationId(_name, "ServerEditor_Name");
         AutomationProperties.SetAutomationId(_type, "ServerEditor_Type");
         AutomationProperties.SetAutomationId(_error, "ServerEditor_Error");
@@ -41,7 +43,7 @@ public sealed class ServerEditorForm : Grid
             AutomationProperties.SetAutomationId(item, "ServerEditor_Type_" + protocol.Type);
             _type.Items.Add(item);
         }
-        if (!_current.IsKnown) _type.Items.Add(new ComboBoxItem { Content = $"{_current.Type}（高级配置）", Tag = _current.Type });
+        if (!_current.IsKnown) _type.Items.Add(new ComboBoxItem { Content = Localization.Format("ServerEditorForm_0AdvancedConfiguration", _current.Type), Tag = _current.Type });
         _type.SelectedItem = _type.Items.Cast<ComboBoxItem>().First(item => (string)item.Tag == _current.Type);
         Children.Add(_type);
         var content = new StackPanel { Spacing = 12 };
@@ -93,12 +95,12 @@ public sealed class ServerEditorForm : Grid
         {
             _fields.Children.Add(new TextBlock
             {
-                Text = "此类型尚无预定义表单。原配置会保留，可编辑高级配置或在上方选择常用服务器类型。",
+                Text = Localization.Get("ServerEditorForm_ThisTypeHasNoPredefinedFormItsOriginal"),
                 TextWrapping = TextWrapping.Wrap
             });
             _raw = new TextBox
             {
-                Header = "高级配置", Text = _rawDrafts.GetValueOrDefault(_current.Type) ?? _current.Build().ToJsonString(new JsonSerializerOptions { WriteIndented = true }),
+                Header = Localization.Get("ServerEditorForm_AdvancedConfiguration"), Text = _rawDrafts.GetValueOrDefault(_current.Type) ?? _current.Build().ToJsonString(new JsonSerializerOptions { WriteIndented = true }),
                 AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 180,
                 FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Consolas")
             };
@@ -112,7 +114,45 @@ public sealed class ServerEditorForm : Grid
             FrameworkElement control;
             switch (field.Kind)
             {
+                case ServerFieldKind.ServerList:
+                    var members = new StackPanel { Spacing = 8 };
+                    members.Children.Add(new TextBlock { Text = field.Label });
+                    var selectedTags = ServerEditorDraft.SplitList(value).ToHashSet(StringComparer.Ordinal);
+                    var memberChoices = new List<CheckBox>();
+                    foreach (var server in App.State.Settings.Servers.Where(server => server.Id != _sourceId))
+                    {
+                        var tag = SingBoxConfigBuilder.OutboundTag(server.Id);
+                        var sourceTag = ServerEditorDraft.FromProfile(server)["tag"]?.ToString();
+                        var checkbox = new CheckBox { Content = server.Name, Tag = tag, IsChecked = selectedTags.Contains(tag) || sourceTag is not null && selectedTags.Contains(sourceTag) };
+                        memberChoices.Add(checkbox); members.Children.Add(checkbox);
+                        void Changed(object sender, RoutedEventArgs args)
+                        {
+                            _current.Set(field.Path, string.Join(",", memberChoices.Where(item => item.IsChecked == true).Select(item => item.Tag)));
+                            foreach (var candidate in App.State.Settings.Servers)
+                                if (_current.Get("default") == ServerEditorDraft.FromProfile(candidate)["tag"]?.ToString())
+                                    _current.Set("default", SingBoxConfigBuilder.OutboundTag(candidate.Id));
+                        }
+                        checkbox.Checked += Changed; checkbox.Unchecked += Changed;
+                    }
+                    if (memberChoices.Count == 0) members.Children.Add(new TextBlock { Text = Localization.Get("ServerEditorForm_AddAtLeastOneServerFirst") });
+                    control = members;
+                    break;
+                case ServerFieldKind.ServerChoice:
+                    var selector = new ComboBox { Header = field.Label, HorizontalAlignment = HorizontalAlignment.Stretch };
+                    selector.Items.Add(new ComboBoxItem { Content = field.Path == "detour" ? Localization.Get("ServerEditorForm_NoUpstreamProxy") : Localization.Get("ServerEditorForm_FirstCandidateServer"), Tag = "" });
+                    foreach (var server in App.State.Settings.Servers.Where(server => server.Id != _sourceId))
+                    {
+                        var tag = SingBoxConfigBuilder.OutboundTag(server.Id);
+                        var original = ServerEditorDraft.FromProfile(server)["tag"]?.ToString();
+                        // Preserve an imported reference until it is explicitly changed.
+                        selector.Items.Add(new ComboBoxItem { Content = server.Name, Tag = value == original ? original : tag });
+                    }
+                    selector.SelectedItem = selector.Items.Cast<ComboBoxItem>().FirstOrDefault(item => (string)item.Tag == value) ?? selector.Items[0];
+                    selector.SelectionChanged += (_, _) => { if (selector.SelectedItem is ComboBoxItem { Tag: string tag }) _current.Set(field.Path, tag); };
+                    control = selector;
+                    break;
                 case ServerFieldKind.Choice:
+                case ServerFieldKind.IntegerChoice:
                     var combo = new ComboBox { Header = field.Label, HorizontalAlignment = HorizontalAlignment.Stretch };
                     var choices = new List<string>(field.Choices ?? []);
                     if (!choices.Contains(value)) choices.Add(value); // Do not coerce imported values to the first option.
@@ -145,7 +185,7 @@ public sealed class ServerEditorForm : Grid
                     var text = new TextBox
                     {
                         Header = field.Label, Text = value,
-                        PlaceholderText = field.Required ? "必填" : "可留空",
+                        PlaceholderText = field.Required ? Localization.Get("ServerEditorForm_Required") : Localization.Get("ServerEditorForm_Optional"),
                         AcceptsReturn = field.Kind == ServerFieldKind.StringList,
                         TextWrapping = TextWrapping.Wrap
                     };
@@ -159,16 +199,16 @@ public sealed class ServerEditorForm : Grid
         }
         if (_current.Type == "naive") _fields.Children.Add(new TextBlock
         {
-            Text = "Naive 需要支持该协议的核心及配套 libcronet.dll。", TextWrapping = TextWrapping.Wrap
+            Text = Localization.Get("ServerEditorForm_NaiveRequiresACoreWithProtocolSupportAnd"), TextWrapping = TextWrapping.Wrap
         });
         _preview = new TextBox
         {
-            Header = "完整配置", IsReadOnly = true, AcceptsReturn = true,
+            Header = Localization.Get("ServerEditorForm_FullConfiguration"), IsReadOnly = true, AcceptsReturn = true,
             TextWrapping = TextWrapping.Wrap, MaxHeight = 220,
             FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Consolas")
         };
         AutomationProperties.SetAutomationId(_preview, "ServerEditor_JsonPreview");
-        _advancedMode = new CheckBox { Content = "直接编辑完整 JSON（保存时采用下方内容）" };
+        _advancedMode = new CheckBox { Content = Localization.Get("ServerEditorForm_EditCompleteJSONDirectlyTheContentBelowIs") };
         AutomationProperties.SetAutomationId(_advancedMode, "ServerEditor_AdvancedMode");
         _advancedMode.Checked += (_, _) => SetAdvancedMode(true);
         _advancedMode.Unchecked += (_, _) => SetAdvancedMode(false);
@@ -177,7 +217,7 @@ public sealed class ServerEditorForm : Grid
         advancedContent.Children.Add(_preview);
         var advanced = new Expander
         {
-            Header = "高级配置（可选）", HorizontalAlignment = HorizontalAlignment.Stretch, Content = advancedContent
+            Header = Localization.Get("ServerEditorForm_AdvancedConfigurationOptional"), HorizontalAlignment = HorizontalAlignment.Stretch, Content = advancedContent
         };
         AutomationProperties.SetAutomationId(advanced, "ServerEditor_Advanced");
         advanced.Expanding += (_, _) =>
@@ -210,17 +250,17 @@ public sealed class ServerEditorForm : Grid
         outbound = null;
         try
         {
-            if (name.Length == 0) throw new FormatException("请填写服务器名称。");
+            if (name.Length == 0) throw new FormatException(Localization.Get("ServerEditorDraft_EnterAServerName"));
             var raw = _raw?.Text ?? (_advancedMode?.IsChecked == true ? _preview?.Text : null);
-            outbound = raw is null ? _current.Build() : JsonNode.Parse(raw) as JsonObject ?? throw new FormatException("配置必须是单个 outbound JSON 对象。");
-            if (outbound["type"]?.GetValue<string>() != _current.Type) throw new FormatException("高级配置的 type 必须与顶部选择的服务器类型一致。");
+            outbound = raw is null ? _current.Build() : JsonNode.Parse(raw) as JsonObject ?? throw new FormatException(Localization.Get("ServerEditorDraft_TheConfigurationMustBeASingleOutboundJSON"));
+            if (outbound["type"]?.GetValue<string>() != _current.Type) throw new FormatException(Localization.Get("ServerEditorForm_TheAdvancedConfigurationTypeMustMatchTheServer"));
             if (raw is not null && _current.IsKnown) outbound = new ServerEditorDraft(outbound).Build();
             return true;
         }
         catch (Exception exception) when (exception is FormatException or JsonException or InvalidOperationException)
         {
-            _error.Title = "请检查服务器信息";
-            _error.Message = exception is JsonException ? "高级配置 JSON 格式无效。" : exception.Message;
+            _error.Title = Localization.Get("ServerEditorForm_CheckTheServerInformation");
+            _error.Message = exception is JsonException ? Localization.Get("ServerEditorForm_InvalidAdvancedConfigurationJSON") : exception.Message;
             _error.IsOpen = true;
             return false;
         }

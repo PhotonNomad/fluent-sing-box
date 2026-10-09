@@ -21,7 +21,7 @@ public sealed class ServerEditorDraft
     {
         _original = (JsonObject)outbound.DeepClone();
         _new = isNew;
-        Type = outbound["type"]?.GetValue<string>() ?? throw new FormatException("服务器配置缺少 type。");
+        Type = outbound["type"]?.GetValue<string>() ?? throw new FormatException(Localization.Get("ServerEditorDraft_TheServerConfigurationIsMissingType"));
         Fields = ServerEditorSchema.Fields(Type);
         foreach (var field in Fields)
         {
@@ -96,9 +96,9 @@ public sealed class ServerEditorDraft
             if (string.IsNullOrWhiteSpace(value)) { Remove(result, field.Path); continue; }
             JsonNode? node = field.Kind switch
             {
-                ServerFieldKind.Integer => JsonValue.Create(int.Parse(value, CultureInfo.InvariantCulture)),
+                ServerFieldKind.Integer or ServerFieldKind.IntegerChoice => JsonValue.Create(int.Parse(value, CultureInfo.InvariantCulture)),
                 ServerFieldKind.Boolean => JsonValue.Create(value == "true"),
-                ServerFieldKind.StringList => new JsonArray(SplitList(value).Select(item =>
+                ServerFieldKind.StringList or ServerFieldKind.ServerList => new JsonArray(SplitList(value).Select(item =>
                     (JsonNode?)JsonValue.Create(field.Path == "server_ports" && !item.Contains(':') ? item + ":" + item : item)).ToArray()),
                 ServerFieldKind.Secret => JsonValue.Create(value),
                 _ => JsonValue.Create(value.Trim())
@@ -115,35 +115,48 @@ public sealed class ServerEditorDraft
             Write(result, "tls.utls.fingerprint", JsonValue.Create(Get("tls.utls.fingerprint").Length == 0 ? "chrome" : Get("tls.utls.fingerprint")));
         }
         if (_changed.Contains("plugin") && Get("plugin").Length == 0) result.Remove("plugin_opts");
-        if (_changed.Contains("version") && Get("version") != "5") result.Remove("password");
+        if (Type == "socks" && _changed.Contains("version") && Get("version") != "5") result.Remove("password");
+        if (Type == "snell" && _changed.Contains("version"))
+        {
+            if (Get("version") == "6") { result.Remove("obfs_mode"); result.Remove("obfs_host"); }
+            else result.Remove("mode");
+        }
+        if (Type == "shadowtls" && _changed.Contains("version") && Get("version") == "1") result.Remove("password");
         return result;
     }
 
     private void Validate()
     {
         if (ServerEditorSchema.Find(Type)?.RequiredTls == true && Get("$security") == "none")
-            throw new FormatException("此服务器类型需要启用 TLS。");
+            throw new FormatException(Localization.Get("ServerEditorDraft_ThisServerTypeRequiresTLS"));
         foreach (var field in Fields.Where(Visible))
         {
             var value = Get(field.Path);
-            if (field.Required && string.IsNullOrWhiteSpace(value)) throw new FormatException($"请填写{field.Label}。");
+            if (field.Required && string.IsNullOrWhiteSpace(value)) throw new FormatException(Localization.Format("ServerEditorDraft_Enter0", field.Label));
+            if (field.Kind == ServerFieldKind.IntegerChoice && field.Choices?.Contains(value) != true) throw new FormatException(Localization.Format("ServerEditorDraft_Invalid0", field.Label));
             if (field.Kind == ServerFieldKind.Integer && value.Length > 0
                 && (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number) || number < field.Minimum || number > field.Maximum))
-                throw new FormatException($"{field.Label}必须是 {field.Minimum}–{field.Maximum} 范围内的整数。");
+                throw new FormatException(Localization.Format("ServerEditorDraft_0MustBeAnIntegerBetween1And", field.Label, field.Minimum, field.Maximum));
         }
-        if (Type is "vless" or "vmess" or "tuic" && !Guid.TryParse(Get("uuid"), out _)) throw new FormatException("UUID 格式无效。");
+        if (Type is "vless" or "vmess" or "tuic" && !Guid.TryParse(Get("uuid"), out _)) throw new FormatException(Localization.Get("ServerEditorDraft_InvalidUUIDFormat"));
+        if (Type == "selector" && Get("default").Length > 0 && !SplitList(Get("outbounds")).Contains(Get("default")))
+            throw new FormatException(Localization.Get("ServerEditorDraft_TheDefaultServerMustBeOneOfThe"));
+        if (Type == "urltest" && (!Uri.TryCreate(Get("url"), UriKind.Absolute, out var url) || url.Scheme is not ("http" or "https")))
+            throw new FormatException(Localization.Get("ServerEditorDraft_TheTestURLMustBeAnHTTPOr"));
+        if (Type == "snell" && Get("version") == "6" && System.Text.Encoding.UTF8.GetByteCount(Get("psk")) is < 12 or > 255)
+            throw new FormatException(Localization.Get("ServerEditorDraft_TheSnell6PreSharedKeyMustContain"));
         if (Type == "vless" && Get("flow") == "xtls-rprx-vision" && (Get("$transport") != "tcp" || Get("$security") == "none"))
-            throw new FormatException("Vision Flow 需要 TCP 传输和 TLS / REALITY。");
+            throw new FormatException(Localization.Get("ServerEditorDraft_VisionFlowRequiresTCPTransportAndTLSREALITY"));
         if (Get("$security") == "reality")
         {
             try { if (Convert.FromBase64String(Get("tls.reality.public_key").Replace('-', '+').Replace('_', '/') + "=").Length != 32) throw new FormatException(); }
-            catch (FormatException) { throw new FormatException("REALITY 公钥应是 32 字节的 Base64URL 公钥（通常为 43 个字符）。"); }
-            if (!Regex.IsMatch(Get("tls.reality.short_id"), "^(?:[0-9a-fA-F]{2}){0,8}$")) throw new FormatException("REALITY Short ID 必须是最多 16 位、长度为偶数的十六进制字符。");
+            catch (FormatException) { throw new FormatException(Localization.Get("ServerEditorDraft_TheREALITYPublicKeyMustBeA32")); }
+            if (!Regex.IsMatch(Get("tls.reality.short_id"), "^(?:[0-9a-fA-F]{2}){0,8}$")) throw new FormatException(Localization.Get("ServerEditorDraft_TheREALITYShortIDMustContainAnEven"));
         }
         if (Type == "hysteria" && Get("$authMode") == "base64" && Get("auth").Length > 0)
         {
             try { Convert.FromBase64String(Get("auth")); }
-            catch (FormatException) { throw new FormatException("认证内容不是有效的 Base64。"); }
+            catch (FormatException) { throw new FormatException(Localization.Get("ServerEditorDraft_TheAuthenticationValueIsNotValidBase64")); }
         }
         if (Get("$portMode") == "range")
         {
@@ -151,7 +164,7 @@ public sealed class ServerEditorDraft
             {
                 var parts = range.Split(':');
                 if (parts.Length > 2 || parts.Any(part => !int.TryParse(part, out var port) || port is < 1 or > 65535)
-                    || parts.Length == 2 && int.Parse(parts[0]) > int.Parse(parts[1])) throw new FormatException("端口范围应为 1–65535 内的端口，或起始:结束（如 2000:3000）。");
+                    || parts.Length == 2 && int.Parse(parts[0]) > int.Parse(parts[1])) throw new FormatException(Localization.Get("ServerEditorDraft_UsePortsBetween1And65535OrA"));
             }
         }
         if (Type == "shadowsocks" && Get("method").StartsWith("2022-", StringComparison.Ordinal))
@@ -160,7 +173,7 @@ public sealed class ServerEditorDraft
             foreach (var key in Get("password").Split(':'))
             {
                 try { if (Convert.FromBase64String(key).Length != bytes) throw new FormatException(); }
-                catch (FormatException) { throw new FormatException($"此 Shadowsocks 2022 方法需要 {bytes} 字节的 Base64 密钥；多用户密钥用冒号连接。"); }
+                catch (FormatException) { throw new FormatException(Localization.Format("ServerEditorDraft_ThisShadowsocks2022MethodRequiresA0Byte", bytes)); }
             }
         }
     }
@@ -194,7 +207,7 @@ public sealed class ServerEditorDraft
     public static JsonObject FromProfile(ServerProfile source)
     {
         if (!string.IsNullOrWhiteSpace(source.OutboundJson))
-            return JsonNode.Parse(source.OutboundJson) as JsonObject ?? throw new FormatException("配置必须是单个 outbound JSON 对象。");
+            return JsonNode.Parse(source.OutboundJson) as JsonObject ?? throw new FormatException(Localization.Get("ServerEditorDraft_TheConfigurationMustBeASingleOutboundJSON"));
         var result = new JsonObject { ["type"] = "vless", ["server"] = source.Address, ["server_port"] = source.Port, ["uuid"] = source.UserId };
         if (source.Flow.Length > 0) result["flow"] = source.Flow;
         if (source.Security != "none") result["tls"] = new JsonObject { ["enabled"] = true, ["server_name"] = source.ServerName };
@@ -208,9 +221,9 @@ public sealed class ServerEditorDraft
 
     public static void Apply(ServerProfile source, string name, JsonObject outbound)
     {
-        if (string.IsNullOrWhiteSpace(name)) throw new FormatException("请填写服务器名称。");
+        if (string.IsNullOrWhiteSpace(name)) throw new FormatException(Localization.Get("ServerEditorDraft_EnterAServerName"));
         var type = outbound["type"]?.GetValue<string>();
-        if (string.IsNullOrWhiteSpace(type)) throw new FormatException("配置缺少服务器类型。");
+        if (string.IsNullOrWhiteSpace(type)) throw new FormatException(Localization.Get("ServerEditorDraft_TheConfigurationIsMissingTheServerType"));
         // Validate before assigning any property observed by AppState.
         var json = outbound.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
         var address = outbound["server"]?.GetValue<string>() ?? "";

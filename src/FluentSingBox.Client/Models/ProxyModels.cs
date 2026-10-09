@@ -1,3 +1,4 @@
+using FluentSingBox.Client.Services;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Text.Json.Serialization;
@@ -7,7 +8,7 @@ namespace FluentSingBox.Client.Models;
 public sealed class ServerProfile : ObservableModel
 {
     private string _id = Guid.NewGuid().ToString("N");
-    private string _name = "新服务器";
+    private string _name = Localization.Get("ProxyModels_NewServer");
     private string _address = string.Empty;
     private int _port = 443;
     private string _userId = string.Empty;
@@ -56,6 +57,7 @@ public sealed class ServerProfile : ObservableModel
                 NotifyPropertyChanged(nameof(ProtocolSummary));
                 NotifyPropertyChanged(nameof(TransportSummary));
                 NotifyPropertyChanged(nameof(SecuritySummary));
+                NotifyPropertyChanged(nameof(Endpoint));
             }
         }
     }
@@ -64,7 +66,18 @@ public sealed class ServerProfile : ObservableModel
     public bool IsDefault { get => _isDefault; set => Set(ref _isDefault, value); }
 
     [JsonIgnore]
-    public string Endpoint => string.IsNullOrWhiteSpace(Address) ? "未配置" : $"{Address}:{Port}";
+    public string Endpoint
+    {
+        get
+        {
+            if (ProtocolSummary is "selector" or "urltest")
+            {
+                try { return Localization.Format("ProxyModels_0CandidateServers", System.Text.Json.Nodes.JsonNode.Parse(OutboundJson)?["outbounds"]?.AsArray().Count ?? 0); }
+                catch (System.Text.Json.JsonException) { return Localization.Get("ProxyModels_ProxyGroup"); }
+            }
+            return string.IsNullOrWhiteSpace(Address) ? Localization.Get("ProxyModels_NotConfigured") : $"{Address}:{Port}";
+        }
+    }
 
     [JsonIgnore]
     public string MoreAutomationId => "Server_More_" + Id;
@@ -102,14 +115,14 @@ public sealed class ServerProfile : ObservableModel
                     return transport switch
                     {
                         "ws" => "WebSocket",
-                        null => "协议默认",
-                        "" => "协议默认",
+                        null => Localization.Get("ProxyModels_ProtocolDefault"),
+                        "" => Localization.Get("ProxyModels_ProtocolDefault"),
                         var type => type
                     };
                 }
                 catch (System.Text.Json.JsonException)
                 {
-                    return "由 outbound JSON 定义";
+                    return Localization.Get("ProxyModels_DefinedByOutboundJSON");
                 }
             }
 
@@ -132,26 +145,26 @@ public sealed class ServerProfile : ObservableModel
                 try
                 {
                     var tls = System.Text.Json.Nodes.JsonNode.Parse(OutboundJson)?["tls"];
-                    if (tls is null) return "未启用";
+                    if (tls is null) return Localization.Get("ProxyModels_Disabled");
                     if (tls is System.Text.Json.Nodes.JsonObject tlsObject
                         && bool.TryParse(tlsObject["enabled"]?.ToString(), out var enabled)
                         && !enabled)
                     {
-                        return "未启用";
+                        return Localization.Get("ProxyModels_Disabled");
                     }
 
                     return "TLS";
                 }
                 catch (System.Text.Json.JsonException)
                 {
-                    return "由 outbound JSON 定义";
+                    return Localization.Get("ProxyModels_DefinedByOutboundJSON");
                 }
             }
 
             return Security switch
             {
                 "tls" => "TLS",
-                "none" => "无",
+                "none" => Localization.Get("ProxyModels_None"),
                 _ => Security
             };
         }
@@ -197,26 +210,26 @@ public sealed class RouteRuleProfile : ObservableModel
     [JsonIgnore]
     public string DestinationLabel => Outbound switch
     {
-        "direct" => "直连",
-        "block" => "拦截",
-        "proxy" => "指定服务器",
-        _ => "代理"
+        "direct" => Localization.Get("ProxyModels_Direct"),
+        "block" => Localization.Get("ProxyModels_Block"),
+        "proxy" => Localization.Get("ProxyModels_SpecificServer"),
+        _ => Localization.Get("ProxyModels_Proxy")
     };
 
     [JsonIgnore]
     public string RuleDescription => BuiltInKind switch
     {
-        "china-domains" => "中国域名（geosite-geolocation-cn）",
-        "china-addresses" => "中国 IP（排除非中国域名）",
-        "connection-guard" => "阻止 DoT、QUIC 与 STUN",
-        "private" => "本机、局域网与私有地址",
+        "china-domains" => Localization.Get("ProxyModels_ChineseDomainsGeositeGeolocationCn"),
+        "china-addresses" => Localization.Get("ProxyModels_ChineseIPAddressesExcludingNonChineseDomains"),
+        "connection-guard" => Localization.Get("ProxyModels_BlockDoTQUICAndSTUN"),
+        "private" => Localization.Get("ProxyModels_ThisDeviceLANAndPrivateAddresses"),
         _ => Addresses
     };
 
     [JsonIgnore]
-    public string RowDescription => $"{RuleDescription} · {DestinationLabel} · {(IsEnabled ? "已启用" : "已停用")}";
+    public string RowDescription => $"{RuleDescription} · {DestinationLabel} · {(IsEnabled ? Localization.Get("ProxyModels_Enabled") : Localization.Get("ProxyModels_Disabled2"))}";
 
-    [JsonIgnore] public string ScopeLabel => Outbound == "block" || Scope == "both" ? "系统代理和应用代理" : "系统代理";
+    [JsonIgnore] public string ScopeLabel => Outbound == "block" || Scope == "both" ? Localization.Get("ProxyModels_SystemAndApplicationProxy") : Localization.Get("ProxyModels_SystemProxy");
     [JsonIgnore] public bool IsCustom => !IsBuiltIn;
     [JsonIgnore] public string ExpanderAutomationId => $"Route_Expander_{Id}";
     [JsonIgnore] public string ToggleAutomationId => $"Route_Toggle_{Id}";
@@ -238,10 +251,31 @@ public sealed class ApplicationProxyProfile : ObservableModel
     private string _serverId = string.Empty;
     private bool _isEnabled;
     private ObservableCollection<string> _executablePaths = [];
+    private string _matchMode = "path";
+    private ObservableCollection<string> _processNames = [];
+    public string MatchMode
+    {
+        get => _matchMode;
+        set { if (Set(ref _matchMode, value)) { NotifyPropertyChanged(nameof(MatchEntries)); NotifyPropertyChanged(nameof(ExecutableName)); NotifyPropertyChanged(nameof(RowDescription)); } }
+    }
+    public ObservableCollection<string> ProcessNames
+    {
+        get => _processNames;
+        set
+        {
+            _processNames.CollectionChanged -= ExecutablePaths_CollectionChanged;
+            _processNames = value ?? [];
+            _processNames.CollectionChanged += ExecutablePaths_CollectionChanged;
+            NotifyPropertyChanged(); NotifyPropertyChanged(nameof(MatchEntries)); NotifyPropertyChanged(nameof(ExecutableName)); NotifyPropertyChanged(nameof(RowDescription));
+        }
+    }
+    [JsonIgnore] public ObservableCollection<string> MatchEntries => MatchMode == "name" ? ProcessNames : ExecutablePaths;
+    [JsonIgnore] public string MatchField => MatchMode == "name" ? "process_name" : "process_path";
 
     public ApplicationProxyProfile()
     {
         _executablePaths.CollectionChanged += ExecutablePaths_CollectionChanged;
+        _processNames.CollectionChanged += ExecutablePaths_CollectionChanged;
     }
 
     public string Id { get => _id; set => Set(ref _id, value); }
@@ -270,6 +304,7 @@ public sealed class ApplicationProxyProfile : ObservableModel
             _executablePaths.CollectionChanged += ExecutablePaths_CollectionChanged;
             NotifyPropertyChanged();
             NotifyPropertyChanged(nameof(ExecutableName));
+            NotifyPropertyChanged(nameof(MatchEntries));
         }
     }
 
@@ -298,19 +333,20 @@ public sealed class ApplicationProxyProfile : ObservableModel
     [JsonIgnore] public string DeleteAutomationId => $"Application_Delete_{Id}";
 
     [JsonIgnore]
-    public string ExecutableName => ExecutablePaths.Count switch
+    public string ExecutableName => MatchEntries.Count switch
     {
-        0 => "未选择程序",
-        1 => Path.GetFileName(ExecutablePaths[0]),
-        _ => $"{ExecutablePaths.Count} 个程序"
+        0 => Localization.Get("ProxyModels_NoProgramSelected"),
+        1 => Path.GetFileName(MatchEntries[0]),
+        _ => Localization.Format("ProxyModels_0Programs", MatchEntries.Count)
     };
 
     [JsonIgnore]
-    public string RowDescription => $"{ExecutableName} · {AvailableServers.FirstOrDefault(server => server.Id == ServerId)?.Name ?? "未选择服务器"} · {(IsEnabled ? "已启用" : "已停用")}";
+    public string RowDescription => $"{ExecutableName} · {AvailableServers.FirstOrDefault(server => server.Id == ServerId)?.Name ?? Localization.Get("ProxyModels_NoServerSelected")} · {(IsEnabled ? Localization.Get("ProxyModels_Enabled") : Localization.Get("ProxyModels_Disabled2"))}";
 
     private void ExecutablePaths_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         NotifyPropertyChanged(nameof(ExecutablePaths));
+        NotifyPropertyChanged(nameof(MatchEntries));
         NotifyPropertyChanged(nameof(ExecutableName));
         NotifyPropertyChanged(nameof(RowDescription));
     }
@@ -318,20 +354,27 @@ public sealed class ApplicationProxyProfile : ObservableModel
 
 public sealed class AppSettingsData
 {
+    public ConfigurationOptions Configuration { get; set; } = new();
+    [JsonIgnore] public bool CoreOnlyEnabled { get; set; }
     public ObservableCollection<ServerProfile> Servers { get; set; } = [];
     public ObservableCollection<RouteRuleProfile> RoutingRules { get; set; } = [];
     public ObservableCollection<ApplicationProxyProfile> Applications { get; set; } = [];
     public string? DefaultServerId { get; set; }
+    public string RouteFinalMode { get; set; } = "auto";
+    public string? RouteFinalServerId { get; set; }
     public string SingBoxExecutablePath { get; set; } = string.Empty;
     public string ThemeChoice { get; set; } = "system";
+    public string LanguageChoice { get; set; } = "system";
     public bool LaunchAtStartup { get; set; }
     public bool SystemProxyEnabled { get; set; }
+    public bool GlobalTunEnabled { get; set; }
     public int SystemProxyPort { get; set; } = 10809;
     public bool SystemProxyAuthEnabled { get; set; }
     public string SystemProxyUsername { get; set; } = string.Empty;
     public string SystemProxyPassword { get; set; } = string.Empty;
     public bool HasSystemProxySnapshot { get; set; }
     public int PreviousProxyEnable { get; set; }
+    public int? PreviousConnectionFlags { get; set; }
     public string? PreviousProxyServer { get; set; }
     public string? PreviousProxyOverride { get; set; }
     public string? PreviousAutoConfigUrl { get; set; }
@@ -340,10 +383,10 @@ public sealed class AppSettingsData
 
     public void EnsureBuiltInRules()
     {
-        EnsureBuiltIn("private", "私有地址", "本机、局域网与私有地址", "direct", matchPrivate: true);
-        EnsureBuiltIn("connection-guard", "阻止 QUIC / STUN / DoT", "阻止常见绕过代理的 UDP 与加密 DNS 流量", "block");
-        EnsureBuiltIn("china-domains", "中国域名直连", "中国域名（geosite-geolocation-cn）", "direct");
-        EnsureBuiltIn("china-addresses", "中国 IP 直连", "中国 IP（排除非中国域名）", "direct");
+        EnsureBuiltIn("private", Localization.Get("ProxyModels_PrivateAddresses"), Localization.Get("ProxyModels_ThisDeviceLANAndPrivateAddresses"), "direct", matchPrivate: true);
+        EnsureBuiltIn("connection-guard", Localization.Get("ProxyModels_BlockQUICSTUNDoT"), Localization.Get("ProxyModels_BlockCommonUDPAndEncryptedDNSTrafficThat"), "block");
+        EnsureBuiltIn("china-domains", Localization.Get("ProxyModels_DirectConnectionForChineseDomains"), Localization.Get("ProxyModels_ChineseDomainsGeositeGeolocationCn"), "direct");
+        EnsureBuiltIn("china-addresses", Localization.Get("ProxyModels_DirectConnectionForChineseIPAddresses"), Localization.Get("ProxyModels_ChineseIPAddressesExcludingNonChineseDomains"), "direct");
 
         void EnsureBuiltIn(string kind, string name, string description, string outbound, bool matchPrivate = false)
         {
@@ -351,7 +394,9 @@ public sealed class AppSettingsData
                 ?? (kind == "private" ? RoutingRules.FirstOrDefault(item => item.MatchPrivateAddresses) : null);
             if (rule is null)
             {
-                rule = new RouteRuleProfile { IsEnabled = kind == "private" };
+                // Domestic bypass is the default; broad protocol blocking is opt-in.
+                // Existing rules retain the user's explicit enabled/disabled choice.
+                rule = new RouteRuleProfile { IsEnabled = kind is "private" or "china-domains" or "china-addresses" };
                 RoutingRules.Add(rule);
             }
             rule.BuiltInKind = kind;
@@ -375,8 +420,8 @@ public sealed class AppSettingsData
 
             if (rule.IsBuiltIn && (rule.Addresses.Contains("geoip:private", StringComparison.OrdinalIgnoreCase) || rule.MatchPrivateAddresses))
             {
-                rule.Name = "私有地址";
-                rule.Addresses = "本机、局域网与私有地址";
+                rule.Name = Localization.Get("ProxyModels_PrivateAddresses");
+                rule.Addresses = Localization.Get("ProxyModels_ThisDeviceLANAndPrivateAddresses");
                 rule.Outbound = "direct";
                 rule.MatchPrivateAddresses = true;
                 rule.BuiltInKind = "private";

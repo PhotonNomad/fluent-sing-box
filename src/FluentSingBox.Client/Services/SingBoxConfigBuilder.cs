@@ -7,27 +7,54 @@ namespace FluentSingBox.Client.Services;
 
 public sealed class SingBoxConfigBuilder
 {
-    public string Build(AppSettingsData settings, string logPath, bool supportsHttpClient, string? initialRuleSetPath = null)
+    public string Build(AppSettingsData settings, string logPath, bool supportsHttpClient, bool validateApplicationPaths = true)
     {
-        if (settings.SystemProxyPort is < 1 or > 65535) throw new InvalidOperationException("本地代理端口必须在 1–65535 之间。");
+        var options = settings.Configuration ?? new ConfigurationOptions();
+        if (options.UsesFileConfiguration) return ConfigurationComposer.BuildNative(settings, logPath);
+        ConfigurationComposer.ValidateOptions(options);
+        if (settings.SystemProxyPort is < 1 or > 65535) throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_TheLocalProxyPortMustBeBetween1"));
         var defaultServer = settings.Servers.FirstOrDefault(server => server.Id == settings.DefaultServerId)
-            ?? throw new InvalidOperationException("请先添加并选择默认服务器。");
-        var enabledApps = settings.Applications.Where(profile => profile.IsEnabled).ToArray();
+            ?? throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_AddAndSelectADefaultServerFirst"));
+        var finalOutbound = settings.RouteFinalMode switch
+        {
+            "auto" => settings.GlobalTunEnabled ? OutboundTag(defaultServer.Id) : "direct",
+            "direct" => "direct",
+            "default" => OutboundTag(defaultServer.Id),
+            "server" => settings.Servers.Any(server => server.Id == settings.RouteFinalServerId)
+                ? OutboundTag(settings.RouteFinalServerId!)
+                : throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_TheServerSelectedForUnmatchedTrafficFinalNo")),
+            _ => throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_TheUnmatchedTrafficFinalActionIsInvalidSelect"))
+        };
+        var enabledApps = settings.GlobalTunEnabled ? [] : settings.Applications.Where(profile => profile.IsEnabled).ToArray();
+        var hasTun = settings.GlobalTunEnabled || enabledApps.Length > 0;
         var claimedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var claimedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var profile in enabledApps)
         {
-            if (profile.ExecutablePaths.Count == 0)
+            if (profile.MatchMode is not ("path" or "name")) throw new InvalidOperationException(Localization.Get("ApplicationMatch_InvalidMode"));
+            if (profile.MatchEntries.Count == 0)
             {
-                throw new InvalidOperationException($"应用组“{profile.Name}”还没有可执行文件。");
+                throw new InvalidOperationException(Localization.Format("SingBoxConfigBuilder_ApplicationGroup0HasNoExecutableFilesYet", profile.Name));
+            }
+
+            if (profile.MatchMode == "name")
+            {
+                foreach (var name in profile.ProcessNames)
+                {
+                    if (string.IsNullOrWhiteSpace(name) || name != name.Trim() || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+                        throw new InvalidOperationException(Localization.Format("ApplicationMatch_InvalidName", name));
+                    if (!claimedNames.Add(name)) throw new InvalidOperationException(Localization.Format("ApplicationMatch_DuplicateName", name));
+                }
+                continue;
             }
 
             var missingPath = profile.ExecutablePaths.FirstOrDefault(path => !File.Exists(path));
-            if (missingPath is not null)
+            if (validateApplicationPaths && missingPath is not null)
             {
-                throw new InvalidOperationException($"找不到应用组“{profile.Name}”中的程序：{missingPath}");
+                throw new InvalidOperationException(Localization.Format("SingBoxConfigBuilder_ProgramNotFoundInApplicationGroup01", profile.Name, missingPath));
             }
             foreach (var path in profile.ExecutablePaths)
-                if (!claimedPaths.Add(Path.GetFullPath(path))) throw new InvalidOperationException($"应用组“{profile.Name}”有重复程序；同一个程序只能属于一个已启用应用组。");
+                if (!claimedPaths.Add(Path.GetFullPath(path))) throw new InvalidOperationException(Localization.Format("SingBoxConfigBuilder_ApplicationGroup0ContainsADuplicateProgramA", profile.Name));
         }
 
         var outbounds = new JsonArray();
@@ -37,7 +64,7 @@ public sealed class SingBoxConfigBuilder
         {
             var sourceTag = ParseOutbound(server)["tag"]?.GetValue<string>();
             if (!string.IsNullOrWhiteSpace(sourceTag) && !importedTags.TryAdd(sourceTag, OutboundTag(server.Id)))
-                throw new InvalidOperationException($"服务器标签“{sourceTag}”重复；请在高级配置中为每个节点设置不同标签。");
+                throw new InvalidOperationException(Localization.Format("SingBoxConfigBuilder_DuplicateServerTag0GiveEachServerA", sourceTag));
         }
         foreach (var server in settings.Servers.OrderByDescending(server => server.Id == defaultServer.Id))
         {
@@ -45,46 +72,30 @@ public sealed class SingBoxConfigBuilder
         }
         outbounds.Add(new JsonObject { ["type"] = "direct", ["tag"] = "direct" });
 
-        var systemHttpInbound = new JsonObject
-        {
-            ["type"] = "mixed",
-            ["tag"] = "system-http",
-            ["listen"] = "127.0.0.1",
-            ["listen_port"] = settings.SystemProxyPort
-        };
-        if (settings.SystemProxyAuthEnabled)
-        {
-            if (string.IsNullOrWhiteSpace(settings.SystemProxyUsername) || string.IsNullOrWhiteSpace(settings.SystemProxyPassword))
-            {
-                throw new InvalidOperationException("启用系统代理身份验证时，必须同时填写用户名和密码。");
-            }
-
-            systemHttpInbound["users"] = new JsonArray
-            {
-                new JsonObject
-                {
-                    ["username"] = settings.SystemProxyUsername,
-                    ["password"] = settings.SystemProxyPassword
-                }
-            };
-        }
+        var systemHttpInbound = BuildManagedInbound(settings);
 
         var inbounds = new JsonArray { systemHttpInbound };
 
-        if (enabledApps.Length > 0)
+        if (hasTun)
         {
             inbounds.Add(new JsonObject
             {
                 ["type"] = "tun",
                 ["tag"] = "app-tun",
+                ["interface_name"] = "fluent-sing-box",
                 ["address"] = new JsonArray("172.19.0.1/30", "fdfe:dcba:9876::1/126"),
                 ["auto_route"] = true,
-                ["strict_route"] = true
+                ["strict_route"] = options.TunStrictRoute,
+                ["stack"] = options.TunStack,
+                ["mtu"] = options.TunMtu,
+                ["route_exclude_address"] = ConfigurationComposer.Cidrs(options.TunExcludedRoutes)
             });
+            inbounds[^1]!["address"] = ConfigurationComposer.Cidrs(options.TunAddresses, required: true);
         }
 
-        var routeRules = new JsonArray { new JsonObject { ["action"] = "sniff" } };
-        if (enabledApps.Length > 0)
+        var routeRules = new JsonArray();
+        if (options.SniffEnabled) routeRules.Add(new JsonObject { ["action"] = "sniff" });
+        if (hasTun)
         {
             routeRules.Add(new JsonObject
             {
@@ -126,11 +137,11 @@ public sealed class SingBoxConfigBuilder
         {
             var server = settings.Servers.FirstOrDefault(item => item.Id == profile.ServerId) ?? defaultServer;
             var processPaths = new JsonArray();
-            foreach (var path in profile.ExecutablePaths) processPaths.Add(path);
+            foreach (var path in profile.MatchEntries) processPaths.Add(path);
             routeRules.Add(new JsonObject
             {
                 ["inbound"] = new JsonArray("app-tun"),
-                ["process_path"] = processPaths,
+                [profile.MatchField] = processPaths,
                 ["action"] = "route",
                 ["outbound"] = OutboundTag(server.Id)
             });
@@ -181,7 +192,9 @@ public sealed class SingBoxConfigBuilder
             });
         }
 
-        routeRules.Add(new JsonObject
+        // Keep old system-proxy behavior only for unmigrated preferences.
+        // An explicit final must handle unmatched traffic from every inbound.
+        if (settings.RouteFinalMode == "auto") routeRules.Add(new JsonObject
         {
             ["inbound"] = new JsonArray("system-http"),
             ["action"] = "route",
@@ -191,33 +204,27 @@ public sealed class SingBoxConfigBuilder
         var route = new JsonObject
         {
             ["rules"] = routeRules,
-            ["final"] = "direct",
+            ["final"] = finalOutbound,
             ["default_domain_resolver"] = "local",
             ["auto_detect_interface"] = true
         };
         if (settings.RoutingRules.Any(rule => rule.IsEnabled && rule.BuiltInKind is "china-domains" or "china-addresses"))
         {
-            route["rule_set"] = new JsonArray
+            var sets = new JsonArray();
+            if (settings.RoutingRules.Any(rule => rule.IsEnabled && rule.BuiltInKind == "china-domains")) sets.Add(BuildLocalRuleSet("geosite-geolocation-cn"));
+            if (settings.RoutingRules.Any(rule => rule.IsEnabled && rule.BuiltInKind == "china-addresses"))
             {
-                BuildRemoteRuleSet("geosite-geolocation-cn", "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-geolocation-cn.srs", OutboundTag(defaultServer.Id), supportsHttpClient, initialRuleSetPath),
-                BuildRemoteRuleSet("geosite-geolocation-!cn", "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-geolocation-!cn.srs", OutboundTag(defaultServer.Id), supportsHttpClient, initialRuleSetPath),
-                BuildRemoteRuleSet("geoip-cn", "https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs", OutboundTag(defaultServer.Id), supportsHttpClient, initialRuleSetPath)
-            };
+                sets.Add(BuildLocalRuleSet("geosite-geolocation-!cn"));
+                sets.Add(BuildLocalRuleSet("geoip-cn"));
+            }
+            route["rule_set"] = sets;
         }
 
         var dnsServers = new JsonArray
         {
-            new JsonObject { ["type"] = "local", ["tag"] = "local" },
-            new JsonObject
-            {
-                ["type"] = "https",
-                ["tag"] = "proxy-dns",
-                ["server"] = "1.1.1.1",
-                ["server_port"] = 443,
-                ["path"] = "/dns-query",
-                ["tls"] = new JsonObject { ["enabled"] = true, ["server_name"] = "cloudflare-dns.com" },
-                ["detour"] = OutboundTag(defaultServer.Id)
-            }
+            ConfigurationComposer.Resolver(options.DirectDns, "local"),
+            ConfigurationComposer.Resolver(options.ProxyDns, "proxy-dns", OutboundTag(defaultServer.Id)),
+            new JsonObject { ["type"] = "local", ["tag"] = "bootstrap" }
         };
 
         var dnsRules = new JsonArray
@@ -235,61 +242,84 @@ public sealed class SingBoxConfigBuilder
             var tag = "dns-" + profile.Id;
             var resolver = (JsonObject)dnsServers[1]!.DeepClone();
             resolver["tag"] = tag;
-            resolver["detour"] = OutboundTag(server.Id);
+            if (options.ProxyDns.Type != "local") resolver["detour"] = OutboundTag(server.Id);
             dnsServers.Add(resolver);
             dnsRules.Add(new JsonObject
             {
                 ["inbound"] = new JsonArray("app-tun"),
-                ["process_path"] = new JsonArray(profile.ExecutablePaths.Select(path => JsonValue.Create(path)).ToArray<JsonNode?>()),
+                [profile.MatchField] = new JsonArray(profile.MatchEntries.Select(path => JsonValue.Create(path)).ToArray<JsonNode?>()),
                 ["server"] = tag
             });
         }
+        // Explicit app DNS keeps precedence over China DNS, matching app routing.
+        if (options.ChinaDnsDirect && settings.RoutingRules.Any(rule => rule.IsEnabled && rule.BuiltInKind == "china-domains"))
+            dnsRules.Add(new JsonObject { ["rule_set"] = "geosite-geolocation-cn", ["server"] = "local" });
         dnsRules.Add(new JsonObject { ["inbound"] = new JsonArray("system-http"), ["server"] = "proxy-dns" });
 
         var config = new JsonObject
         {
             ["log"] = new JsonObject
             {
-                ["level"] = "info",
-                ["timestamp"] = true,
+                ["level"] = options.LogLevel,
+                ["timestamp"] = options.LogTimestamp,
                 ["output"] = logPath
             },
             ["dns"] = new JsonObject
             {
                 ["servers"] = dnsServers,
                 ["rules"] = dnsRules,
-                ["final"] = "local"
+            ["final"] = settings.GlobalTunEnabled ? "proxy-dns" : "local",
+                ["strategy"] = options.DnsStrategy,
+                ["disable_cache"] = !options.DnsCacheEnabled,
+                ["reverse_mapping"] = options.DnsReverseMapping
             },
             ["inbounds"] = inbounds,
             ["outbounds"] = outbounds,
             ["endpoints"] = endpoints,
             ["experimental"] = new JsonObject
             {
-                ["cache_file"] = new JsonObject { ["enabled"] = true, ["store_rdrc"] = true }
+                ["cache_file"] = new JsonObject { ["enabled"] = options.CacheFileEnabled, ["store_dns"] = options.StoreDns }
             },
             ["route"] = route
         };
 
+        var selectors = outbounds.OfType<JsonObject>().Where(item => item["type"]?.ToString() == "selector")
+            .Select(item => new JsonObject { ["tag"] = item["tag"]?.DeepClone(), ["default"] = item["default"]?.DeepClone(), ["outbounds"] = item["outbounds"]?.DeepClone() }).ToArray();
+        if (selectors.Length > 0)
+        {
+            // An explicit GUI default change must not reload an older API choice.
+            var identity = string.Join("\n", selectors.Select(item => item.ToJsonString()));
+            config["experimental"]!["cache_file"]!["cache_id"] = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(identity)));
+        }
+        ConfigurationComposer.ApplySections(config, options);
+        config["log"]!["output"] = logPath;
         return config.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
 
     public static string OutboundTag(string serverId) => $"proxy-{serverId}";
 
-    private static JsonObject BuildRemoteRuleSet(string tag, string url, string outboundTag, bool supportsHttpClient, string? initialRuleSetPath)
+    public static JsonObject BuildManagedInbound(AppSettingsData settings)
+    {
+        if (settings.SystemProxyPort is < 1 or > 65535) throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_TheLocalProxyPortMustBeBetween1"));
+        var inbound = new JsonObject { ["type"] = "mixed", ["tag"] = "system-http", ["listen"] = "127.0.0.1", ["listen_port"] = settings.SystemProxyPort };
+        if (settings.SystemProxyAuthEnabled)
+        {
+            if (string.IsNullOrWhiteSpace(settings.SystemProxyUsername) || string.IsNullOrWhiteSpace(settings.SystemProxyPassword))
+                throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_EnterBothAUsernameAndPasswordWhenSystem"));
+            inbound["users"] = new JsonArray(new JsonObject { ["username"] = settings.SystemProxyUsername, ["password"] = settings.SystemProxyPassword });
+        }
+        return inbound;
+    }
+
+    private static JsonObject BuildLocalRuleSet(string tag)
     {
         var ruleSet = new JsonObject
         {
-            ["type"] = "remote",
+            ["type"] = "local",
             ["tag"] = tag,
             ["format"] = "binary",
-            ["url"] = url
+            ["path"] = BundledRuleSets.Resolve(tag)
         };
-        if (supportsHttpClient)
-        {
-            ruleSet["http_client"] = new JsonObject { ["detour"] = outboundTag };
-            if (!string.IsNullOrWhiteSpace(initialRuleSetPath)) ruleSet["initial_path"] = initialRuleSetPath;
-        }
-        else ruleSet["download_detour"] = outboundTag;
         return ruleSet;
     }
 
@@ -346,7 +376,7 @@ public sealed class SingBoxConfigBuilder
     {
         if (string.IsNullOrWhiteSpace(server.Address) || !Guid.TryParse(server.UserId, out _))
         {
-            throw new InvalidOperationException($"服务器“{server.Name}”缺少有效地址或 UUID。");
+            throw new InvalidOperationException(Localization.Format("SingBoxConfigBuilder_Server0IsMissingAValidAddressOr", server.Name));
         }
 
         var outbound = new JsonObject
@@ -397,7 +427,7 @@ public sealed class SingBoxConfigBuilder
         var type = outbound["type"]?.GetValue<string>();
         if (string.IsNullOrWhiteSpace(type))
         {
-            throw new InvalidOperationException($"服务器“{server.Name}”的 sing-box JSON 缺少 type 字段。");
+            throw new InvalidOperationException(Localization.Format("SingBoxConfigBuilder_TheSingBoxJSONForServer0Is", server.Name));
         }
         outbound["tag"] = tag;
         return outbound;
@@ -449,7 +479,7 @@ public sealed class SingBoxConfigBuilder
         }
         catch (JsonException exception)
         {
-            throw new InvalidOperationException($"服务器“{server.Name}”的 sing-box JSON 无效：{exception.Message}");
+            throw new InvalidOperationException(Localization.Format("SingBoxConfigBuilder_InvalidSingBoxJSONForServer01", server.Name, exception.Message));
         }
     }
 

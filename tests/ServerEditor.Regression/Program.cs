@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using FluentSingBox.Client.Models;
 using FluentSingBox.Client.Services;
 
+Localization.Configure("zh-CN");
 var root = Path.GetFullPath(args.FirstOrDefault() ?? Environment.CurrentDirectory);
 var artifacts = Path.Combine(root, "artifacts", "server-editor");
 Directory.CreateDirectory(artifacts);
@@ -24,11 +25,12 @@ ServerEditorDraft Draft(string type)
     if (draft.Fields.Any(f => f.Path == "uuid")) draft.Set("uuid", uuid);
     if (draft.Fields.Any(f => f.Path == "password")) draft.Set("password", "fixture-password");
     if (type == "naive") draft.Set("username", "fixture-user");
+    if (type == "snell") draft.Set("psk", "fixture-snell-key");
     return draft;
 }
 var fixtures = new List<ServerProfile>();
 var coreVariants = new List<ServerProfile>();
-foreach (var protocol in ServerEditorSchema.Protocols)
+foreach (var protocol in ServerEditorSchema.Protocols.Where(protocol => protocol.Type is not ("selector" or "urltest")))
 {
     Case("create/" + protocol.Type, () =>
     {
@@ -109,7 +111,7 @@ Case("edit/hopping-ports-preserved-and-switchable", () =>
 });
 Case("edit/unknown-protocol-preserved", () =>
 {
-    var json = JsonNode.Parse("""{"type":"ssh","server":"127.0.0.1","server_port":22,"private_key":["fixture"],"user":"fixture"}""")!.AsObject();
+    var json = JsonNode.Parse("""{"type":"fixture-unknown","server":"127.0.0.1","server_port":22,"private_key":["fixture"],"user":"fixture"}""")!.AsObject();
     var draft = new ServerEditorDraft(json); Assert(!draft.IsKnown && JsonNode.DeepEquals(json, draft.Build()), "Unsupported form destroyed data");
 });
 Case("form/conditional-fields", () =>
@@ -119,6 +121,26 @@ Case("form/conditional-fields", () =>
     draft.Set("$transport", "grpc"); Assert(draft.Fields.Any(f => f.Path == "transport.service_name" && draft.Visible(f)), "Missing gRPC field");
     draft.Set("$security", "reality"); Assert(draft.Fields.Any(f => f.Path == "tls.reality.public_key" && draft.Visible(f)), "Missing REALITY key");
     Assert(!draft.Fields.Any(f => f.Path == "tls.insecure" && draft.Visible(f)), "Certificate checkbox visible for REALITY");
+});
+Case("edit/ssh-private-key-preserved", () =>
+{
+    var json = JsonNode.Parse("""{"type":"ssh","server":"127.0.0.1","private_key":"fixture-key","host_key":["fixture-host-key"],"user":"fixture"}""")!.AsObject();
+    var draft = new ServerEditorDraft(json); Assert(JsonNode.DeepEquals(json, draft.Build()), "SSH untouched edit lost key");
+});
+Case("edit/shadowtls-and-snell-version-dependent-fields", () =>
+{
+    var shadow = Draft("shadowtls"); shadow.Set("version", "2");
+    Assert(shadow.Build()["version"]!.GetValue<int>() == 2 && shadow.Build()["password"] is not null, "ShadowTLS version change removed password");
+    var snell = new ServerEditorDraft(Draft("snell").Build()); snell.Set("version", "6");
+    var json = snell.Build(); Assert(json["obfs_mode"] is null && json["mode"]!.ToString() == "default", "Snell v4 fields remained in v6");
+    var profile = new ServerProfile(); ServerEditorDraft.Apply(profile, "snell-v6", json); coreVariants.Add(profile);
+});
+Case("create/multiplex-and-dial-fields", () =>
+{
+    var draft = Draft("vmess"); draft.Set("multiplex.enabled", "true"); draft.Set("multiplex.protocol", "smux");
+    draft.Set("multiplex.max_connections", "2"); draft.Set("connect_timeout", "10s");
+    var json = draft.Build(); Assert(json["multiplex"]!["enabled"]!.GetValue<bool>(), "Multiplex fields ignored");
+    var profile = new ServerProfile(); ServerEditorDraft.Apply(profile, "vmess-multiplex", json); coreVariants.Add(profile);
 });
 Case("import/vmess-fields-prefilled", () =>
 {
@@ -154,6 +176,28 @@ Case("create/http-grpc-upgrade-and-port-hopping", () =>
     var hy2 = new ServerProfile(); ServerEditorDraft.Apply(hy2, "hy2-hopping", hopping.Build()); coreVariants.Add(hy2);
 });
 // Official bundled core checks the complete generated outbounds without starting any listeners or proxy.
+foreach (var type in new[] { "selector", "urltest" })
+{
+    Case("create/group-" + type, () =>
+    {
+        var draft = new ServerEditorDraft(new JsonObject { ["type"] = type }, isNew: true);
+        Reject(() => draft.Build());
+        draft.Set("outbounds", "direct");
+        if (type == "selector")
+        {
+            draft.Set("default", "missing"); Reject(() => draft.Build()); draft.Set("default", "direct");
+        }
+        else
+        {
+            draft.Set("url", "ftp://example.com"); Reject(() => draft.Build());
+            draft.Set("url", "https://example.com/204");
+        }
+        var json = draft.Build();
+        Assert(json["server"] is null && json["outbounds"]!.AsArray().Count == 1, "Group emitted server fields");
+        Assert(JsonNode.DeepEquals(json, new ServerEditorDraft(json).Build()), "Group edit lost fields");
+        var profile = new ServerProfile(); ServerEditorDraft.Apply(profile, type, json); coreVariants.Add(profile);
+    });
+}
 var coreDir = Path.Combine(artifacts, "core");
 Directory.CreateDirectory(coreDir);
 var archivePath = Path.Combine(root, "src", "FluentSingBox.Client", "ThirdParty", "SingBox", "sing-box-1.14.2-windows-amd64.zip");
@@ -168,6 +212,7 @@ foreach (var profile in fixtures.Concat(coreVariants))
     {
         var configPath = Path.Combine(artifacts, profile.Name + ".json");
         var json = new JsonObject { ["outbounds"] = new JsonArray(JsonNode.Parse(profile.OutboundJson)) };
+        if (profile.ProtocolSummary is "selector" or "urltest") json["outbounds"]!.AsArray().Add(new JsonObject { ["type"] = "direct", ["tag"] = "direct" });
         File.WriteAllText(configPath, json.ToJsonString());
         var info = new ProcessStartInfo(Path.Combine(coreDir, "sing-box.exe")) { WorkingDirectory = coreDir, RedirectStandardError = true, RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
         info.ArgumentList.Add("check"); info.ArgumentList.Add("-c"); info.ArgumentList.Add(configPath);

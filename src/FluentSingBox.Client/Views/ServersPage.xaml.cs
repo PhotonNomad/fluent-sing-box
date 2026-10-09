@@ -35,7 +35,7 @@ public sealed partial class ServersPage : Page
     {
         var input = new TextBox
         {
-            PlaceholderText = "vmess://、vless://、ss://、trojan://、hysteria2://… 或 sing-box outbound JSON",
+            PlaceholderText = Localization.Get("ServersPage_VmessVlessSsTrojanHysteria2OrSingBox"),
             AcceptsReturn = true,
             TextWrapping = TextWrapping.Wrap,
             MinHeight = 170,
@@ -44,18 +44,18 @@ public sealed partial class ServersPage : Page
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(input, "Servers_ImportInput");
         var preview = new ListView { SelectionMode = ListViewSelectionMode.Multiple, MaxHeight = 220, DisplayMemberPath = nameof(ServerImportEntry.Summary) };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(preview, "Servers_ImportPreview");
-        var message = new TextBlock { TextWrapping = TextWrapping.Wrap, Text = "粘贴后预览；只有选中的有效项会导入。" };
+        var message = new TextBlock { TextWrapping = TextWrapping.Wrap, Text = Localization.Get("ServersPage_PreviewPastedEntriesOnlySelectedValidEntriesWill") };
         var panel = new StackPanel { Spacing = 12 };
         panel.Children.Add(input);
         panel.Children.Add(message);
         panel.Children.Add(preview);
         var dialog = new ContentDialog
         {
-            Title = "粘贴服务器链接",
+            Title = Localization.Get("ServersPage_PasteServerLinks"),
             Content = CreateServerEditorScrollViewer(panel),
-            PrimaryButtonText = "导入选中项",
+            PrimaryButtonText = Localization.Get("ServersPage_ImportSelectedEntries"),
             IsPrimaryButtonEnabled = false,
-            CloseButtonText = "取消",
+            CloseButtonText = Localization.Get("ProxyPage_Cancel"),
             DefaultButton = ContentDialogButton.Primary,
             XamlRoot = XamlRoot
         };
@@ -67,11 +67,11 @@ public sealed partial class ServersPage : Page
             preview.SelectedItems.Clear();
             foreach (var entry in entries.Where(item => item.Server is not null)) preview.SelectedItems.Add(entry);
             var valid = entries.Count(item => item.Server is not null);
-            message.Text = $"有效 {valid} 项，无法识别 {entries.Count - valid} 项。错误项不会导入。";
+            message.Text = Localization.Format("ServersPage_0ValidEntries1UnrecognizedInvalidEntriesWill", valid, entries.Count - valid);
             dialog.IsPrimaryButtonEnabled = valid > 0;
         };
         preview.SelectionChanged += (_, _) => dialog.IsPrimaryButtonEnabled = preview.SelectedItems.OfType<ServerImportEntry>().Any(item => item.Server is not null);
-        if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+        if (await DialogService.ShowAsync(dialog) != ContentDialogResult.Primary) return;
 
         try
         {
@@ -86,11 +86,11 @@ public sealed partial class ServersPage : Page
             }
             await ApplyChangesAsync();
             RefreshView();
-            if (profiles.Length > 1) await ShowMessageAsync("导入完成", $"已添加 {profiles.Length} 个服务器。");
+            if (profiles.Length > 1) await ShowMessageAsync(Localization.Get("ServersPage_ImportComplete"), Localization.Format("ServersPage_Added0Servers", profiles.Length));
         }
         catch (Exception exception) when (exception is FormatException or JsonException)
         {
-            await ShowMessageAsync("无法导入", exception.Message);
+            await ShowMessageAsync(Localization.Get("ServersPage_CannotImport"), exception.Message);
         }
     }
 
@@ -114,7 +114,7 @@ public sealed partial class ServersPage : Page
     {
         if (sender is not FrameworkElement { DataContext: ServerProfile server }) return;
         var duplicate = new ServerProfile { ConfigSection = server.ConfigSection };
-        ServerEditorDraft.Apply(duplicate, server.Name + "（副本）", ServerEditorDraft.FromProfile(server));
+        ServerEditorDraft.Apply(duplicate, server.Name + Localization.Get("ServersPage_Copy"), ServerEditorDraft.FromProfile(server));
         var json = JsonNode.Parse(duplicate.OutboundJson)!.AsObject();
         json.Remove("tag");
         duplicate.OutboundJson = json.ToJsonString();
@@ -131,7 +131,7 @@ public sealed partial class ServersPage : Page
         {
             OperationMessage.IsOpen = true;
             OperationMessage.Severity = InfoBarSeverity.Informational;
-            OperationMessage.Message = $"正在测试“{server.Name}”…";
+            OperationMessage.Message = Localization.Format("ServersPage_Testing0", server.Name);
             var result = await NodeProbeService.ProbeAsync(App.State.Settings, server);
             OperationMessage.Severity = result.Success ? InfoBarSeverity.Success : InfoBarSeverity.Error;
             OperationMessage.Message = $"{server.Name}：{result.Message}";
@@ -157,16 +157,22 @@ public sealed partial class ServersPage : Page
 
     private async Task DeleteServerAsync(ServerProfile server)
     {
+        var references = ConfigurationComposer.FindReferences(App.State.Settings, server);
+        if (references.Count > 0)
+        {
+            await ShowMessageAsync(Localization.Get("ServersPage_ServerIsStillReferenced"), Localization.Get("ServersPage_EditTheFollowingServersOrProxyGroupsAnd") + string.Join("\n", references));
+            return;
+        }
         var dialog = new ContentDialog
         {
-            Title = $"删除“{server.Name}”？",
-            Content = "引用此节点的应用和路由会改用默认服务器。",
-            PrimaryButtonText = "删除",
-            CloseButtonText = "取消",
+            Title = Localization.Format("ServersPage_Delete0", server.Name),
+            Content = Localization.Get("ServersPage_ApplicationsAndRoutesReferencingThisServerWillSwitch"),
+            PrimaryButtonText = Localization.Get("ProxyPage_Delete"),
+            CloseButtonText = Localization.Get("ProxyPage_Cancel"),
             DefaultButton = ContentDialogButton.Close,
             XamlRoot = XamlRoot
         };
-        if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+        if (await DialogService.ShowAsync(dialog) != ContentDialogResult.Primary) return;
 
         App.State.RemoveServer(server);
         await ApplyChangesAsync();
@@ -182,10 +188,10 @@ public sealed partial class ServersPage : Page
             form.Width = Math.Min(600, Math.Max(240, XamlRoot.Size.Width - 100));
             var dialog = new ContentDialog
             {
-                Title = isNew ? "添加服务器" : "编辑服务器",
+                Title = isNew ? Localization.Get("ServersPage_AddServer") : Localization.Get("ServersPage_EditServer"),
                 Content = form,
-                PrimaryButtonText = "保存",
-                CloseButtonText = "取消",
+                PrimaryButtonText = Localization.Get("ProxyPage_Save"),
+                CloseButtonText = Localization.Get("ProxyPage_Cancel"),
                 DefaultButton = ContentDialogButton.Primary,
                 XamlRoot = XamlRoot
             };
@@ -194,14 +200,20 @@ public sealed partial class ServersPage : Page
             string name = string.Empty;
             JsonObject? outbound = null;
             dialog.PrimaryButtonClick += (_, args) => args.Cancel = !form.TryGetResult(out name, out outbound);
-            if (await dialog.ShowAsync() != ContentDialogResult.Primary || outbound is null) return null;
+            if (await DialogService.ShowAsync(dialog) != ContentDialogResult.Primary || outbound is null) return null;
+            var candidate = JsonSerializer.Deserialize<FluentSingBox.Client.Models.AppSettingsData>(JsonSerializer.Serialize(App.State.Settings))!;
+            var candidateServer = candidate.Servers.FirstOrDefault(server => server.Id == source.Id);
+            if (candidateServer is null) { candidateServer = new ServerProfile { Id = source.Id }; candidate.Servers.Add(candidateServer); }
+            ServerEditorDraft.Apply(candidateServer, name, outbound);
+            if (!candidate.Servers.Any(server => server.Id == candidate.DefaultServerId)) candidate.DefaultServerId = candidateServer.Id;
+            await App.CoreService.ValidateAsync(candidate);
             ServerEditorDraft.Apply(source, name, outbound);
             if (!isNew) await App.State.SaveAsync();
             return source;
         }
         catch (Exception exception) when (exception is JsonException or FormatException or InvalidOperationException)
         {
-            await ShowMessageAsync("无法编辑服务器", exception.Message);
+            await ShowMessageAsync(Localization.Get("ServersPage_CannotEditServer"), exception.Message);
             return null;
         }
     }
@@ -221,8 +233,8 @@ public sealed partial class ServersPage : Page
 
     private async Task ShowMessageAsync(string title, string message)
     {
-        var dialog = new ContentDialog { Title = title, Content = message, CloseButtonText = "关闭", XamlRoot = XamlRoot };
-        await dialog.ShowAsync();
+        var dialog = new ContentDialog { Title = title, Content = message, CloseButtonText = Localization.Get("App_Close"), XamlRoot = XamlRoot };
+        await DialogService.ShowAsync(dialog);
     }
 }
 

@@ -1,7 +1,7 @@
 [CmdletBinding(SupportsShouldProcess)]
 param(
     [Parameter(Mandatory)][string]$IsoPath,
-    [string]$Name = 'fluent sing-box-Test',
+    [string]$Name = 'fluent-sing-box-Test',
     [string]$StorageRoot = (Join-Path (Split-Path $PSScriptRoot -Parent) 'artifacts\vm'),
     [string]$SwitchName = 'Default Switch',
     [ValidateRange(4,16)][int]$MemoryGB = 8,

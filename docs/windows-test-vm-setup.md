@@ -1,37 +1,53 @@
-# 创建 Windows 测试虚拟机
+# Windows 测试虚拟机
 
-2026-10-01 已只读确认本机为 Windows 11 专业版，32 GB 内存，C 盘约 243 GB 可用空间；HypervisorPresent=true，Hyper-V 虚拟机管理服务正在运行。当前 Codex 执行进程没有管理 Hyper-V 的权限，这与是否在 Codex 沙箱外运行是两回事。无需据此重复安装 Hyper-V。
+使用 Hyper-V Windows 客体隔离系统代理、TUN、UAC 和网络恢复测试。需要支持 Hyper-V 的 Windows 主机、管理员 PowerShell、Windows x64 安装 ISO 和足够的磁盘空间。
 
-## 首次创建
+## 创建客体
 
-1. 从 [微软 Windows 11 下载页](https://www.microsoft.com/software-download/windows11) 下载 **x64 ISO**，记录完整路径。选择 ISO 下载，不要选择升级本机的安装助手。
-2. 开始菜单搜索 PowerShell，选择“以管理员身份运行”。
-3. 运行以下命令，把 ISO 路径换成实际文件。脚本只创建新的 `fluent sing-box-Test`，使用已有 Default Switch，不修改物理网卡、现有代理和已有虚拟机；若同名或同目录已存在则拒绝覆盖。
+从[微软下载页](https://www.microsoft.com/software-download/windows11)获取 ISO。在仓库根目录的管理员 PowerShell 中执行，替换 ISO 路径：
 
 ```powershell
-Set-Location 'C:\Users\issues\CodePlayGround\fluent sing-box'
-Get-VMSwitch | Select-Object Name,SwitchType
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\tools\New-TestVm.ps1' -IsoPath 'C:\Users\issues\Downloads\Windows11.iso' -Start
-vmconnect.exe localhost 'fluent sing-box-Test'
+Get-VMSwitch | Select-Object Name, SwitchType
+./tools/New-TestVm.ps1 -IsoPath 'C:/path/to/Windows11.iso' -Start
+vmconnect.exe localhost 'fluent-sing-box-Test'
 ```
 
-如果实际交换机名称不是 `Default Switch`，创建命令追加 `-SwitchName '实际名称'`。`ExecutionPolicy Bypass` 只用于这一次 PowerShell 进程，不修改全局执行策略。
+脚本默认创建第 2 代虚拟机，使用 Default Switch、动态内存、动态虚拟磁盘、安全启动和虚拟 TPM。不同环境可通过脚本参数调整。已有同名虚拟机或目标目录会拒绝覆盖。
 
-默认配置为第 2 代、2 个处理器、8 GB 启动内存（动态内存 4–8 GB）、64 GB 动态扩展虚拟硬盘、安全启动和虚拟 TPM。磁盘按实际使用增长；仍应给 Windows 更新和检查点预留空间。脚本未在本机实际创建过虚拟机，只完成语法检查。
-
-4. 在虚拟机连接窗口中按提示从 DVD 启动，完成 Windows 安装和首次设置。使用独立测试账户；不要把主机代理设置同步进去。
-5. 安装 Windows 更新、适当的 .NET/Windows App SDK 运行依赖和 winapp。复制客户端发行包并完成一次启动。首次配置完成后关闭虚拟机并在管理员 PowerShell 建立基线：
+完成 Windows 安装后，使用独立账户安装 .NET 10 和测试所需工具。不要同步主机代理配置。在干净状态下创建检查点：
 
 ```powershell
-Checkpoint-VM -Name 'fluent sing-box-Test' -SnapshotName 'clean-ready'
+Checkpoint-VM -Name 'fluent-sing-box-Test' -SnapshotName 'clean-ready'
 ```
 
-检查点用于之后测试结束的恢复；不要对其他虚拟机套用恢复命令。无需把账户密码写进项目或聊天记录；后续执行器可交互读取凭据，或使用用户已配置的安全凭据机制。
+## 传入项目
 
-## 测试边界
+先在主机生成固定 Release 目录：
 
-Default Switch 为客体提供网络，但主机已有 TUN/代理仍可能影响 NAT 出口。客体中的应用分组、DNS 和默认直连测试必须先建立真实路径基线，不能把“虚拟机能访问 Google”直接视为客户端分流通过。UIA 需要客体内可用的交互桌面；配置检查和网络工作进程可以后台运行。
+```powershell
+./tools/Build.ps1 -Configuration Release
+```
 
-完整 TUN 用例必须在客体内记录路由表、接口、核心日志、进程路径和测试节点端的观测结果；结束后恢复客体设置/检查点。目前已完成的本机回归不等价于这部分验证。
+然后在管理员 PowerShell 中执行：
 
-官方参考：[创建 Hyper-V 虚拟机](https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/get-started/create-a-virtual-machine-in-hyper-v)、[Windows 11 虚拟机要求](https://learn.microsoft.com/windows/whats-new/windows-11-requirements)、[启用虚拟 TPM](https://learn.microsoft.com/powershell/module/hyper-v/enable-vmtpm)。
+```powershell
+./tools/Prepare-TestVm.ps1 -VMName 'fluent-sing-box-Test' -IncludeRelease
+```
+
+脚本通过 PowerShell Direct 传输源码及 `artifacts/publish/Release`，直接复制目录，不生成项目 ZIP。凭据只用于当前会话，不保存。客体收到独立的 `C:/fluent-sing-box-tests/<运行标识>/project`；主机预检输出位于 `artifacts/vm-staging`。
+
+该步骤只传输文件并只读检查环境，不运行 UI、代理或 TUN 测试。
+
+## 执行测试
+
+在客体已登录的交互桌面中打开 PowerShell，进入传入的项目目录：
+
+```powershell
+./tools/Run-GuestDevelopment.ps1
+```
+
+可选 `-InstallDependencies` 使用 winget 在客体安装缺失的 .NET SDK 和 winapp；脚本拒绝在非 Hyper-V 客体执行。当前 Release 目录需要 .NET 10 运行时。
+
+PowerShell Direct 会话不是可交互桌面，不能以远程会话中的 UI 结果代替真实桌面测试。winapp 的命令解析也可能因账户和 PATH 不同而变化。
+
+客体回归仍不自动完成真实外部节点与 TUN 验收。网络场景按[网络验证指南](manual-network-validation.md)执行；恢复检查点会丢弃其后的客体修改，先保存需要的证据。

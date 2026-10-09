@@ -37,6 +37,17 @@ public static class LogReader
         }
         if (!string.IsNullOrEmpty(settings.SystemProxyPassword)) secrets.Add(settings.SystemProxyPassword);
         if (!string.IsNullOrEmpty(settings.SystemProxyUsername)) secrets.Add(settings.SystemProxyUsername);
+        foreach (var section in settings.Configuration?.Sections.Values.AsEnumerable() ?? Enumerable.Empty<string>())
+            try { Collect(JsonNode.Parse(section)); } catch (System.Text.Json.JsonException) { }
+        try { Collect(JsonNode.Parse(settings.Configuration?.NativeJson ?? "{}")); } catch (System.Text.Json.JsonException) { }
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(settings.Configuration?.ExternalFilePath))
+                Collect(JsonNode.Parse(File.ReadAllText(settings.Configuration.ExternalFilePath)));
+            if (!string.IsNullOrWhiteSpace(settings.Configuration?.NativeFilePath))
+                Collect(JsonNode.Parse(File.ReadAllText(settings.Configuration.NativeFilePath)));
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { }
         foreach (var secret in secrets.OrderByDescending(value => value.Length)) text = text.Replace(secret, "[REDACTED_SECRET]", StringComparison.Ordinal);
         // URI user-info and common query credentials may come from core errors rather than saved nodes.
         text = Regex.Replace(text, @"(\w[\w+.-]*://)[^\s/@]+@", "$1[REDACTED_SECRET]@");
@@ -47,7 +58,7 @@ public static class LogReader
             if (node is JsonObject obj)
                 foreach (var pair in obj)
                 {
-                    if (pair.Key is "password" or "uuid" or "username" or "private_key" or "auth_str" or "auth" or "token" && pair.Value is JsonValue value && value.TryGetValue<string>(out var secret) && secret.Length > 0) secrets.Add(secret);
+                    if (pair.Key is "password" or "uuid" or "username" or "private_key" or "private_key_passphrase" or "pre_shared_key" or "auth_key" or "psk" or "userkey" or "auth_str" or "auth" or "token" or "secret" or "api_key" && pair.Value is JsonValue value && value.TryGetValue<string>(out var secret) && secret.Length > 0) secrets.Add(secret);
                     else Collect(pair.Value);
                 }
             else if (node is JsonArray array) foreach (var child in array) Collect(child);

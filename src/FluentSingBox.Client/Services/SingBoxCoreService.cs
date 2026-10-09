@@ -14,31 +14,56 @@ public sealed class SingBoxCoreService : IDisposable
 {
     private readonly SingBoxConfigBuilder _configBuilder = new();
     private Process? _coreProcess;
+    private ProcessJob? _coreJob;
     private Process? _hostProcess;
-    private NamedPipeClientStream? _controlPipe;
+    private NamedPipeServerStream? _controlPipe;
     private StreamReader? _pipeReader;
     private StreamWriter? _pipeWriter;
     private AppSettingsData? _runningSettings;
+    private string[] _runningTunNames = [];
     private CoreStatus _status;
     private readonly SemaphoreSlim _operationGate = new(1, 1);
 
     public bool IsRunning => IsProcessRunning(_coreProcess) || IsProcessRunning(_hostProcess);
     public CoreStatus Status => _status == CoreStatus.Running && !IsRunning ? CoreStatus.Faulted : _status;
-    public bool IsTransitioning => _status is CoreStatus.Starting or CoreStatus.Stopping;
+    public bool IsTransitioning => _operationGate.CurrentCount == 0 || _status is CoreStatus.Starting or CoreStatus.Stopping;
+
+    public async Task RunStoppedMaintenanceAsync(Func<Task> maintenance)
+    {
+        await _operationGate.WaitAsync();
+        try
+        {
+            if (IsRunning) throw new InvalidOperationException(Localization.Get("TunCleanup_StopCore"));
+            await maintenance();
+        }
+        finally { _operationGate.Release(); }
+    }
 
     public async Task RestartAsync(AppSettingsData settings)
     {
-        await ValidateAsync(settings);
-        var previous = _runningSettings;
-        Stop();
-        try { await StartAsync(settings); }
-        catch (Exception applyError)
+        await _operationGate.WaitAsync();
+        try
         {
-            if (previous is null) throw;
-            try { await StartAsync(previous); }
-            catch (Exception rollbackError) { throw new InvalidOperationException($"新配置启动失败，旧配置也未能恢复：{applyError.Message}\n{rollbackError.Message}", applyError); }
-            throw new InvalidOperationException("新配置启动失败，核心已恢复到上次运行配置：" + applyError.Message, applyError);
+            await ValidateAsync(settings);
+            var previous = _runningSettings;
+            Stop();
+            try { await StartGuardedAsync(settings); }
+            catch (Exception applyError)
+            {
+                if (previous is null) throw;
+                try { await StartGuardedAsync(previous); }
+                catch (Exception rollbackError) { throw new InvalidOperationException(Localization.Format("SingBoxCoreService_TheNewConfigurationFailedToStartAndThe", applyError.Message, rollbackError.Message), applyError); }
+                throw new InvalidOperationException(Localization.Get("SingBoxCoreService_TheNewConfigurationFailedToStartTheCore") + applyError.Message, applyError);
+            }
         }
+        finally { _operationGate.Release(); }
+    }
+
+    public async Task ShutdownAsync()
+    {
+        await _operationGate.WaitAsync();
+        try { await Task.Run(Stop); }
+        finally { _operationGate.Release(); }
     }
 
     public async Task ValidateAsync(AppSettingsData settings)
@@ -49,20 +74,50 @@ public sealed class SingBoxCoreService : IDisposable
         var candidate = Path.Combine(directory, "config.validation.json");
         var supportsHttpClient = await DetectHttpClientSupportAsync(executable);
         await File.WriteAllTextAsync(candidate, _configBuilder.Build(settings, Path.Combine(directory, "sing-box.log"), supportsHttpClient));
-        await CoreCommand.CheckAsync(executable, candidate);
+        try { await CoreCommand.CheckAsync(executable, candidate); }
+        catch (InvalidOperationException exception) { throw new InvalidOperationException(LogReader.Redact(exception.Message, settings)); }
     }
 
     public async Task StartAsync(AppSettingsData settings)
     {
+        settings = JsonSerializer.Deserialize<AppSettingsData>(JsonSerializer.Serialize(settings))!;
+        await _operationGate.WaitAsync();
+        try { await StartGuardedAsync(settings); }
+        finally { _operationGate.Release(); }
+    }
+
+    public async Task CheckStartupAsync(AppSettingsData settings)
+    {
+        settings = JsonSerializer.Deserialize<AppSettingsData>(JsonSerializer.Serialize(settings))!;
         await _operationGate.WaitAsync();
         try
         {
-            if (IsRunning) return;
-            _status = CoreStatus.Starting;
-            try { await StartInternalAsync(settings); _status = CoreStatus.Running; }
-            catch { _status = CoreStatus.Faulted; throw; }
+            var executable = await SingBoxCoreBundle.ResolveExecutablePathAsync(settings.SingBoxExecutablePath);
+            var directory = Path.Combine(AppPaths.DataDirectory, "sing-box");
+            Directory.CreateDirectory(directory);
+            var candidate = Path.Combine(directory, "config.preflight.json");
+            var supportsHttpClient = await DetectHttpClientSupportAsync(executable);
+            var configText = _configBuilder.Build(settings, Path.Combine(directory, "sing-box.log"), supportsHttpClient);
+            await File.WriteAllTextAsync(candidate, configText);
+            await CoreCommand.CheckAsync(executable, candidate);
+            await Task.Run(CoreProcessLease.Recover);
+            StartupPreflight.CheckResources(configText, settings.SystemProxyPort);
+            StartupPreflight.WriteReport("passed");
+        }
+        catch (Exception exception)
+        {
+            StartupPreflight.WriteReport("failed", LogReader.Redact(exception.Message, settings));
+            throw;
         }
         finally { _operationGate.Release(); }
+    }
+
+    private async Task StartGuardedAsync(AppSettingsData settings)
+    {
+        if (IsRunning) return;
+        _status = CoreStatus.Starting;
+        try { await StartInternalAsync(settings); _status = CoreStatus.Running; }
+        catch (Exception exception) { _status = CoreStatus.Faulted; StartupPreflight.WriteReport("failed", LogReader.Redact(exception.Message, settings)); throw; }
     }
 
     private async Task StartInternalAsync(AppSettingsData settings)
@@ -80,25 +135,30 @@ public sealed class SingBoxCoreService : IDisposable
         var candidatePath = Path.Combine(directory, "config.candidate.json");
         await File.WriteAllTextAsync(candidatePath, configText);
         await CoreCommand.CheckAsync(executablePath, candidatePath);
+        await Task.Run(CoreProcessLease.Recover);
+        StartupPreflight.CheckResources(configText, settings.SystemProxyPort);
+        StartupPreflight.WriteReport("passed");
         if (File.Exists(configPath)) File.Copy(configPath, configPath + ".previous", overwrite: true);
         File.Move(candidatePath, configPath, overwrite: true);
+        _runningTunNames = TunShutdownCheck.Names(configText);
         if (File.Exists(logPath)) File.Copy(logPath, logPath + ".previous", overwrite: true);
         if (File.Exists(logPath)) File.Delete(logPath);
 
-        var requiresElevation = settings.Applications.Any(profile => profile.IsEnabled);
+        var requiresElevation = ConfigurationComposer.RequiresElevation(configText);
         if (!requiresElevation)
         {
-            await StartCoreDirectlyAsync(executablePath, directory, logPath, settings.SystemProxyPort);
+            await StartCoreDirectlyAsync(executablePath, directory, logPath, settings.SystemProxyPort, ConfigurationComposer.NeedsListenerReadiness(configText));
             _runningSettings = JsonSerializer.Deserialize<AppSettingsData>(JsonSerializer.Serialize(settings));
             return;
         }
 
-        var pipeName = $"fluent sing-boxCore-{Guid.NewGuid():N}";
-        var hostPath = Environment.ProcessPath ?? throw new InvalidOperationException("无法确定 fluent sing-box 程序路径。");
+        var pipeName = $"fluent-sing-box-core-{Guid.NewGuid():N}";
+        _controlPipe = CoreControlPipe.Create(pipeName);
+        var hostPath = Environment.ProcessPath ?? throw new InvalidOperationException(Localization.Get("SingBoxCoreService_CannotDetermineTheFluentSingBoxExecutablePath"));
         var startInfo = new ProcessStartInfo
         {
             FileName = hostPath,
-            Arguments = $"--fluent sing-box-core-host \"{executablePath}\" \"{configPath}\" \"{pipeName}\" {settings.SystemProxyPort}",
+            Arguments = $"--fluent-sing-box-core-host \"{executablePath}\" \"{configPath}\" \"{pipeName}\" {settings.SystemProxyPort}",
             UseShellExecute = requiresElevation,
             CreateNoWindow = true,
             WindowStyle = ProcessWindowStyle.Hidden
@@ -110,20 +170,21 @@ public sealed class SingBoxCoreService : IDisposable
             // ShellExecute with the "runas" verb can wait for the elevation UI. Keep that
             // synchronous Windows call off the XAML thread so the window stays responsive.
             _hostProcess = await Task.Run(() => Process.Start(startInfo))
-                ?? throw new InvalidOperationException("无法启动 sing-box 核心宿主进程。");
+                ?? throw new InvalidOperationException(Localization.Get("SingBoxCoreService_CannotStartTheSingBoxCoreHostProcess"));
         }
         catch (Win32Exception exception) when (exception.NativeErrorCode == 1223)
         {
-            throw new InvalidOperationException("应用代理需要管理员权限来创建 TUN 路由；你取消了 Windows 权限提示。", exception);
+            CleanupHandles();
+            throw new InvalidOperationException(Localization.Get("SingBoxCoreService_ApplicationProxyRequiresAdministratorPermissionToCreateTUN"), exception);
         }
+        catch { CleanupHandles(); throw; }
 
-        _controlPipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
         try
         {
-            await _controlPipe.ConnectAsync(10000);
+            await CoreControlPipe.AcceptAsync(_controlPipe, _hostProcess.Id, TimeSpan.FromSeconds(15));
             _pipeReader = new StreamReader(_controlPipe, Encoding.UTF8, leaveOpen: true);
             _pipeWriter = new StreamWriter(_controlPipe, new UTF8Encoding(false), leaveOpen: true) { AutoFlush = true };
-            var readiness = await _pipeReader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(5));
+            var readiness = await _pipeReader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(15));
             if (readiness == "READY")
             {
                 _runningSettings = JsonSerializer.Deserialize<AppSettingsData>(JsonSerializer.Serialize(settings));
@@ -132,7 +193,7 @@ public sealed class SingBoxCoreService : IDisposable
 
             var details = readiness?.StartsWith("ERROR ", StringComparison.Ordinal) == true
                 ? Encoding.UTF8.GetString(Convert.FromBase64String(readiness[6..]))
-                : "sing-box 核心没有报告就绪。";
+                : Localization.Get("SingBoxCoreService_TheSingBoxCoreDidNotReportReadiness");
             await StopAsync();
             throw new InvalidOperationException(details);
         }
@@ -141,32 +202,36 @@ public sealed class SingBoxCoreService : IDisposable
             var details = File.Exists(logPath) ? await File.ReadAllTextAsync(logPath) : string.Empty;
             await StopAsync();
             if (details.Length > 1600) details = details[^1600..];
-            throw new InvalidOperationException($"等待 sing-box 启动超时。\n{details}", exception);
+            throw new InvalidOperationException(Localization.Format("SingBoxCoreService_TimedOutWaitingForSingBoxToStart", details), exception);
         }
         catch (IOException exception)
         {
             var details = File.Exists(logPath) ? await File.ReadAllTextAsync(logPath) : string.Empty;
             await StopAsync();
             if (details.Length > 1600) details = details[^1600..];
-            throw new InvalidOperationException($"无法连接 sing-box 核心宿主。\n{details}", exception);
+            throw new InvalidOperationException(Localization.Format("SingBoxCoreService_CannotConnectToTheSingBoxCoreHost", details), exception);
         }
         catch (Exception exception)
         {
             await StopAsync();
-            throw new InvalidOperationException($"sing-box 后台宿主启动失败：{exception.Message}", exception);
+            throw new InvalidOperationException(Localization.Format("SingBoxCoreService_TheSingBoxBackgroundHostFailedToStart", exception.Message), exception);
         }
     }
 
     public void Stop()
     {
         _status = CoreStatus.Stopping;
-        StopElevatedHost();
-        StopCoreProcess();
-        CleanupHandles();
-        _status = CoreStatus.Stopped;
+        try
+        {
+            StopElevatedHost();
+            StopCoreProcess();
+            TunShutdownCheck.Verify(_runningTunNames);
+            CleanupHandles(); _status = CoreStatus.Stopped;
+        }
+        catch { _status = CoreStatus.Faulted; throw; }
     }
 
-    private async Task StartCoreDirectlyAsync(string executablePath, string workingDirectory, string logPath, int proxyPort)
+    private async Task StartCoreDirectlyAsync(string executablePath, string workingDirectory, string logPath, int proxyPort, bool quietLogs)
     {
         var startInfo = new ProcessStartInfo
         {
@@ -181,10 +246,13 @@ public sealed class SingBoxCoreService : IDisposable
         startInfo.ArgumentList.Add(Path.Combine(workingDirectory, "config.json"));
 
         _coreProcess = Process.Start(startInfo)
-            ?? throw new InvalidOperationException("无法创建 sing-box 进程。");
+            ?? throw new InvalidOperationException(Localization.Get("SingBoxCoreService_CannotCreateTheSingBoxProcess"));
         try
         {
-            await SingBoxCoreHost.WaitForCoreStartedAsync(_coreProcess, logPath, TimeSpan.FromSeconds(10));
+            _coreJob = new ProcessJob();
+            _coreJob.Attach(_coreProcess);
+            CoreProcessLease.Register(_coreProcess, executablePath, Path.Combine(workingDirectory, "config.json"));
+            await SingBoxCoreHost.WaitForCoreStartedAsync(_coreProcess, logPath, TimeSpan.FromSeconds(10), quietLogs ? proxyPort : null);
         }
         catch (Exception exception)
         {
@@ -193,8 +261,8 @@ public sealed class SingBoxCoreService : IDisposable
             if (details.Length > 2400) details = details[^2400..];
             StopCoreProcess();
             CleanupHandles();
-            var exitText = exitCode is null ? "尚未退出" : $"退出代码 {exitCode}";
-            throw new InvalidOperationException($"sing-box 未能启动并监听本地端口 {proxyPort}（{exitText}）：{exception.Message}\n{details}", exception);
+            var exitText = exitCode is null ? Localization.Get("SingBoxCoreService_NotExitedYet") : Localization.Format("SingBoxCoreService_ExitCode0", exitCode);
+            throw new InvalidOperationException(Localization.Format("SingBoxCoreService_SingBoxCouldNotStartAndListenOn", proxyPort, exitText, exception.Message, details), exception);
         }
     }
 
@@ -215,7 +283,7 @@ public sealed class SingBoxCoreService : IDisposable
 
         try
         {
-            if (!host!.WaitForExit(5000))
+            if (!host!.WaitForExit(12000))
             {
                 _controlPipe?.Dispose();
                 host.WaitForExit(1500);
@@ -225,6 +293,7 @@ public sealed class SingBoxCoreService : IDisposable
         {
             // Closing the control pipe also tells the elevated host to stop its core.
         }
+        if (IsProcessRunning(host)) throw new InvalidOperationException(Localization.Get("SingBoxCoreService_TheElevatedCoreHostHasNotExitedCleanup"));
     }
 
     private async Task StopAsync()
@@ -247,13 +316,13 @@ public sealed class SingBoxCoreService : IDisposable
 
             try
             {
-                await host!.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5));
+                await host!.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(12));
             }
             catch (TimeoutException)
             {
                 _controlPipe?.Dispose();
                 try { await host!.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(2)); }
-                catch (Exception exception) when (IsPipeShutdownException(exception)) { }
+                catch (Exception exception) when (exception is TimeoutException || IsPipeShutdownException(exception)) { }
             }
             catch (Exception exception) when (IsPipeShutdownException(exception))
             {
@@ -261,7 +330,9 @@ public sealed class SingBoxCoreService : IDisposable
             }
         }
 
+        if (IsProcessRunning(host)) throw new InvalidOperationException(Localization.Get("SingBoxCoreService_TheElevatedHostIsStillRunningAfterStartup"));
         StopCoreProcess();
+        TunShutdownCheck.Verify(_runningTunNames);
         CleanupHandles();
     }
 
@@ -273,16 +344,19 @@ public sealed class SingBoxCoreService : IDisposable
         try
         {
             process!.Kill(entireProcessTree: true);
-            process.WaitForExit(5000);
+            if (!process.WaitForExit(5000)) throw new TimeoutException(Localization.Get("SingBoxCoreService_TheCoreHasNotExitedItsProcessRecord"));
         }
         catch (Exception exception) when (IsPipeShutdownException(exception))
         {
-            // The core may exit between the state check and Kill.
+            if (IsProcessRunning(process)) throw new InvalidOperationException(Localization.Get("SingBoxCoreService_TheCoreCouldNotBeStoppedAndIs"), exception);
         }
     }
 
     private void CleanupHandles()
     {
+        CoreProcessLease.Clear(_coreProcess);
+        DisposeQuietly(_coreJob);
+        _coreJob = null;
         DisposeQuietly(_pipeReader);
         DisposeQuietly(_pipeWriter);
         DisposeQuietly(_controlPipe);
@@ -293,6 +367,7 @@ public sealed class SingBoxCoreService : IDisposable
         _controlPipe = null;
         _hostProcess = null;
         _coreProcess = null;
+        _runningTunNames = [];
     }
 
     private static bool IsProcessRunning(Process? process)
@@ -312,7 +387,7 @@ public sealed class SingBoxCoreService : IDisposable
 
     public void Dispose() => Stop();
 
-    private static async Task<bool> DetectHttpClientSupportAsync(string executablePath)
+    internal static async Task<bool> DetectHttpClientSupportAsync(string executablePath)
     {
         var startInfo = new ProcessStartInfo
         {
@@ -323,7 +398,7 @@ public sealed class SingBoxCoreService : IDisposable
             RedirectStandardOutput = true,
             RedirectStandardError = true
         };
-        using var process = Process.Start(startInfo) ?? throw new InvalidOperationException("无法读取 sing-box 版本。");
+        using var process = Process.Start(startInfo) ?? throw new InvalidOperationException(Localization.Get("SingBoxCoreService_CannotReadTheSingBoxVersion"));
         var outputTask = process.StandardOutput.ReadToEndAsync();
         var errorTask = process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(8));
@@ -331,7 +406,7 @@ public sealed class SingBoxCoreService : IDisposable
         var match = Regex.Match(versionText, @"\b(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)\b");
         if (!match.Success || process.ExitCode != 0)
         {
-            throw new InvalidOperationException($"无法识别 sing-box 版本输出：{versionText.Trim()}");
+            throw new InvalidOperationException(Localization.Format("SingBoxCoreService_UnrecognizedSingBoxVersionOutput0", versionText.Trim()));
         }
 
         var major = int.Parse(match.Groups["major"].Value);
@@ -345,7 +420,7 @@ public static class SingBoxCoreHost
     public static bool TryGetArguments(out string executablePath, out string configPath, out string pipeName, out int proxyPort)
     {
         var arguments = Environment.GetCommandLineArgs();
-        if (arguments.Length >= 6 && arguments[1] == "--fluent sing-box-core-host" && int.TryParse(arguments[5], out proxyPort))
+        if (arguments.Length >= 6 && arguments[1] == "--fluent-sing-box-core-host" && int.TryParse(arguments[5], out proxyPort))
         {
             executablePath = arguments[2];
             configPath = arguments[3];
@@ -362,16 +437,19 @@ public static class SingBoxCoreHost
 
     public static async Task RunAsync(string executablePath, string configPath, string pipeName, int proxyPort)
     {
-        await using var pipe = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+        await using var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
         var diagnosticPath = Path.Combine(Path.GetDirectoryName(configPath) ?? Environment.CurrentDirectory, "core-host.log");
         StreamReader? reader = null;
         StreamWriter? writer = null;
         Process? core = null;
+        using var coreJob = new ProcessJob();
+        CoreConsole? console = null;
         try
         {
-            await pipe.WaitForConnectionAsync().WaitAsync(TimeSpan.FromSeconds(15));
+            await pipe.ConnectAsync(15000);
             reader = new StreamReader(pipe, Encoding.UTF8, leaveOpen: true);
             writer = new StreamWriter(pipe, new UTF8Encoding(false), leaveOpen: true) { AutoFlush = true };
+            console = new CoreConsole();
 
             var startInfo = new ProcessStartInfo
             {
@@ -379,22 +457,25 @@ public static class SingBoxCoreHost
                 Arguments = $"run -c \"{configPath}\"",
                 WorkingDirectory = Path.GetDirectoryName(configPath) ?? Environment.CurrentDirectory,
                 UseShellExecute = false,
-                CreateNoWindow = true
+                CreateNoWindow = false
             };
-            core = Process.Start(startInfo) ?? throw new InvalidOperationException("无法创建 sing-box 进程。");
+            core = Process.Start(startInfo) ?? throw new InvalidOperationException(Localization.Get("SingBoxCoreService_CannotCreateTheSingBoxProcess"));
+            coreJob.Attach(core);
+            CoreProcessLease.Register(core, executablePath, configPath);
             try
             {
                 var logPath = Path.Combine(Path.GetDirectoryName(configPath) ?? string.Empty, "sing-box.log");
-                await WaitForCoreStartedAsync(core, logPath, TimeSpan.FromSeconds(10));
+            var quietLogs = ConfigurationComposer.NeedsListenerReadiness(await File.ReadAllTextAsync(configPath));
+            await WaitForCoreStartedAsync(core, logPath, TimeSpan.FromSeconds(10), quietLogs ? proxyPort : null);
             }
             catch (Exception exception)
             {
                 var logPath = Path.Combine(Path.GetDirectoryName(configPath) ?? string.Empty, "sing-box.log");
                 var details = File.Exists(logPath) ? await File.ReadAllTextAsync(logPath) : string.Empty;
                 if (details.Length > 2400) details = details[^2400..];
-                var exitText = core.HasExited ? $"退出代码 {core.ExitCode}" : "核心仍在运行但未开始监听";
-                await writer.WriteLineAsync("ERROR " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"sing-box 未能启动并监听本地端口 {proxyPort}（{exitText}）：{exception.Message}\n{details}")));
-                TryKillCore(core);
+                var exitText = core.HasExited ? Localization.Format("SingBoxCoreService_ExitCode0", core.ExitCode) : Localization.Get("SingBoxCoreService_TheCoreIsStillRunningButHasNot");
+                await writer.WriteLineAsync("ERROR " + Convert.ToBase64String(Encoding.UTF8.GetBytes(Localization.Format("SingBoxCoreService_SingBoxCouldNotStartAndListenOn", proxyPort, exitText, exception.Message, details))));
+                StopHostedCore(core, console, diagnosticPath);
                 if (IsProcessRunning(core)) await core!.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(3));
                 return;
             }
@@ -405,14 +486,14 @@ public static class SingBoxCoreHost
             var finished = await Task.WhenAny(command, coreExit);
             if (finished == command && !core.HasExited)
             {
-                core.Kill(entireProcessTree: true);
+                StopHostedCore(core, console, diagnosticPath);
             }
             if (!core.HasExited) await core.WaitForExitAsync();
         }
         catch (IOException)
         {
             // A broken pipe means the controlling app disconnected; treat it as a normal shutdown.
-            TryKillCore(core);
+            StopHostedCore(core, console, diagnosticPath);
         }
         catch (Exception exception)
         {
@@ -428,10 +509,17 @@ public static class SingBoxCoreHost
                 catch (Exception writeException) when (writeException is IOException or ObjectDisposedException) { }
             }
 
-            TryKillCore(core);
+            StopHostedCore(core, console, diagnosticPath);
         }
         finally
         {
+            StopHostedCore(core, console, diagnosticPath);
+            if (core is not null)
+            {
+                try { if (!core.HasExited) core.WaitForExit(5000); }
+                catch (Exception exception) when (IsPipeShutdownException(exception)) { }
+                CoreProcessLease.Clear(core, configPath);
+            }
             DisposeQuietly(reader);
             if (writer is not null)
             {
@@ -439,7 +527,19 @@ public static class SingBoxCoreHost
                 catch (Exception exception) when (exception is IOException or ObjectDisposedException) { }
             }
             DisposeQuietly(core);
+            console?.Dispose();
         }
+    }
+
+    private static void StopHostedCore(Process? core, CoreConsole? console, string diagnosticPath)
+    {
+        if (!IsProcessRunning(core)) return;
+        bool graceful = false;
+        try { graceful = console?.Stop(core!) == true; }
+        catch (Exception exception) when (IsPipeShutdownException(exception)) { }
+        try { File.AppendAllText(diagnosticPath, $"[{DateTimeOffset.Now:O}] core-stop: {(graceful ? "graceful" : "forced-fallback")}\n"); }
+        catch (IOException) { }
+        if (!graceful) TryKillCore(core);
     }
 
     private static void TryKillCore(Process? core)
@@ -449,14 +549,14 @@ public static class SingBoxCoreHost
         catch (Exception exception) when (IsPipeShutdownException(exception)) { }
     }
 
-    internal static async Task WaitForCoreStartedAsync(Process core, string logPath, TimeSpan timeout)
+    internal static async Task WaitForCoreStartedAsync(Process core, string logPath, TimeSpan timeout, int? proxyPort = null)
     {
         var deadline = DateTime.UtcNow + timeout;
         while (DateTime.UtcNow < deadline)
         {
             if (core.HasExited)
             {
-                throw new InvalidOperationException($"sing-box 进程已退出，代码 {core.ExitCode}。");
+                throw new InvalidOperationException(Localization.Format("SingBoxCoreService_TheSingBoxProcessExitedWithCode0", core.ExitCode));
             }
 
             if (File.Exists(logPath))
@@ -469,10 +569,30 @@ public static class SingBoxCoreHost
                 }
             }
 
+            // At warn/error levels the core emits no startup INFO line. A real
+            // SOCKS handshake confirms that the managed mixed inbound is serving.
+            if (proxyPort is { } port)
+            {
+                try
+                {
+                    using var client = new System.Net.Sockets.TcpClient();
+                    await client.ConnectAsync(System.Net.IPAddress.Loopback, port).WaitAsync(TimeSpan.FromMilliseconds(200));
+                    var stream = client.GetStream();
+                    await stream.WriteAsync(new byte[] { 5, 1, 0 });
+                    var response = new byte[2];
+                    await stream.ReadExactlyAsync(response).AsTask().WaitAsync(TimeSpan.FromMilliseconds(200));
+                    if (response[0] == 5)
+                    {
+                        await Task.Delay(200);
+                        if (!core.HasExited) return;
+                    }
+                }
+                catch (Exception exception) when (exception is System.Net.Sockets.SocketException or IOException or TimeoutException) { }
+            }
             await Task.Delay(100);
         }
 
-        throw new TimeoutException("等待 sing-box 报告启动完成超时。");
+        throw new TimeoutException(Localization.Get("SingBoxCoreService_TimedOutWaitingForSingBoxToReport"));
     }
 
     private static bool IsProcessRunning(Process? process)

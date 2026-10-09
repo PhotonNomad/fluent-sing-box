@@ -8,7 +8,6 @@ public sealed partial class SystemProxySettingsControl : UserControl
 {
     private bool _loading;
 
-
     public SystemProxySettingsControl()
     {
         InitializeComponent();
@@ -25,16 +24,9 @@ public sealed partial class SystemProxySettingsControl : UserControl
         UsernameTextBox.Text = settings.SystemProxyUsername;
         PasswordInput.Password = settings.SystemProxyPassword;
         UpdateAuthenticationVisibility();
-        StatusText.Text = string.Empty;
-        UpdateSummary();
+        StatusMessage.IsOpen = false;
+
         _loading = false;
-    }
-
-
-    private void UpdateSummary()
-    {
-        var settings = App.State.Settings;
-        SystemProxyCard.Description = $"{(settings.SystemProxyEnabled ? "已启用" : "未启用")} · 127.0.0.1:{settings.SystemProxyPort} · 身份验证{(settings.SystemProxyAuthEnabled ? "已启用" : "未启用")}";
     }
 
     private void AuthenticationSwitch_Toggled(object sender, RoutedEventArgs e)
@@ -63,13 +55,14 @@ public sealed partial class SystemProxySettingsControl : UserControl
             {
                 await App.ProxyCoordinator.SetSystemProxyEnabledAsync(false);
             }
-            UpdateSummary();
-            StatusText.Text = toggle.IsOn ? "系统代理已启用。" : "系统代理已关闭。";
+
+            StatusMessage.Message = toggle.IsOn ? Localization.Get("SystemProxySettingsControl_SystemProxyEnabled") : Localization.Get("SystemProxySettingsControl_SystemProxyDisabled");
+            StatusMessage.IsOpen = true;
         }
         catch (Exception exception)
         {
             LoadFromSettings();
-            await ShowMessageAsync("无法切换系统代理", exception.Message);
+            await ShowMessageAsync(Localization.Get("SystemProxySettingsControl_CannotSwitchSystemProxy"), exception.Message);
         }
     }
 
@@ -78,12 +71,13 @@ public sealed partial class SystemProxySettingsControl : UserControl
         try
         {
             await SaveDraftAsync();
-            UpdateSummary();
-            StatusText.Text = "设置已应用。";
+
+            StatusMessage.Message = Localization.Get("SystemProxySettingsControl_SettingsApplied");
+            StatusMessage.IsOpen = true;
         }
         catch (Exception exception)
         {
-            await ShowMessageAsync("无法应用设置", exception.Message);
+            await ShowMessageAsync(Localization.Get("SystemProxySettingsControl_CannotApplySettings"), exception.Message);
         }
     }
 
@@ -91,7 +85,7 @@ public sealed partial class SystemProxySettingsControl : UserControl
     {
         if (!int.TryParse(PortTextBox.Text, out var port) || port is < 1 or > 65535)
         {
-            throw new InvalidOperationException("端口必须是 1 到 65535 之间的整数。");
+            throw new InvalidOperationException(Localization.Get("SystemProxySettingsControl_ThePortMustBeAnIntegerBetween1"));
         }
 
         var authEnabled = AuthenticationSwitch.IsOn;
@@ -99,7 +93,7 @@ public sealed partial class SystemProxySettingsControl : UserControl
         var password = PasswordInput.Password;
         if (authEnabled && (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password)))
         {
-            throw new InvalidOperationException("启用身份验证时，用户名和密码都不能为空。");
+            throw new InvalidOperationException(Localization.Get("SystemProxySettingsControl_TheUsernameAndPasswordMustBothBeProvided"));
         }
 
         var settings = App.State.Settings;
@@ -141,7 +135,7 @@ public sealed partial class SystemProxySettingsControl : UserControl
 
     private async Task ShowMessageAsync(string title, string message)
     {
-        var dialog = new ContentDialog { Title = title, Content = message, CloseButtonText = "关闭", XamlRoot = XamlRoot };
-        await dialog.ShowAsync();
+        var dialog = new ContentDialog { Title = title, Content = message, CloseButtonText = Localization.Get("App_Close"), XamlRoot = XamlRoot };
+        await DialogService.ShowAsync(dialog);
     }
 }

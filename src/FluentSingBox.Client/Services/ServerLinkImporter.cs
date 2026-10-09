@@ -10,7 +10,7 @@ public static class ServerLinkImporter
     public static IReadOnlyList<ServerProfile> Parse(string input)
     {
         var text = input.Trim();
-        if (text.Length == 0) throw new FormatException("请粘贴服务器分享链接或 sing-box outbound JSON。");
+        if (text.Length == 0) throw new FormatException(Localization.Get("ServerLinkImporter_PasteServerShareLinksOrSingBoxOutbound"));
 
         if (text.StartsWith('{') || text.StartsWith('[')) return ParseJson(text);
         if (!text.Contains("://", StringComparison.Ordinal))
@@ -28,16 +28,16 @@ public static class ServerLinkImporter
             try { result.Add(ParseUri(line)); }
             catch (Exception exception) when (exception is FormatException or UriFormatException or JsonException or ArgumentException)
             {
-                throw new FormatException("无法导入这一项：链接格式不正确或协议暂不支持。", exception);
+                throw new FormatException(Localization.Get("ServerLinkImporter_CannotImportThisEntryInvalidLinkFormatOr"), exception);
             }
         }
-        if (result.Count == 0) throw new FormatException("没有找到可导入的分享链接。");
+        if (result.Count == 0) throw new FormatException(Localization.Get("ServerLinkImporter_NoImportableShareLinksWereFound"));
         return result;
     }
 
     private static IReadOnlyList<ServerProfile> ParseJson(string json)
     {
-        var root = JsonNode.Parse(json) ?? throw new FormatException("JSON 内容为空。");
+        var root = JsonNode.Parse(json) ?? throw new FormatException(Localization.Get("ServerLinkImporter_TheJSONContentIsEmpty"));
         if (root is JsonObject configuration && configuration["type"] is null && (configuration["outbounds"] is JsonArray || configuration["endpoints"] is JsonArray))
         {
             var profiles = new List<ServerProfile>();
@@ -45,23 +45,23 @@ public static class ServerLinkImporter
                 if (configuration[section] is JsonArray entries)
                     foreach (var entry in entries)
                     {
-                        if (entry is not JsonObject node || string.IsNullOrWhiteSpace(node["type"]?.ToString())) throw new FormatException("每个配置项必须是包含 type 的对象。");
+                        if (entry is not JsonObject node || string.IsNullOrWhiteSpace(node["type"]?.ToString())) throw new FormatException(Localization.Get("ServerLinkImporter_EveryConfigurationEntryMustBeAnObjectContaining"));
                         var profile = CreateProfile((JsonObject)node.DeepClone(), null);
                         profile.ConfigSection = section;
                         profiles.Add(profile);
                     }
-            return profiles.Count > 0 ? profiles : throw new FormatException("配置中没有服务器或端点。");
+            return profiles.Count > 0 ? profiles : throw new FormatException(Localization.Get("ServerLinkImporter_TheConfigurationContainsNoServersOrEndpoints"));
         }
         var nodes = root switch
         {
             JsonArray array => array.OfType<JsonObject>().ToArray(),
             JsonObject { } obj when obj["type"] is null && obj["outbounds"] is JsonArray outbounds => outbounds.OfType<JsonObject>().ToArray(),
             JsonObject single => [single],
-            _ => throw new FormatException("请粘贴单个 outbound 对象、JSON 数组，或包含 outbounds 数组的 sing-box 配置。")
+            _ => throw new FormatException(Localization.Get("ServerLinkImporter_PasteASingleOutboundObjectAJSONArray"))
         };
         if (nodes.Length == 0 || nodes.Any(node => string.IsNullOrWhiteSpace(node["type"]?.GetValue<string>())))
         {
-            throw new FormatException("每个 outbound 都必须包含 type 字段。");
+            throw new FormatException(Localization.Get("ServerLinkImporter_EveryOutboundMustContainATypeField"));
         }
 
         return nodes.Select(node => CreateProfile((JsonObject)node.DeepClone(), null)).ToArray();
@@ -91,7 +91,7 @@ public static class ServerLinkImporter
                 ApplyTransport(outbound, query);
                 break;
             case "vmess":
-                throw new FormatException("VMess 分享链接需要使用 vmess:// 后的 Base64 JSON 格式。");
+                throw new FormatException(Localization.Get("ServerLinkImporter_VMessShareLinksMustUseBase64JSONAfter"));
             case "trojan":
                 outbound["type"] = "trojan";
                 outbound["password"] = userInfo;
@@ -154,7 +154,7 @@ public static class ServerLinkImporter
                 ApplyTls(outbound, query, host, defaultEnabled: true);
                 break;
             default:
-                throw new FormatException($"暂不识别 {scheme}:// 链接。可粘贴 sing-box outbound JSON 导入此协议。");
+                throw new FormatException(Localization.Format("ServerLinkImporter_0LinksAreNotRecognizedPasteSingBox", scheme));
         }
 
         return CreateProfile(outbound, name);
@@ -162,9 +162,9 @@ public static class ServerLinkImporter
 
     private static ServerProfile ParseVmess(string encoded)
     {
-        var vmess = JsonNode.Parse(DecodeBase64(encoded))?.AsObject() ?? throw new FormatException("VMess Base64 内容不是 JSON 对象。");
-        var host = vmess["add"]?.GetValue<string>() ?? throw new FormatException("VMess 链接缺少 add 服务器地址。");
-        if (!int.TryParse(vmess["port"]?.ToString(), out var port)) throw new FormatException("VMess 链接缺少有效端口。");
+        var vmess = JsonNode.Parse(DecodeBase64(encoded))?.AsObject() ?? throw new FormatException(Localization.Get("ServerLinkImporter_TheVMessBase64ContentIsNotAJSON"));
+        var host = vmess["add"]?.GetValue<string>() ?? throw new FormatException(Localization.Get("ServerLinkImporter_TheVMessLinkIsMissingTheAddServer"));
+        if (!int.TryParse(vmess["port"]?.ToString(), out var port)) throw new FormatException(Localization.Get("ServerLinkImporter_TheVMessLinkIsMissingAValidPort"));
         var outbound = new JsonObject
         {
             ["type"] = "vmess",
@@ -208,17 +208,17 @@ public static class ServerLinkImporter
             var body = uri.AbsolutePath.Trim('/');
             var decoded = DecodeBase64(body);
             var at = decoded.LastIndexOf('@');
-            if (at < 0) throw new FormatException("Shadowsocks 链接缺少服务器地址。");
+            if (at < 0) throw new FormatException(Localization.Get("ServerLinkImporter_TheShadowsocksLinkIsMissingTheServerAddress"));
             userInfo = decoded[..at];
             var endpoint = decoded[(at + 1)..];
             var split = endpoint.LastIndexOf(':');
-            if (split < 1 || !int.TryParse(endpoint[(split + 1)..], out port)) throw new FormatException("Shadowsocks 链接端口无效。");
+            if (split < 1 || !int.TryParse(endpoint[(split + 1)..], out port)) throw new FormatException(Localization.Get("ServerLinkImporter_InvalidPortInTheShadowsocksLink"));
             host = endpoint[..split];
         }
 
         if (!userInfo.Contains(':')) userInfo = DecodeBase64(userInfo);
         var credentials = userInfo.Split(':', 2);
-        if (credentials.Length != 2) throw new FormatException("Shadowsocks 链接需要 method:password。");
+        if (credentials.Length != 2) throw new FormatException(Localization.Get("ServerLinkImporter_TheShadowsocksLinkRequiresMethodPassword"));
         outbound["type"] = "shadowsocks";
         outbound["server"] = host;
         outbound["server_port"] = port;
@@ -228,7 +228,7 @@ public static class ServerLinkImporter
         if (string.IsNullOrWhiteSpace(name) && fragment.Length > 1) name = Decode(fragment[1..]);
         if (!string.IsNullOrWhiteSpace(uri.Query) && uri.Query.Contains("plugin=", StringComparison.OrdinalIgnoreCase))
         {
-            throw new FormatException("此 Shadowsocks 分享链接使用了插件参数，请改用 sing-box outbound JSON 导入。");
+            throw new FormatException(Localization.Get("ServerLinkImporter_ThisShadowsocksShareLinkUsesPluginOptionsImport"));
         }
     }
 
@@ -238,9 +238,12 @@ public static class ServerLinkImporter
         if (!defaultEnabled && !query.ContainsKey("sni") && !query.ContainsKey("alpn")) return;
         var tls = new JsonObject
         {
-            ["enabled"] = true,
-            ["server_name"] = query.GetValueOrDefault("sni", host)
+            ["enabled"] = true
         };
+        // An absent SNI is not an explicitly requested IP certificate name.
+        // The config builder can infer WSS SNI from Host; otherwise sing-box
+        // uses the outbound server hostname as its TLS default.
+        if (!string.IsNullOrWhiteSpace(query.GetValueOrDefault("sni"))) tls["server_name"] = query["sni"];
         if (query.TryGetValue("insecure", out var insecure) && insecure is "1" or "true") tls["insecure"] = true;
         if (query.TryGetValue("alpn", out var alpn) && alpn.Length > 0)
         {
@@ -266,7 +269,7 @@ public static class ServerLinkImporter
     {
         var type = query.GetValueOrDefault("type", "tcp").ToLowerInvariant();
         if (type is "tcp" or "raw" or "none" or "") return;
-        if (type is "kcp" or "mkcp") throw new FormatException("sing-box 不支持 V2Ray mKCP 传输；链接未导入。");
+        if (type is "kcp" or "mkcp") throw new FormatException(Localization.Get("ServerLinkImporter_SingBoxDoesNotSupportV2RayMKCPTransport"));
         var transport = new JsonObject { ["type"] = type switch { "h2" => "http", "httpupgrade" => "httpupgrade", _ => type } };
         if (type is "ws" or "httpupgrade")
         {
@@ -305,7 +308,7 @@ public static class ServerLinkImporter
         }
         else if (type != "quic")
         {
-            throw new FormatException($"无法识别 V2Ray 传输方式 {type}；可改用 sing-box outbound JSON。");
+            throw new FormatException(Localization.Format("ServerLinkImporter_UnrecognizedV2RayTransport0UseSingBoxOutbound", type));
         }
         outbound["transport"] = transport;
     }
@@ -328,7 +331,7 @@ public static class ServerLinkImporter
         var normalized = Uri.UnescapeDataString(value).Replace('-', '+').Replace('_', '/');
         normalized = normalized.PadRight((normalized.Length + 3) / 4 * 4, '=');
         try { return Encoding.UTF8.GetString(Convert.FromBase64String(normalized)); }
-        catch (FormatException) { throw new FormatException("Base64 内容格式无效。"); }
+        catch (FormatException) { throw new FormatException(Localization.Get("ServerLinkImporter_InvalidBase64Content")); }
     }
 
     private static void ApplyUsernamePassword(JsonObject outbound, string[] parts)

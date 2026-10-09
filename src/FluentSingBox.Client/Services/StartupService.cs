@@ -16,14 +16,14 @@ public static class StartupService
     public static void SetEnabled(bool enabled)
     {
         using var key = Registry.CurrentUser.CreateSubKey(RunKey, writable: true)
-            ?? throw new InvalidOperationException("无法修改当前用户的开机启动项。");
+            ?? throw new InvalidOperationException(Localization.Get("StartupService_CannotChangeTheCurrentUserSStartupEntry"));
         if (!enabled)
         {
             key.DeleteValue(ValueName, throwOnMissingValue: false);
             return;
         }
         var executable = Environment.ProcessPath
-            ?? throw new InvalidOperationException("无法确定应用程序路径。");
+            ?? throw new InvalidOperationException(Localization.Get("StartupService_CannotDetermineTheApplicationExecutablePath"));
         key.SetValue(ValueName, $"\"{executable}\"", RegistryValueKind.String);
     }
 }

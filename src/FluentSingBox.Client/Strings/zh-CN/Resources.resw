@@ -1,0 +1,682 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <data name="MainWindow_NavigationPaneToggleButton.AutomationProperties.Name" xml:space="preserve">
+    <value>显示导航菜单</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_BrandIconImage.AutomationProperties.Name" xml:space="preserve">
+    <value>fluent sing-box 图标</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem28.Content" xml:space="preserve">
+    <value>服务器</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem31.Content" xml:space="preserve">
+    <value>路由</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem34.Content" xml:space="preserve">
+    <value>代理</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem37.Content" xml:space="preserve">
+    <value>日志</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem43.Content" xml:space="preserve">
+    <value>配置</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_CoreSwitch.OffContent" xml:space="preserve">
+    <value>已停止</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_CoreSwitch.OnContent" xml:space="preserve">
+    <value>运行中</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_CoreSwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>启动或停止 sing-box</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_TextBlock49.Text" xml:space="preserve">
+    <value>配置修改后，关闭再开启核心生效。</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="ConfigurationPage_TextBlock4.Text" xml:space="preserve">
+    <value>配置</value>
+    <comment>Source: Views\ConfigurationPage.xaml</comment>
+  </data>
+  <data name="LogsPage_TextBlock4.Text" xml:space="preserve">
+    <value>日志</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_StatusText.Text" xml:space="preserve">
+    <value>核心尚未运行</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_PauseButton.Content" xml:space="preserve">
+    <value>暂停刷新</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_Button10.Content" xml:space="preserve">
+    <value>清空显示</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_Button11.Content" xml:space="preserve">
+    <value>导出脱敏日志</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_FilterBox.Header" xml:space="preserve">
+    <value>筛选</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_FilterBox.PlaceholderText" xml:space="preserve">
+    <value>输入关键词，例如 error、域名或程序名</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_EmptyHint.Text" xml:space="preserve">
+    <value>暂无日志。开启系统代理或应用代理后，核心日志会在这里更新。</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_TextBlock16.Text" xml:space="preserve">
+    <value>显示最近 128 KB；日志已遮盖已保存的凭据。清空显示不会删除核心文件。日志可能仍包含访问地址和本机路径。</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_TextBlock5.Text" xml:space="preserve">
+    <value>代理</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_TextBlock8.Text" xml:space="preserve">
+    <value>系统代理和全局 TUN 使用默认服务器；应用代理可以按程序选择服务器。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_TextBlock9.Text" xml:space="preserve">
+    <value>应用代理使用 TUN。可识别来源的 DNS 请求随应用组服务器解析；Windows 汇总后无法识别来源的 DNS 请求默认使用本地解析。未选中应用的业务连接默认直连。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsSection10.Header" xml:space="preserve">
+    <value>系统代理</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard13.Header" xml:space="preserve">
+    <value>默认服务器</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard13.Description" xml:space="preserve">
+    <value>系统代理和全局 TUN 未命中路由规则时使用此服务器。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_DefaultServerComboBox.PlaceholderText" xml:space="preserve">
+    <value>选择服务器</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsSection18.Header" xml:space="preserve">
+    <value>全局 TUN</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard20.Header" xml:space="preserve">
+    <value>启用全局 TUN</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard20.Description" xml:space="preserve">
+    <value>所有程序进入同一个 TUN，按路由规则处理，未匹配流量使用默认服务器。开启时忽略应用组；仅保存配置，在左下角重新启动核心后生效。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsSection22.Header" xml:space="preserve">
+    <value>应用代理</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsSection22.Description" xml:space="preserve">
+    <value>一个应用组可包含多个程序，并独立选择代理服务器。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_EmptyApplicationsMessage.Text" xml:space="preserve">
+    <value>还没有添加应用。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard33.Header" xml:space="preserve">
+    <value>启用应用代理</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard33.Description" xml:space="preserve">
+    <value>仅保存这组程序的代理配置；在左下角启动核心后生效。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_ToggleSwitch34.AutomationProperties.Name" xml:space="preserve">
+    <value>启用应用代理</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard35.Header" xml:space="preserve">
+    <value>代理服务器</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_ComboBox36.PlaceholderText" xml:space="preserve">
+    <value>选择服务器</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard37.Header" xml:space="preserve">
+    <value>包含的程序</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard42.Header" xml:space="preserve">
+    <value>编辑应用组</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_Button43.Content" xml:space="preserve">
+    <value>编辑</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard44.Header" xml:space="preserve">
+    <value>删除应用组</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_Button45.Content" xml:space="preserve">
+    <value>删除</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard46.Header" xml:space="preserve">
+    <value>添加应用组</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard46.Description" xml:space="preserve">
+    <value>选择一个或多个程序，并为这组程序选择服务器。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_Button49.Content" xml:space="preserve">
+    <value>添加应用组</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_TextBlock50.Text" xml:space="preserve">
+    <value>应用组开关只修改配置。左下角启动 sing-box 时，如配置包含 TUN 会请求管理员权限；修改后关闭再开启核心即可应用。未配置的程序默认直连。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_TextBlock4.Text" xml:space="preserve">
+    <value>路由</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_TextBlock7.Text" xml:space="preserve">
+    <value>按地址选择直连、拦截或代理，并可单独启停中国绕过规则。</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsSection8.Header" xml:space="preserve">
+    <value>默认处理方式</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_FinalCard.Header" xml:space="preserve">
+    <value>未匹配流量（final）</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_FinalCard.Description" xml:space="preserve">
+    <value>没有匹配到路由规则时使用的出口。保存后，下次启动核心生效；DNS 在 DNS 页单独设置。</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_FinalSelector.AutomationProperties.Name" xml:space="preserve">
+    <value>未匹配流量（final）</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsSection14.Header" xml:space="preserve">
+    <value>添加路由规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard17.Header" xml:space="preserve">
+    <value>创建自定义路由规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard17.Description" xml:space="preserve">
+    <value>按域名、IP 地址或 CIDR 网段选择处理方式。</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button20.Content" xml:space="preserve">
+    <value>添加规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsSection21.Header" xml:space="preserve">
+    <value>路由规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_EmptyMessage.Text" xml:space="preserve">
+    <value>暂无自定义规则。</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard32.Header" xml:space="preserve">
+    <value>启用规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard32.Description" xml:space="preserve">
+    <value>关闭后不参与路由匹配。</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_ToggleSwitch33.AutomationProperties.Name" xml:space="preserve">
+    <value>启用规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard34.Header" xml:space="preserve">
+    <value>匹配内容</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard35.Header" xml:space="preserve">
+    <value>处理方式</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard36.Header" xml:space="preserve">
+    <value>生效范围</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard37.Header" xml:space="preserve">
+    <value>规则详情</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard37.Description" xml:space="preserve">
+    <value>在浏览器中查看规则来源或 sing-box 官方说明。</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard37.ActionIconToolTip" xml:space="preserve">
+    <value>在浏览器中打开</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard40.Header" xml:space="preserve">
+    <value>编辑规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button41.Content" xml:space="preserve">
+    <value>编辑</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard42.Header" xml:space="preserve">
+    <value>上移规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button43.Content" xml:space="preserve">
+    <value>上移</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard44.Header" xml:space="preserve">
+    <value>下移规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button45.Content" xml:space="preserve">
+    <value>下移</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard46.Header" xml:space="preserve">
+    <value>删除规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button47.Content" xml:space="preserve">
+    <value>删除</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="ServersPage_TextBlock4.Text" xml:space="preserve">
+    <value>服务器</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_TextBlock7.Text" xml:space="preserve">
+    <value>管理 sing-box 服务器；可粘贴分享链接，也可导入 outbound JSON。</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsSection9.Header" xml:space="preserve">
+    <value>添加服务器</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard12.Header" xml:space="preserve">
+    <value>从分享链接或配置添加服务器</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard12.Description" xml:space="preserve">
+    <value>支持粘贴服务器分享链接、导入 outbound JSON，或手动添加。</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button16.Content" xml:space="preserve">
+    <value>导入</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button16.AutomationProperties.Name" xml:space="preserve">
+    <value>导入服务器链接或配置</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button17.Content" xml:space="preserve">
+    <value>添加服务器</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsSection18.Header" xml:space="preserve">
+    <value>服务器列表</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_EmptyMessage.Text" xml:space="preserve">
+    <value>还没有服务器。可导入分享链接、outbound JSON，或按类型手动添加。</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_TextBlock33.Text" xml:space="preserve">
+    <value>· 默认</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard35.Header" xml:space="preserve">
+    <value>默认服务器</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard35.Description" xml:space="preserve">
+    <value>系统代理使用默认服务器；应用组可单独选择。</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button36.Content" xml:space="preserve">
+    <value>设为默认</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard37.Header" xml:space="preserve">
+    <value>连接测试</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard37.Description" xml:space="preserve">
+    <value>通过此服务器请求 Google HTTPS 204。</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button38.Content" xml:space="preserve">
+    <value>测试连接</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard39.Header" xml:space="preserve">
+    <value>编辑服务器</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard39.Description" xml:space="preserve">
+    <value>查看和修改服务器的协议、连接与安全设置。</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button40.Content" xml:space="preserve">
+    <value>编辑</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard41.Header" xml:space="preserve">
+    <value>复制服务器</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button42.Content" xml:space="preserve">
+    <value>复制</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard43.Header" xml:space="preserve">
+    <value>删除服务器</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button44.Content" xml:space="preserve">
+    <value>删除</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_TextBlock4.Text" xml:space="preserve">
+    <value>设置</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_TextBlock7.Text" xml:space="preserve">
+    <value>应用启动、外观和维护选项。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsSection8.Header" xml:space="preserve">
+    <value>外观</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard11.Header" xml:space="preserve">
+    <value>主题</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard11.Description" xml:space="preserve">
+    <value>默认读取 Windows 的浅色或深色设置。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_ComboBoxItem15.Content" xml:space="preserve">
+    <value>跟随系统</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_ComboBoxItem16.Content" xml:space="preserve">
+    <value>浅色</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_ComboBoxItem17.Content" xml:space="preserve">
+    <value>深色</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsSection18.Header" xml:space="preserve">
+    <value>启动</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard21.Header" xml:space="preserve">
+    <value>开机启动</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard21.Description" xml:space="preserve">
+    <value>登录 Windows 后自动启动 fluent sing-box。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_StartupSwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>开机启动</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsSection25.Header" xml:space="preserve">
+    <value>sing-box 核心</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard28.Header" xml:space="preserve">
+    <value>核心程序</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SingBoxPathDescription.Text" xml:space="preserve">
+    <value>尚未选择 sing-box.exe。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SingBoxCorePathButton.Content" xml:space="preserve">
+    <value>选择其他核心</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard34.Header" xml:space="preserve">
+    <value>验证生成配置</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard34.Description" xml:space="preserve">
+    <value>由当前选用的 sing-box 执行 check，检查完整配置及路由文件。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_CheckConfigurationButton.Content" xml:space="preserve">
+    <value>验证配置</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard37.Header" xml:space="preserve">
+    <value>内置路由规则</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard37.Description" xml:space="preserve">
+    <value>本地提供中国域名、中国 IP 和非中国域名规则。无需启动时下载；快照版本与来源见发行目录 ThirdParty/RuleSets/manifest.json。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsSection38.Header" xml:space="preserve">
+    <value>更新与反馈</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard41.Header" xml:space="preserve">
+    <value>检查更新</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard41.Description" xml:space="preserve">
+    <value>当前为开发预览版；配置发布源后可检查并安装更新。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_Button44.Content" xml:space="preserve">
+    <value>检查更新</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard45.Header" xml:space="preserve">
+    <value>反馈</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard45.Description" xml:space="preserve">
+    <value>填写反馈并复制内容，方便粘贴到问题单或邮件中。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_Button48.Content" xml:space="preserve">
+    <value>提交反馈</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard49.Header" xml:space="preserve">
+    <value>sing-box 文档</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard49.Description" xml:space="preserve">
+    <value>查看 sing-box 的协议和配置说明。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard49.ActionIconToolTip" xml:space="preserve">
+    <value>在浏览器中打开</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_TextBlock54.Text" xml:space="preserve">
+    <value>fluent sing-box · 0.1.0 开发预览</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard3.Header" xml:space="preserve">
+    <value>启用系统代理</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard3.Description" xml:space="preserve">
+    <value>仅更新 Windows 代理设置；sing-box 在左下角单独启动。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SystemProxySwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>启用系统代理</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard5.Header" xml:space="preserve">
+    <value>协议</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard5.Description" xml:space="preserve">
+    <value>HTTP / SOCKS5 共用本地端口；Windows 系统代理使用 HTTP。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard6.Header" xml:space="preserve">
+    <value>监听地址</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard6.Description" xml:space="preserve">
+    <value>127.0.0.1 · 仅允许本机连接。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard7.Header" xml:space="preserve">
+    <value>监听端口</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard7.Description" xml:space="preserve">
+    <value>填写本地代理端口。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard9.Header" xml:space="preserve">
+    <value>身份验证</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard9.Description" xml:space="preserve">
+    <value>为本地代理配置用户名和密码。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_AuthenticationSwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>启用系统代理身份验证</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_UsernameCard.Header" xml:space="preserve">
+    <value>用户名</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_UsernameTextBox.PlaceholderText" xml:space="preserve">
+    <value>用户名</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_PasswordCard.Header" xml:space="preserve">
+    <value>密码</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_PasswordInput.PlaceholderText" xml:space="preserve">
+    <value>密码</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard15.Header" xml:space="preserve">
+    <value>应用设置</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard15.Description" xml:space="preserve">
+    <value>保存端口或身份验证更改；在左下角关闭再开启核心后应用配置。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_Button16.Content" xml:space="preserve">
+    <value>应用设置</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard17.Header" xml:space="preserve">
+    <value>使用提示</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard17.Description" xml:space="preserve">
+    <value>应用是否支持代理认证，取决于该应用自身。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="Settings_Language.Header" xml:space="preserve">
+    <value>应用语言</value>
+  </data>
+  <data name="Settings_Language.Description" xml:space="preserve">
+    <value>跟随系统语言或选择语言；重启应用后生效。</value>
+  </data>
+  <data name="Settings_Language_System.Content" xml:space="preserve">
+    <value>跟随系统</value>
+  </data>
+  <data name="Settings_Language_Chinese.Content" xml:space="preserve">
+    <value>简体中文</value>
+  </data>
+  <data name="Settings_Language_English.Content" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="ProxyPage_GlobalTunSwitch.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="ProxyPage_GlobalTunSwitch.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="ProxyPage_ToggleSwitch34.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="ProxyPage_ToggleSwitch34.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="RoutingPage_ToggleSwitch33.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="RoutingPage_ToggleSwitch33.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="SettingsPage_StartupSwitch.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="SettingsPage_StartupSwitch.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="SystemProxySettingsControl_SystemProxySwitch.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="SystemProxySettingsControl_SystemProxySwitch.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="SystemProxySettingsControl_AuthenticationSwitch.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="SystemProxySettingsControl_AuthenticationSwitch.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+</root>

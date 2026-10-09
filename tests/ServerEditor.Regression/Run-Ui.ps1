@@ -6,11 +6,13 @@ New-Item -ItemType Directory -Path $taskRunRoot | Out-Null
 $taskSettingsPath = Join-Path $taskRunRoot 'settings.json'
 Copy-Item -LiteralPath (Join-Path $taskArtifacts 'ui-data\settings.json') -Destination $taskSettingsPath
 $taskSeed = Get-Content -LiteralPath $taskSettingsPath -Raw | ConvertFrom-Json
+$taskInitialServerCount = @($taskSeed.Servers).Count
+$taskSeed | Add-Member -NotePropertyName LanguageChoice -NotePropertyValue 'zh-CN' -Force
 if ($taskSeed.SystemProxyEnabled -or @($taskSeed.Applications | Where-Object IsEnabled).Count) { throw 'UI fixtures must have all proxies disabled' }
 $taskSeed.Applications = @([pscustomobject]@{Id='ui-app-group';Name='测试应用组';ServerId=$taskSeed.DefaultServerId;IsEnabled=$false;ExecutablePaths=@('C:\fixtures\example.exe')})
 $taskSeed.RoutingRules = @([pscustomobject]@{Id='ui-custom-rule';Name='测试地址规则';Addresses='example.com';Outbound='direct';Scope='system';IsEnabled=$true;IsBuiltIn=$false})
 $taskSeed | ConvertTo-Json -Depth 50 | Set-Content -LiteralPath $taskSettingsPath
-$taskExecutable = Join-Path $ProjectRoot 'src\FluentSingBox.Client\bin\x64\Debug\net10.0-windows10.0.19041.0\win-x64\fluent sing-box.exe'
+$taskExecutable = Join-Path $ProjectRoot 'artifacts\publish\Debug\fluent sing-box.exe'
 if ($ExecutablePath) { $taskExecutable = (Resolve-Path -LiteralPath $ExecutablePath).Path }
 $taskResults = [Collections.Generic.List[object]]::new()
 $taskOldData = $env:FLUENTSINGBOX_DATA_DIR
@@ -123,6 +125,16 @@ try {
     $taskWindows = @(Invoke-TestUi @('list-windows', '-a', "$($taskProcess.Id)"))
     $script:taskWindow = $taskWindows[0].hwnd
     if (!$script:taskWindow) { throw 'Test client window not found' }
+    Run-UiCase 'session/duplicate-instance-exits-without-disrupting-owner' {
+        $duplicate = Start-Process -FilePath $taskExecutable -WorkingDirectory (Split-Path $taskExecutable) -WindowStyle Hidden -PassThru
+        try {
+            if (!$duplicate.WaitForExit(8000)) { throw 'Duplicate instance did not exit' }
+            $taskProcess.Refresh()
+            if ($taskProcess.HasExited) { throw 'Original client exited when duplicate started' }
+            Use-Ui @('wait-for', 'Servers_Add') | Out-Null
+        }
+        finally { if (!$duplicate.HasExited) { Stop-Process -Id $duplicate.Id }; $duplicate.Dispose() }
+    }
     Run-UiCase 'add/protocol-selection-and-draft-retention' {
         Open-Add
         Use-Ui @('set-value', 'ServerEditor_Name', 'ui-added-vmess') | Out-Null
@@ -145,7 +157,7 @@ try {
         Use-Ui @('invoke', 'PrimaryButton') | Out-Null
         Use-Ui @('wait-for', 'ServerEditor_Error') | Out-Null
         Use-Ui @('wait-for', 'ServerEditor_Type') | Out-Null
-        Assert-Ui (@((Get-SavedSettings).Servers).Count -eq 11) 'Invalid input created a server'
+        Assert-Ui (@((Get-SavedSettings).Servers).Count -eq $taskInitialServerCount) 'Invalid input created a server'
         Use-Ui @('screenshot', '-o', (Join-Path $taskRunRoot 'validation-error.png')) | Out-Null
     }
     Run-UiCase 'add/vmess-websocket-save' {
@@ -199,7 +211,7 @@ try {
         Use-Ui @('invoke', 'PrimaryButton') | Out-Null
         Use-Ui @('wait-for', 'ServerEditor_Dialog', '--gone') | Out-Null
         $saved = Wait-SavedSettings { param($settings) @($settings.Servers | Where-Object { $_.Id -eq $source.Id -and ($_.OutboundJson | ConvertFrom-Json).connect_timeout -eq '7s' }).Count -eq 1 }
-        Assert-Ui (@($saved.Servers).Count -eq 12) 'Advanced editing duplicated a server'
+        Assert-Ui (@($saved.Servers).Count -eq ($taskInitialServerCount + 1)) 'Advanced editing duplicated a server'
     }
     Run-UiCase 'add/all-eleven-types-open-structured-fields' {
         Open-Add
@@ -214,7 +226,7 @@ try {
         }
         Use-Ui @('invoke', 'CloseButton') | Out-Null
         Use-Ui @('wait-for', 'ServerEditor_Dialog', '--gone') | Out-Null
-        Assert-Ui (@((Get-SavedSettings).Servers).Count -eq 12) 'Opening forms created extra servers'
+        Assert-Ui (@((Get-SavedSettings).Servers).Count -eq ($taskInitialServerCount + 1)) 'Opening forms created extra servers'
     }
     Run-UiCase 'edit/change-protocol-keeps-default-reference' {
         $source = (Get-SavedSettings).Servers | Where-Object Name -eq 'fixture-vless'
@@ -237,7 +249,7 @@ try {
         Invoke-TestUi @('wait-for', 'Servers_Add', '-a', "$($taskProcess.Id)") | Out-Null
         $script:taskWindow = @(Invoke-TestUi @('list-windows', '-a', "$($taskProcess.Id)"))[0].hwnd
         $saved = Get-SavedSettings
-        Assert-Ui (@($saved.Servers).Count -eq 12) 'Restart lost added server'
+        Assert-Ui (@($saved.Servers).Count -eq ($taskInitialServerCount + 1)) 'Restart lost added server'
         $source = $saved.Servers | Where-Object Name -eq 'ui-edited-vmess'
         $tree = Use-Ui @('inspect', '--depth', '14')
         function Find-RestartedRow($Nodes) {
@@ -264,7 +276,7 @@ try {
         Assert-Ui ($json.Contains('ui-preview') -and $json.Contains('无法识别 1 项')) 'Import preview did not separate valid/invalid entries'
         Assert-Ui (!$json.Contains('无法导入：invalid://secret')) 'Import error exposed a share link'
         Use-Ui @('invoke', 'CloseButton') | Out-Null
-        Assert-Ui (@((Get-SavedSettings).Servers).Count -eq 12) 'Canceled preview created servers'
+        Assert-Ui (@((Get-SavedSettings).Servers).Count -eq ($taskInitialServerCount + 1)) 'Canceled preview created servers'
     }
     Run-UiCase 'logs/read-filter-pause-clear-with-redaction' {
         $logDirectory = Join-Path $taskRunRoot 'sing-box'
@@ -318,21 +330,14 @@ try {
         [pscustomobject]@{backgroundRequested= !$Foreground; startupForeground=$taskWindows[0].isForeground; finalForeground=$taskWindowsFinal[0].isForeground} |
             ConvertTo-Json | Set-Content -LiteralPath (Join-Path $taskRunRoot 'foreground-observation.json')
     }
-    Run-UiCase 'routing/child-controls-toggle-persist-and-details-link' {
-        Use-Ui @('invoke', 'Navigation_Routing') | Out-Null
-        Expand-Settings 'Route_Expander_ui-custom-rule'
-        Use-Ui @('wait-for', 'Route_Details_ui-custom-rule') | Out-Null
-        $link = Use-Ui @('inspect', 'Route_Details_ui-custom-rule', '--depth', '1')
-        Assert-Ui (($link | ConvertTo-Json -Depth 20).Contains('Hyperlink')) 'Details link is not a hyperlink'
-        Use-Ui @('invoke', 'Route_Toggle_ui-custom-rule', '--action', 'toggle-off') | Out-Null
-        Wait-SavedSettings { param($settings) !($settings.RoutingRules | Where-Object Id -eq 'ui-custom-rule').IsEnabled } | Out-Null
-        Use-Ui @('invoke', 'Route_Toggle_ui-custom-rule', '--action', 'toggle-on') | Out-Null
-        Wait-SavedSettings { param($settings) ($settings.RoutingRules | Where-Object Id -eq 'ui-custom-rule').IsEnabled } | Out-Null
-        Use-Ui @('screenshot', '-o', (Join-Path $taskRunRoot 'routing-child-controls.png')) | Out-Null
+    Run-UiCase 'routing/schema-page-loads-source-and-final' {
+        Use-Ui @('invoke','Navigation_Routing') | Out-Null
+        Use-Ui @('wait-for','Routing_final') | Out-Null
+        Use-Ui @('wait-for','Routing_Save') | Out-Null
     }
     Run-UiCase 'proxy/system-inline-port-validation-and-save' {
         Use-Ui @('invoke', 'Navigation_Proxy') | Out-Null
-        Expand-Settings 'Proxy_SystemExpander'
+        Use-Ui @('wait-for', 'Proxy_PortTextBox') | Out-Null
         Use-Ui @('wait-for', 'Proxy_PortTextBox') | Out-Null
         Use-Ui @('set-value', 'Proxy_PortTextBox', '70000') | Out-Null
         Use-Ui @('invoke', 'Proxy_Apply') | Out-Null
@@ -359,6 +364,36 @@ try {
         Wait-SavedSettings { param($settings) ($settings.Applications | Where-Object Id -eq 'ui-app-group').Name -eq '已编辑的应用组' } | Out-Null
         Assert-Ui (!(Get-SavedSettings).Applications[0].IsEnabled) 'Editing enabled TUN'
         Use-Ui @('screenshot', '-o', (Join-Path $taskRunRoot 'application-child-controls.png')) | Out-Null
+    }
+    Run-UiCase 'configuration/core-check-with-bundled-routing-files' {
+        Use-Ui @('invoke', 'Navigation_Routing') | Out-Null
+        Use-Ui @('wait-for', 'Routing_rule_set') | Out-Null
+        $taskRuleSets = @('geosite-geolocation-cn', 'geoip-cn', 'geosite-geolocation-!cn') | ForEach-Object {
+            @{tag=$_;type='local';format='binary';path=(Join-Path (Split-Path $taskExecutable) "ThirdParty\RuleSets\$_.srs")}
+        }
+        Use-Ui @('set-value', 'Routing_rule_set', ($taskRuleSets | ConvertTo-Json -Depth 8)) | Out-Null
+        Use-Ui @('invoke', 'Routing_Save') | Out-Null
+        $taskSaveDeadline = [DateTime]::UtcNow.AddSeconds(20)
+        do {
+            $taskSaved = Get-Content -LiteralPath (Join-Path $taskRunRoot 'sing-box\user-config.json') -Raw | ConvertFrom-Json
+            if (@($taskSaved.route.rule_set).Count -eq 3) { break }
+            Start-Sleep -Milliseconds 200
+        } while ([DateTime]::UtcNow -lt $taskSaveDeadline)
+        Assert-Ui (@($taskSaved.route.rule_set).Count -eq 3) 'Route page did not save bundled rule sets'
+        Use-Ui @('invoke', 'Navigation_Settings') | Out-Null
+        Use-Ui @('invoke', 'Settings_CheckConfiguration') | Out-Null
+        $deadline = [DateTime]::UtcNow.AddSeconds(20)
+        do {
+            $result = Use-Ui @('inspect', 'Settings_ConfigurationResult', '--depth', '1')
+            if (($result | ConvertTo-Json -Depth 20).Contains('配置校验通过')) { break }
+            Start-Sleep -Milliseconds 200
+        } while ([DateTime]::UtcNow -lt $deadline)
+        Assert-Ui (($result | ConvertTo-Json -Depth 20).Contains('配置校验通过')) 'Core rejected generated configuration'
+        $config = Get-Content (Join-Path $taskRunRoot 'sing-box\config.validation.json') -Raw | ConvertFrom-Json
+        Assert-Ui (@($config.route.rule_set).Count -eq 3) 'Validation did not read all bundled rule files'
+        Assert-Ui (@($config.route.rule_set | Where-Object type -ne local).Count -eq 0) 'Validation used remote rule sets'
+        Assert-Ui (!(Get-SavedSettings).SystemProxyEnabled -and !((Get-SavedSettings).Applications | Where-Object IsEnabled)) 'Validation enabled host proxy or TUN'
+        Use-Ui @('screenshot', '-o', (Join-Path $taskRunRoot 'configuration-check.png')) | Out-Null
     }
     Write-Output "UI regression passed; evidence: $taskRunRoot"
 }

@@ -14,10 +14,15 @@ public sealed partial class MainWindow : Window
     private XamlRoot? _windowXamlRoot;
     private readonly DispatcherTimer _healthTimer = new() { Interval = TimeSpan.FromSeconds(2) };
     private bool _recovering;
+    private bool _closing;
+    private bool _shutdownComplete;
+    private bool _coreSwitchBusy;
 
     public MainWindow()
     {
         InitializeComponent();
+        UpdateCoreSwitch();
+        ToolTipService.SetToolTip(CoreSwitch, Localization.Get("MainWindow_TextBlock49.Text"));
         var logoPath = Path.Combine(AppContext.BaseDirectory, "Assets", "fluent-sing-box.png");
         if (File.Exists(logoPath)) BrandIconImage.Source = new BitmapImage(new Uri(logoPath));
         ExtendsContentIntoTitleBar = true;
@@ -29,28 +34,101 @@ public sealed partial class MainWindow : Window
         RootNavigationView.SizeChanged += RootNavigationView_SizeChanged;
         RootGrid.Loaded += RootGrid_Loaded;
         Closed += MainWindow_Closed;
+        AppWindow.Closing += MainWindow_Closing;
         _healthTimer.Tick += async (_, _) =>
         {
-            if (_recovering || App.CoreService.IsTransitioning || App.CoreService.IsRunning ||
-                (!App.State.Settings.SystemProxyEnabled && App.State.Settings.Applications.All(profile => !profile.IsEnabled))) return;
+            if (_recovering || _coreSwitchBusy || App.CoreService.IsTransitioning || App.CoreService.IsRunning ||
+                !App.State.Settings.CoreOnlyEnabled) return;
             _recovering = true;
             try
             {
                 var restored = WindowsProxyService.Restore(App.State.Settings);
                 App.State.Settings.SystemProxyEnabled = false;
-                foreach (var profile in App.State.Settings.Applications) profile.IsEnabled = false;
+                App.State.Settings.CoreOnlyEnabled = false;
+                UpdateCoreSwitch();
                 await App.State.SaveAsync();
-                RecoveryMessage.Message = restored ? "核心意外停止，已停用代理并恢复原系统代理设置。请检查日志后重新开启。" : "核心意外停止，已停用应用中的代理开关。Windows 代理已被其他程序修改，已保留其设置。";
+                RecoveryMessage.Message = restored ? Localization.Get("MainWindow_TheCoreStoppedUnexpectedlyPreviousSystemProxySettings") : Localization.Get("MainWindow_TheCoreStoppedUnexpectedlyAnotherProgramChangedThe");
                 RecoveryMessage.IsOpen = true;
             }
-            catch (Exception exception) { RecoveryMessage.Message = "核心意外停止，恢复失败：" + exception.Message; RecoveryMessage.IsOpen = true; }
+            catch (Exception exception) { RecoveryMessage.Message = Localization.Get("MainWindow_TheCoreStoppedUnexpectedlyRecoveryFailed") + exception.Message; RecoveryMessage.IsOpen = true; }
             finally { _recovering = false; }
         };
         _healthTimer.Start();
     }
 
+    private void UpdateCoreSwitch()
+    {
+        var running = App.CoreService.IsRunning;
+        CoreActionIcon.Glyph = running ? "\uE71A" : "\uE768";
+        CoreActionText.Text = Localization.Get(running ? "CoreButton_Stop" : "CoreButton_Start");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(CoreSwitch, CoreActionText.Text);
+    }
+
+    public async Task CheckStartupAsync()
+    {
+        _coreSwitchBusy = true;
+        CoreSwitch.IsEnabled = false;
+        try
+        {
+            // An empty first-run profile is editable; no core or network resources are created.
+            if (!App.State.Settings.Configuration.UsesFileConfiguration && App.State.Settings.Servers.Count == 0)
+            {
+                await Task.Run(CoreProcessLease.Recover);
+                return;
+            }
+            await App.CoreService.CheckStartupAsync(App.State.Settings);
+        }
+        catch (Exception exception)
+        {
+            RecoveryMessage.Message = Localization.Get("MainWindow_StartupPreflightFailed") + LogReader.Redact(exception.Message, App.State.Settings);
+            RecoveryMessage.IsOpen = true;
+        }
+        finally { CoreSwitch.IsEnabled = true; _coreSwitchBusy = false; }
+    }
+
+    private async void CoreSwitch_Click(object sender, RoutedEventArgs args)
+    {
+        if (_coreSwitchBusy || _closing) return;
+        _coreSwitchBusy = true;
+        CoreSwitch.IsEnabled = false;
+        var starting = !App.CoreService.IsRunning;
+        CoreActionText.Text = Localization.Get(starting ? "CoreButton_Starting" : "CoreButton_Stopping");
+        try
+        {
+            if (starting)
+            {
+                await App.CoreService.StartAsync(App.State.Settings);
+                App.State.Settings.CoreOnlyEnabled = true;
+                RecoveryMessage.IsOpen = false;
+            }
+            else
+            {
+                await App.CoreService.ShutdownAsync();
+                App.State.Settings.CoreOnlyEnabled = false;
+            }
+        }
+        catch (Exception exception)
+        {
+            App.State.Settings.CoreOnlyEnabled = App.CoreService.IsRunning;
+            RecoveryMessage.Message = Localization.Get("MainWindow_CannotSwitchSingBox") + LogReader.Redact(exception.Message, App.State.Settings);
+            RecoveryMessage.IsOpen = true;
+        }
+        finally
+        {
+            UpdateCoreSwitch();
+            CoreSwitch.IsEnabled = true;
+            _coreSwitchBusy = false;
+        }
+    }
+
     private void RootGrid_Loaded(object sender, RoutedEventArgs args)
     {
+        if (RootNavigationView.SettingsItem is DependencyObject settingsItem)
+        {
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(settingsItem, "Navigation_Settings");
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(settingsItem, Localization.Get("SettingsPage_TextBlock4.Text"));
+            if (settingsItem is NavigationViewItem item) item.Content = Localization.Get("SettingsPage_TextBlock4.Text");
+        }
         _windowXamlRoot = RootGrid.XamlRoot;
         if (_windowXamlRoot is not null)
         {
@@ -142,26 +220,51 @@ public sealed partial class MainWindow : Window
             "routing" => typeof(RoutingPage),
             "proxy" => typeof(ProxyPage),
             "logs" => typeof(LogsPage),
+            "configuration" => typeof(ConfigurationPage),
+            "dns" => typeof(DnsPage),
             _ => typeof(ServersPage)
         };
         ContentFrame.Navigate(pageType);
     }
 
-    private async void MainWindow_Closed(object sender, WindowEventArgs args)
+    private async void MainWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
+    {
+        if (_shutdownComplete) return;
+        args.Cancel = true;
+        if (_closing) return;
+        _closing = true;
+        App.ProxyCoordinator.BeginShutdown();
+        _healthTimer.Stop();
+        try
+        {
+            try { WindowsProxyService.Restore(App.State.Settings); }
+            finally
+            {
+                await App.CoreService.ShutdownAsync();
+                App.State.Settings.CoreOnlyEnabled = false;
+                App.State.Settings.SystemProxyEnabled = false;
+            }
+            await App.State.SaveAsync();
+            _shutdownComplete = true;
+            Close();
+        }
+        catch (Exception exception)
+        {
+            _closing = false;
+            App.ProxyCoordinator.CancelShutdown();
+            RecoveryMessage.Message = Localization.Get("MainWindow_ExitCleanupFailedPleaseRetry") + exception.Message;
+            RecoveryMessage.IsOpen = true;
+        }
+    }
+
+    private void MainWindow_Closed(object sender, WindowEventArgs args)
     {
         _healthTimer.Stop();
+        App.CoreService.Stop();
         if (_windowXamlRoot is not null)
         {
             _windowXamlRoot.Changed -= WindowXamlRoot_Changed;
             _windowXamlRoot = null;
         }
-
-        if (App.State.Settings.SystemProxyEnabled)
-        {
-            WindowsProxyService.Restore(App.State.Settings);
-            App.State.Settings.SystemProxyEnabled = false;
-        }
-        App.CoreService.Stop();
-        await App.State.SaveAsync();
     }
 }

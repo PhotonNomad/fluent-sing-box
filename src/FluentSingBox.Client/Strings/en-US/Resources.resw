@@ -1,0 +1,682 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <data name="MainWindow_NavigationPaneToggleButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Show navigation menu</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_BrandIconImage.AutomationProperties.Name" xml:space="preserve">
+    <value>fluent sing-box icon</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem28.Content" xml:space="preserve">
+    <value>Servers</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem31.Content" xml:space="preserve">
+    <value>Routing</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem34.Content" xml:space="preserve">
+    <value>Proxy</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem37.Content" xml:space="preserve">
+    <value>Logs</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem43.Content" xml:space="preserve">
+    <value>Configuration</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_CoreSwitch.OffContent" xml:space="preserve">
+    <value>Stopped</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_CoreSwitch.OnContent" xml:space="preserve">
+    <value>Running</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_CoreSwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>Start or stop sing-box</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_TextBlock49.Text" xml:space="preserve">
+    <value>After changing configuration, stop and restart the core to apply it.</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="ConfigurationPage_TextBlock4.Text" xml:space="preserve">
+    <value>Configuration</value>
+    <comment>Source: Views\ConfigurationPage.xaml</comment>
+  </data>
+  <data name="LogsPage_TextBlock4.Text" xml:space="preserve">
+    <value>Logs</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_StatusText.Text" xml:space="preserve">
+    <value>Core is not running</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_PauseButton.Content" xml:space="preserve">
+    <value>Pause refresh</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_Button10.Content" xml:space="preserve">
+    <value>Clear display</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_Button11.Content" xml:space="preserve">
+    <value>Export redacted logs</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_FilterBox.Header" xml:space="preserve">
+    <value>Filter</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_FilterBox.PlaceholderText" xml:space="preserve">
+    <value>Enter a keyword, such as error, a domain or a program name</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_EmptyHint.Text" xml:space="preserve">
+    <value>No logs yet. Start the core using the bottom-left switch to display its logs here.</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_TextBlock16.Text" xml:space="preserve">
+    <value>Show the latest 128 KB. Saved credentials are redacted. Clearing the display does not delete core log files. Logs may still contain destination addresses and local paths.</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_TextBlock5.Text" xml:space="preserve">
+    <value>Proxy</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_TextBlock8.Text" xml:space="preserve">
+    <value>System proxy and global TUN use the default server. Application proxy can select servers by program.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_TextBlock9.Text" xml:space="preserve">
+    <value>Application proxy uses TUN. DNS requests whose source is identifiable follow the application group's server. Requests aggregated by Windows with no identifiable source use local DNS by default. Other applications connect directly by default.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsSection10.Header" xml:space="preserve">
+    <value>System proxy</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard13.Header" xml:space="preserve">
+    <value>Default server</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard13.Description" xml:space="preserve">
+    <value>Used by system proxy and global TUN when the selected final policy uses the default server.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_DefaultServerComboBox.PlaceholderText" xml:space="preserve">
+    <value>Select server</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsSection18.Header" xml:space="preserve">
+    <value>Global TUN</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard20.Header" xml:space="preserve">
+    <value>Enable global TUN</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard20.Description" xml:space="preserve">
+    <value>All programs enter one TUN and follow routing rules. Unmatched traffic follows the final policy. Application groups are ignored while enabled. This only saves configuration; restart the core with the bottom-left switch to apply it.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsSection22.Header" xml:space="preserve">
+    <value>Application proxy</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsSection22.Description" xml:space="preserve">
+    <value>A group can contain multiple programs and select its own proxy server.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_EmptyApplicationsMessage.Text" xml:space="preserve">
+    <value>No applications added yet.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard33.Header" xml:space="preserve">
+    <value>Enable application proxy</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard33.Description" xml:space="preserve">
+    <value>Only save this group's proxy configuration. It takes effect when you start the core using the bottom-left switch.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_ToggleSwitch34.AutomationProperties.Name" xml:space="preserve">
+    <value>Enable application proxy</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard35.Header" xml:space="preserve">
+    <value>Proxy server</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_ComboBox36.PlaceholderText" xml:space="preserve">
+    <value>Select server</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard37.Header" xml:space="preserve">
+    <value>Included programs</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard42.Header" xml:space="preserve">
+    <value>Edit application group</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_Button43.Content" xml:space="preserve">
+    <value>Edit</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard44.Header" xml:space="preserve">
+    <value>Delete application group</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_Button45.Content" xml:space="preserve">
+    <value>Delete</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard46.Header" xml:space="preserve">
+    <value>Add application group</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard46.Description" xml:space="preserve">
+    <value>Select one or more programs and choose a server for this group.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_Button49.Content" xml:space="preserve">
+    <value>Add application group</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_TextBlock50.Text" xml:space="preserve">
+    <value>Application group switches only change configuration. Starting sing-box using the bottom-left switch requests administrator permission if TUN is configured. Stop and restart the core after changes. Unconfigured programs connect directly by default.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_TextBlock4.Text" xml:space="preserve">
+    <value>Routing</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_TextBlock7.Text" xml:space="preserve">
+    <value>Choose direct, blocked or proxied routing by address, and enable China bypass rules separately.</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsSection8.Header" xml:space="preserve">
+    <value>Default action</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_FinalCard.Header" xml:space="preserve">
+    <value>Unmatched traffic (final)</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_FinalCard.Description" xml:space="preserve">
+    <value>The outbound used when no routing rule matches. Saved changes take effect the next time the core starts. Configure DNS separately on the DNS page.</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_FinalSelector.AutomationProperties.Name" xml:space="preserve">
+    <value>Unmatched traffic (final)</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsSection14.Header" xml:space="preserve">
+    <value>Add routing rule</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard17.Header" xml:space="preserve">
+    <value>Create a custom routing rule</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard17.Description" xml:space="preserve">
+    <value>Choose an action by domain name, IP address or CIDR range.</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button20.Content" xml:space="preserve">
+    <value>Add rule</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsSection21.Header" xml:space="preserve">
+    <value>Routing rules</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_EmptyMessage.Text" xml:space="preserve">
+    <value>No custom rules yet.</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard32.Header" xml:space="preserve">
+    <value>Enable rule</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard32.Description" xml:space="preserve">
+    <value>Disabled rules do not participate in routing.</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_ToggleSwitch33.AutomationProperties.Name" xml:space="preserve">
+    <value>Enable rule</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard34.Header" xml:space="preserve">
+    <value>Match criteria</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard35.Header" xml:space="preserve">
+    <value>Action</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard36.Header" xml:space="preserve">
+    <value>Scope</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard37.Header" xml:space="preserve">
+    <value>Rule details</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard37.Description" xml:space="preserve">
+    <value>View the rule source or official sing-box documentation in your browser.</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard37.ActionIconToolTip" xml:space="preserve">
+    <value>Open in browser</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard40.Header" xml:space="preserve">
+    <value>Edit rule</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button41.Content" xml:space="preserve">
+    <value>Edit</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard42.Header" xml:space="preserve">
+    <value>Move rule up</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button43.Content" xml:space="preserve">
+    <value>Move up</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard44.Header" xml:space="preserve">
+    <value>Move rule down</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button45.Content" xml:space="preserve">
+    <value>Move down</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard46.Header" xml:space="preserve">
+    <value>Delete rule</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button47.Content" xml:space="preserve">
+    <value>Delete</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="ServersPage_TextBlock4.Text" xml:space="preserve">
+    <value>Servers</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_TextBlock7.Text" xml:space="preserve">
+    <value>Manage sing-box servers. Paste share links or import outbound JSON.</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsSection9.Header" xml:space="preserve">
+    <value>Add server</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard12.Header" xml:space="preserve">
+    <value>Add servers from share links or configuration</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard12.Description" xml:space="preserve">
+    <value>Paste server share links, import outbound JSON or add servers manually.</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button16.Content" xml:space="preserve">
+    <value>Import</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button16.AutomationProperties.Name" xml:space="preserve">
+    <value>Import server links or configuration</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button17.Content" xml:space="preserve">
+    <value>Add server</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsSection18.Header" xml:space="preserve">
+    <value>Server list</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_EmptyMessage.Text" xml:space="preserve">
+    <value>No servers yet. Import share links or outbound JSON, or add a server manually by type.</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_TextBlock33.Text" xml:space="preserve">
+    <value>· Default</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard35.Header" xml:space="preserve">
+    <value>Default server</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard35.Description" xml:space="preserve">
+    <value>System proxy uses the default server; application groups can select their own.</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button36.Content" xml:space="preserve">
+    <value>Set as default</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard37.Header" xml:space="preserve">
+    <value>Connection test</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard37.Description" xml:space="preserve">
+    <value>Request Google HTTPS 204 through this server.</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button38.Content" xml:space="preserve">
+    <value>Test connection</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard39.Header" xml:space="preserve">
+    <value>Edit server</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard39.Description" xml:space="preserve">
+    <value>View and change this server's protocol, connection and security settings.</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button40.Content" xml:space="preserve">
+    <value>Edit</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard41.Header" xml:space="preserve">
+    <value>Copy server</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button42.Content" xml:space="preserve">
+    <value>Copy</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard43.Header" xml:space="preserve">
+    <value>Delete server</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button44.Content" xml:space="preserve">
+    <value>Delete</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_TextBlock4.Text" xml:space="preserve">
+    <value>Settings</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_TextBlock7.Text" xml:space="preserve">
+    <value>Application startup, appearance and maintenance options.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsSection8.Header" xml:space="preserve">
+    <value>Appearance</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard11.Header" xml:space="preserve">
+    <value>Theme</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard11.Description" xml:space="preserve">
+    <value>Use the Windows light or dark theme by default.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_ComboBoxItem15.Content" xml:space="preserve">
+    <value>Use system setting</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_ComboBoxItem16.Content" xml:space="preserve">
+    <value>Light</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_ComboBoxItem17.Content" xml:space="preserve">
+    <value>Dark</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsSection18.Header" xml:space="preserve">
+    <value>Startup</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard21.Header" xml:space="preserve">
+    <value>Launch at startup</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard21.Description" xml:space="preserve">
+    <value>Start fluent sing-box automatically when you sign in to Windows.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_StartupSwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>Launch at startup</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsSection25.Header" xml:space="preserve">
+    <value>sing-box core</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard28.Header" xml:space="preserve">
+    <value>Core executable</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SingBoxPathDescription.Text" xml:space="preserve">
+    <value>No sing-box.exe selected yet.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SingBoxCorePathButton.Content" xml:space="preserve">
+    <value>Select another core</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard34.Header" xml:space="preserve">
+    <value>Validate generated configuration</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard34.Description" xml:space="preserve">
+    <value>Use the selected sing-box core's check command to verify the startup configuration and rule files.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_CheckConfigurationButton.Content" xml:space="preserve">
+    <value>Check configuration</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard37.Header" xml:space="preserve">
+    <value>Bundled routing rules</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard37.Description" xml:space="preserve">
+    <value>Chinese domains, Chinese IP addresses and non-Chinese domains are provided locally. No startup download is needed. See ThirdParty/RuleSets/manifest.json in the release folder for snapshot versions and sources.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsSection38.Header" xml:space="preserve">
+    <value>Updates and feedback</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard41.Header" xml:space="preserve">
+    <value>Check for updates</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard41.Description" xml:space="preserve">
+    <value>This is a development preview. Updates can be checked and installed after a release source is configured.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_Button44.Content" xml:space="preserve">
+    <value>Check for updates</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard45.Header" xml:space="preserve">
+    <value>Feedback</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard45.Description" xml:space="preserve">
+    <value>Write and copy feedback to paste into an issue or email.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_Button48.Content" xml:space="preserve">
+    <value>Submit feedback</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard49.Header" xml:space="preserve">
+    <value>sing-box documentation</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard49.Description" xml:space="preserve">
+    <value>Read about sing-box protocols and configuration.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard49.ActionIconToolTip" xml:space="preserve">
+    <value>Open in browser</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_TextBlock54.Text" xml:space="preserve">
+    <value>fluent sing-box · 0.1.0 development preview</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard3.Header" xml:space="preserve">
+    <value>Enable system proxy</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard3.Description" xml:space="preserve">
+    <value>Only update Windows proxy settings. Start sing-box separately using the bottom-left switch.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SystemProxySwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>Enable system proxy</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard5.Header" xml:space="preserve">
+    <value>Protocol</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard5.Description" xml:space="preserve">
+    <value>HTTP / SOCKS5 share a local port. The Windows system proxy uses HTTP.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard6.Header" xml:space="preserve">
+    <value>Listen address</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard6.Description" xml:space="preserve">
+    <value>127.0.0.1 · Connections from this device only.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard7.Header" xml:space="preserve">
+    <value>Listen port</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard7.Description" xml:space="preserve">
+    <value>Enter the local proxy port.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard9.Header" xml:space="preserve">
+    <value>Authentication</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard9.Description" xml:space="preserve">
+    <value>Configure a username and password for the local proxy.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_AuthenticationSwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>Enable system proxy authentication</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_UsernameCard.Header" xml:space="preserve">
+    <value>Username</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_UsernameTextBox.PlaceholderText" xml:space="preserve">
+    <value>Username</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_PasswordCard.Header" xml:space="preserve">
+    <value>Password</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_PasswordInput.PlaceholderText" xml:space="preserve">
+    <value>Password</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard15.Header" xml:space="preserve">
+    <value>Apply settings</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard15.Description" xml:space="preserve">
+    <value>Save port or authentication changes. Stop and restart the core using the bottom-left switch to apply the configuration.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_Button16.Content" xml:space="preserve">
+    <value>Apply settings</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard17.Header" xml:space="preserve">
+    <value>Usage notes</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard17.Description" xml:space="preserve">
+    <value>Proxy authentication support depends on the application itself.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="Settings_Language.Header" xml:space="preserve">
+    <value>Application language</value>
+  </data>
+  <data name="Settings_Language.Description" xml:space="preserve">
+    <value>Use the system language or choose a language. Changes take effect after restarting the application.</value>
+  </data>
+  <data name="Settings_Language_System.Content" xml:space="preserve">
+    <value>Use system setting</value>
+  </data>
+  <data name="Settings_Language_Chinese.Content" xml:space="preserve">
+    <value>Chinese (Simplified)</value>
+  </data>
+  <data name="Settings_Language_English.Content" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="ProxyPage_GlobalTunSwitch.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="ProxyPage_GlobalTunSwitch.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="ProxyPage_ToggleSwitch34.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="ProxyPage_ToggleSwitch34.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="RoutingPage_ToggleSwitch33.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="RoutingPage_ToggleSwitch33.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="SettingsPage_StartupSwitch.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="SettingsPage_StartupSwitch.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="SystemProxySettingsControl_SystemProxySwitch.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="SystemProxySettingsControl_SystemProxySwitch.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="SystemProxySettingsControl_AuthenticationSwitch.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="SystemProxySettingsControl_AuthenticationSwitch.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+</root>

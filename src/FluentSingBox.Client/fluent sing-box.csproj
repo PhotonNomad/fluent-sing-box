@@ -15,21 +15,25 @@
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <Platforms>x64</Platforms>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishDir Condition="'$(PublishDir)' == ''">$(MSBuildProjectDirectory)\..\..\artifacts\publish\$(Configuration)\</PublishDir>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>preview</LangVersion>
+    <DefaultLanguage>en-US</DefaultLanguage>
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="2.2.1" />
+    <!-- SettingsControls references the old aggregate SDK; use only the component assets above. -->
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.250108002" ExcludeAssets="all" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
   </ItemGroup>
   <ItemGroup>
+    <PRIResource Include="Strings\**\*.resw" />
+    <None Update="ThirdParty\Schemas\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Update="Assets\fluent-sing-box.png" CopyToOutputDirectory="PreserveNewest" />
-    <EmbeddedResource Include="Assets\empty-rule-set.srs">
-      <LogicalName>FluentSingBox.Client.Resources.empty-rule-set.srs</LogicalName>
-    </EmbeddedResource>
+    <None Update="ThirdParty\RuleSets\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Remove="ThirdParty\SingBox\sing-box-1.14.2-windows-amd64.zip" />
     <EmbeddedResource Include="ThirdParty\SingBox\sing-box-1.14.2-windows-amd64.zip">
       <LogicalName>FluentSingBox.Client.Resources.sing-box-1.14.2-windows-amd64.zip</LogicalName>
@@ -39,4 +43,10 @@
     <None Update="ThirdParty\SingBox\GPL-3.0.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Update="ThirdParty\SingBox\NOTICE.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
+  <Target Name="PublishXamlResources" AfterTargets="Publish">
+    <ItemGroup>
+      <CompiledXamlForPublish Include="$(TargetDir)**\*.xbf;$(TargetDir)*.pri" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CompiledXamlForPublish)" DestinationFiles="@(CompiledXamlForPublish->'$(PublishDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

@@ -1,72 +1,10 @@
-<Page
-    x:Class="FluentSingBox.Client.Views.RoutingPage"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:models="using:FluentSingBox.Client.Models"
-    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
-    xmlns:local="using:FluentSingBox.Client.Views">
+<Page x:Class="FluentSingBox.Client.Views.RoutingPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="using:FluentSingBox.Client.Views">
     <local:PageLayout>
         <local:PageLayout.HeaderContent>
-            <TextBlock
-                Text="路由"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch"
-                Style="{StaticResource TitleTextBlockStyle}"
-                AutomationProperties.HeadingLevel="Level1" />
+            <TextBlock Style="{StaticResource TitleTextBlockStyle}" AutomationProperties.HeadingLevel="Level1" x:Uid="RoutingPage_TextBlock4" />
         </local:PageLayout.HeaderContent>
         <local:PageLayout.PageContent>
-            <StackPanel Spacing="0">
-                <TextBlock Text="按地址选择直连、拦截或代理，并可单独启停中国绕过规则。" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-
-                <local:SettingsSection Header="添加路由规则">
-                    <local:SettingsSection.SectionContent>
-                        <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
-                            <controls:SettingsCard Header="创建自定义路由规则" Description="按域名、IP 地址或 CIDR 网段选择处理方式。">
-                                <controls:SettingsCard.HeaderIcon>
-                                    <FontIcon Glyph="&#xE71B;" />
-                                </controls:SettingsCard.HeaderIcon>
-                                <Button Content="添加规则" Click="AddRule_Click" Style="{StaticResource AccentButtonStyle}" />
-                            </controls:SettingsCard>
-                        </StackPanel>
-                    </local:SettingsSection.SectionContent>
-                </local:SettingsSection>
-
-                <local:SettingsSection Header="路由规则">
-                    <local:SettingsSection.SectionContent>
-                        <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
-                            <TextBlock x:Name="EmptyMessage" Text="暂无自定义规则。" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            <ListView x:Name="RuleList" SelectionMode="None" IsItemClickEnabled="False" Padding="0">
-                                <ListView.ItemTemplate>
-                                    <DataTemplate x:DataType="models:RouteRuleProfile">
-                                        <controls:SettingsExpander Header="{x:Bind Name, Mode=OneWay}" Description="{x:Bind RowDescription, Mode=OneWay}" AutomationProperties.AutomationId="{x:Bind ExpanderAutomationId}">
-                                            <controls:SettingsExpander.HeaderIcon><FontIcon Glyph="&#xE8B7;" /></controls:SettingsExpander.HeaderIcon>
-                                            <controls:SettingsExpander.Items>
-                                                <controls:SettingsCard Header="启用规则" Description="关闭后不参与路由匹配。">
-                                                    <ToggleSwitch IsOn="{x:Bind IsEnabled, Mode=OneWay}" Toggled="RuleSwitch_Toggled" AutomationProperties.Name="启用规则" AutomationProperties.AutomationId="{x:Bind ToggleAutomationId}" />
-                                                </controls:SettingsCard>
-                                                <controls:SettingsCard Header="匹配内容" Description="{x:Bind RuleDescription, Mode=OneWay}" />
-                                                <controls:SettingsCard Header="处理方式" Description="{x:Bind DestinationLabel, Mode=OneWay}" />
-                                                <controls:SettingsCard Header="生效范围" Description="{x:Bind ScopeLabel, Mode=OneWay}" />
-                                                <controls:SettingsCard Header="规则详情" Description="在浏览器中查看规则来源或 sing-box 官方说明。">
-                                                    <HyperlinkButton AutomationProperties.AutomationId="{x:Bind LinkAutomationId}" Content="查看详情 ↗" NavigateUri="{x:Bind DetailsUri}" />
-                                                </controls:SettingsCard>
-                                                <controls:SettingsCard Header="管理规则" Visibility="{x:Bind IsCustom, Converter={StaticResource BoolToVisibilityConverter}}">
-                                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                                        <Button Content="编辑" Click="EditRule_Click" />
-                                                        <Button Content="上移" Click="MoveRuleUp_Click" />
-                                                        <Button Content="下移" Click="MoveRuleDown_Click" />
-                                                        <Button Content="删除" Click="DeleteRule_Click" />
-                                                    </StackPanel>
-                                                </controls:SettingsCard>
-                                            </controls:SettingsExpander.Items>
-                                        </controls:SettingsExpander>
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                            </ListView>
-                        </StackPanel>
-                    </local:SettingsSection.SectionContent>
-                </local:SettingsSection>
-            </StackPanel>
+            <StackPanel x:Name="Form" Spacing="12" />
         </local:PageLayout.PageContent>
     </local:PageLayout>
 </Page>

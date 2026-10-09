@@ -4,6 +4,7 @@
 **/obj/
 work/
 artifacts/
+output/
 *.user
 *.suo
 *.cache

@@ -10,13 +10,13 @@ public static class CoreCommand
         start.ArgumentList.Add("check");
         start.ArgumentList.Add("-c");
         start.ArgumentList.Add(configuration);
-        using var process = Process.Start(start) ?? throw new InvalidOperationException("无法启动核心配置检查。");
+        using var process = Process.Start(start) ?? throw new InvalidOperationException(Localization.Get("CoreCommand_CannotStartTheCoreConfigurationCheck"));
         var output = process.StandardOutput.ReadToEndAsync();
         var error = process.StandardError.ReadToEndAsync();
         try { await process.WaitForExitAsync(cancellation).WaitAsync(TimeSpan.FromSeconds(15), cancellation); }
         catch { if (!process.HasExited) process.Kill(entireProcessTree: true); throw; }
         var details = (await output + "\n" + await error).Trim();
-        if (process.ExitCode != 0) throw new InvalidOperationException("核心配置检查未通过：\n" + details);
+        if (process.ExitCode != 0) throw new InvalidOperationException(Localization.Get("CoreCommand_CoreConfigurationCheckFailed") + details);
         return details;
     }
 }

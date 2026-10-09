@@ -1,0 +1,2780 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <data name="App_FluentSingBoxCouldNotStart" xml:space="preserve">
+    <value>fluent sing-box 无法启动</value>
+    <comment>Source: App.xaml.cs</comment>
+  </data>
+  <data name="App_Close" xml:space="preserve">
+    <value>关闭</value>
+    <comment>Source: App.xaml.cs</comment>
+  </data>
+  <data name="MainWindow_TheCoreStoppedUnexpectedlyPreviousSystemProxySettings" xml:space="preserve">
+    <value>核心意外停止，已恢复原系统代理设置。应用代理配置保留，请检查日志后在左下角重新开启。</value>
+    <comment>Source: MainWindow.xaml.cs</comment>
+  </data>
+  <data name="MainWindow_TheCoreStoppedUnexpectedlyAnotherProgramChangedThe" xml:space="preserve">
+    <value>核心意外停止，Windows 代理已被其他程序修改，已保留其设置。请检查日志后在左下角重新开启。</value>
+    <comment>Source: MainWindow.xaml.cs</comment>
+  </data>
+  <data name="MainWindow_TheCoreStoppedUnexpectedlyRecoveryFailed" xml:space="preserve">
+    <value>核心意外停止，恢复失败：</value>
+    <comment>Source: MainWindow.xaml.cs</comment>
+  </data>
+  <data name="MainWindow_StartupPreflightFailed" xml:space="preserve">
+    <value>启动预检未通过：</value>
+    <comment>Source: MainWindow.xaml.cs</comment>
+  </data>
+  <data name="MainWindow_CannotSwitchSingBox" xml:space="preserve">
+    <value>无法切换 sing-box：</value>
+    <comment>Source: MainWindow.xaml.cs</comment>
+  </data>
+  <data name="MainWindow_ExitCleanupFailedPleaseRetry" xml:space="preserve">
+    <value>退出清理失败，请重试：</value>
+    <comment>Source: MainWindow.xaml.cs</comment>
+  </data>
+  <data name="ProxyModels_NewServer" xml:space="preserve">
+    <value>新服务器</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_0CandidateServers" xml:space="preserve">
+    <value>{0} 个候选节点</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_ProxyGroup" xml:space="preserve">
+    <value>代理组</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_NotConfigured" xml:space="preserve">
+    <value>未配置</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_ProtocolDefault" xml:space="preserve">
+    <value>协议默认</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_DefinedByOutboundJSON" xml:space="preserve">
+    <value>由 outbound JSON 定义</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_Disabled" xml:space="preserve">
+    <value>未启用</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_None" xml:space="preserve">
+    <value>无</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_Direct" xml:space="preserve">
+    <value>直连</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_Block" xml:space="preserve">
+    <value>拦截</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_SpecificServer" xml:space="preserve">
+    <value>指定服务器</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_Proxy" xml:space="preserve">
+    <value>代理</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_ChineseDomainsGeositeGeolocationCn" xml:space="preserve">
+    <value>中国域名（geosite-geolocation-cn）</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_ChineseIPAddressesExcludingNonChineseDomains" xml:space="preserve">
+    <value>中国 IP（排除非中国域名）</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_BlockDoTQUICAndSTUN" xml:space="preserve">
+    <value>阻止 DoT、QUIC 与 STUN</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_ThisDeviceLANAndPrivateAddresses" xml:space="preserve">
+    <value>本机、局域网与私有地址</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_Enabled" xml:space="preserve">
+    <value>已启用</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_Disabled2" xml:space="preserve">
+    <value>已停用</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_SystemAndApplicationProxy" xml:space="preserve">
+    <value>系统代理和应用代理</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_SystemProxy" xml:space="preserve">
+    <value>系统代理</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_NoProgramSelected" xml:space="preserve">
+    <value>未选择程序</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_0Programs" xml:space="preserve">
+    <value>{0} 个程序</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_NoServerSelected" xml:space="preserve">
+    <value>未选择服务器</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_PrivateAddresses" xml:space="preserve">
+    <value>私有地址</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_BlockQUICSTUNDoT" xml:space="preserve">
+    <value>阻止 QUIC / STUN / DoT</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_BlockCommonUDPAndEncryptedDNSTrafficThat" xml:space="preserve">
+    <value>阻止常见绕过代理的 UDP 与加密 DNS 流量</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_DirectConnectionForChineseDomains" xml:space="preserve">
+    <value>中国域名直连</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_DirectConnectionForChineseIPAddresses" xml:space="preserve">
+    <value>中国 IP 直连</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="BundledRuleSets_TheBundledRuleSetManifestIsMissingExtract" xml:space="preserve">
+    <value>缺少内置路由规则清单，请重新解压完整发行包。</value>
+    <comment>Source: Services\BundledRuleSets.cs</comment>
+  </data>
+  <data name="BundledRuleSets_TheBundledRuleSetManifestIsInvalid" xml:space="preserve">
+    <value>内置路由规则清单无效。</value>
+    <comment>Source: Services\BundledRuleSets.cs</comment>
+  </data>
+  <data name="BundledRuleSets_BundledRuleSetMissing0" xml:space="preserve">
+    <value>缺少内置路由规则：{0}。</value>
+    <comment>Source: Services\BundledRuleSets.cs</comment>
+  </data>
+  <data name="BundledRuleSets_InvalidRuleSetFileName" xml:space="preserve">
+    <value>路由规则文件名无效。</value>
+    <comment>Source: Services\BundledRuleSets.cs</comment>
+  </data>
+  <data name="BundledRuleSets_RuleSetFileMissing0ExtractTheComplete" xml:space="preserve">
+    <value>路由规则文件缺失：{0}，请重新解压完整发行包。</value>
+    <comment>Source: Services\BundledRuleSets.cs</comment>
+  </data>
+  <data name="BundledRuleSets_RuleSetIntegrityCheckFailed0ExtractThe" xml:space="preserve">
+    <value>路由规则文件校验失败：{0}，请重新解压完整发行包。</value>
+    <comment>Source: Services\BundledRuleSets.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TUNIsManagedByTheLegacyJSONConfiguration" xml:space="preserve">
+    <value>完整配置模式的 TUN 由 JSON 管理；请关闭表单中的全局 TUN。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TheLegacyJSONConfigurationCannotBeUsedWith" xml:space="preserve">
+    <value>完整配置模式不能同时启用表单中的应用代理。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TheFullConfigurationMustBeAJSONObject" xml:space="preserve">
+    <value>完整配置必须是 JSON 对象。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TheFullConfigurationContainsInvalidJSON" xml:space="preserve">
+    <value>完整配置的 JSON 格式无效。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_InboundsMustBeAnArray" xml:space="preserve">
+    <value>inbounds 必须是数组。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_LogMustBeAnObject" xml:space="preserve">
+    <value>log 必须是对象。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_CoreLoggingMustBeEnabledForTheClient" xml:space="preserve">
+    <value>客户端运行需要启用核心日志。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_UnsupportedDNSType" xml:space="preserve">
+    <value>不支持的 DNS 类型。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TheDNSAddressMustBeAnIPAddress" xml:space="preserve">
+    <value>DNS 地址应是 IP 或主机名；端口和路径请分别填写。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TheDNSPortMustBeBetween1And" xml:space="preserve">
+    <value>DNS 端口必须在 1–65535 之间。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TheDoHPathMustStartWith" xml:space="preserve">
+    <value>DoH 路径应以 / 开头。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_InvalidDNSAddressStrategy" xml:space="preserve">
+    <value>DNS 地址策略无效。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_InvalidLogLevel" xml:space="preserve">
+    <value>日志等级无效。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_InvalidTUNStack" xml:space="preserve">
+    <value>TUN 协议栈无效。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TUNMTUMustBeBetween1280And65535" xml:space="preserve">
+    <value>TUN MTU 必须在 1280–65535 之间。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_EnterAtLeastOneTUNAddress" xml:space="preserve">
+    <value>请填写至少一个 TUN 地址。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TUNAddressesAndExcludedRoutesMustUseA" xml:space="preserve">
+    <value>TUN 地址和排除路由必须使用有效的 IP/前缀格式。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_UnknownConfigurationSection" xml:space="preserve">
+    <value>未知的配置章节：</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_MustBeAJSONObject" xml:space="preserve">
+    <value> 必须是 JSON 对象。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_MustBeAJSONArray" xml:space="preserve">
+    <value> 必须是 JSON 数组。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_ContainsInvalidJSON" xml:space="preserve">
+    <value> 的 JSON 格式无效。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_AdditionalInboundsCannotUseTheReservedTagSystem" xml:space="preserve">
+    <value>高级入站不能使用应用保留标签 system-http。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_DuplicateConfigurationTag" xml:space="preserve">
+    <value>配置中存在重复标签：</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_ControlLoggingWithTheLogLevelCoreLogging" xml:space="preserve">
+    <value>请通过日志等级控制日志；客户端运行需要启用核心日志。</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_AdvancedConfiguration" xml:space="preserve">
+    <value>高级配置 · </value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationFileService_TheApplicationConfigurationMustBeAJSONObject" xml:space="preserve">
+    <value>应用配置必须是 JSON 对象。</value>
+    <comment>Source: Services\ConfigurationFileService.cs</comment>
+  </data>
+  <data name="ConfigurationFileService_TheApplicationConfigurationFileIsMissingImportIt" xml:space="preserve">
+    <value>应用配置文件不存在，请重新导入。</value>
+    <comment>Source: Services\ConfigurationFileService.cs</comment>
+  </data>
+  <data name="ConfigurationFileService_AddADefaultServerFirstOrImportAn" xml:space="preserve">
+    <value>请先添加默认服务器，或导入已有 sing-box 配置。</value>
+    <comment>Source: Services\ConfigurationFileService.cs</comment>
+  </data>
+  <data name="ConfigurationFileService_TheConfigurationMustBeAJSONObject" xml:space="preserve">
+    <value>配置必须是 JSON 对象。</value>
+    <comment>Source: Services\ConfigurationFileService.cs</comment>
+  </data>
+  <data name="ConfigurationFileService_TheConfigurationContainsInvalidJSON" xml:space="preserve">
+    <value>配置的 JSON 格式无效。</value>
+    <comment>Source: Services\ConfigurationFileService.cs</comment>
+  </data>
+  <data name="ConfigurationFileService_TheApplicationConfigurationMustBeAJSONObject2" xml:space="preserve">
+    <value>应用配置必须是 JSON 对象，请在外部编辑器中修正。</value>
+    <comment>Source: Services\ConfigurationFileService.cs</comment>
+  </data>
+  <data name="CoreCommand_CannotStartTheCoreConfigurationCheck" xml:space="preserve">
+    <value>无法启动核心配置检查。</value>
+    <comment>Source: Services\CoreCommand.cs</comment>
+  </data>
+  <data name="CoreCommand_CoreConfigurationCheckFailed" xml:space="preserve">
+    <value>核心配置检查未通过：
+</value>
+    <comment>Source: Services\CoreCommand.cs</comment>
+  </data>
+  <data name="CoreConsole_CannotCreateASeparateStopSignalChannelFor" xml:space="preserve">
+    <value>无法为核心建立独立的停止信号通道。</value>
+    <comment>Source: Services\CoreConsole.cs</comment>
+  </data>
+  <data name="CoreControlPipe_CannotIdentifyTheCurrentWindowsUser" xml:space="preserve">
+    <value>无法识别当前 Windows 用户。</value>
+    <comment>Source: Services\CoreControlPipe.cs</comment>
+  </data>
+  <data name="CoreControlPipe_TimedOutWaitingForTheElevatedHostConnection" xml:space="preserve">
+    <value>等待提权宿主连接超时；尚未确认核心就绪。</value>
+    <comment>Source: Services\CoreControlPipe.cs</comment>
+  </data>
+  <data name="CoreControlPipe_TheConnectedProcessIsNotTheCoreHost" xml:space="preserve">
+    <value>连接进程不是本次启动的核心宿主。</value>
+    <comment>Source: Services\CoreControlPipe.cs</comment>
+  </data>
+  <data name="CoreProcessLease_InvalidCoreProcessRecord" xml:space="preserve">
+    <value>核心进程记录无效。</value>
+    <comment>Source: Services\CoreProcessLease.cs</comment>
+  </data>
+  <data name="CoreProcessLease_TheCoreProcessRecordDoesNotMatchThe" xml:space="preserve">
+    <value>核心进程记录与当前配置目录不匹配，不会终止未知进程。</value>
+    <comment>Source: Services\CoreProcessLease.cs</comment>
+  </data>
+  <data name="CoreProcessLease_TheOrphanedCoreExecutablePathDoesNotMatch" xml:space="preserve">
+    <value>残留核心的程序路径不匹配，不会终止未知进程。</value>
+    <comment>Source: Services\CoreProcessLease.cs</comment>
+  </data>
+  <data name="CoreProcessLease_AnotherClientInstanceIsStillManagingThisCore" xml:space="preserve">
+    <value>另一个客户端实例仍在管理此核心，请先关闭该实例。</value>
+    <comment>Source: Services\CoreProcessLease.cs</comment>
+  </data>
+  <data name="CoreProcessLease_TheOrphanedCoreHasNotExitedANew" xml:space="preserve">
+    <value>残留核心尚未退出，无法安全启动新核心。</value>
+    <comment>Source: Services\CoreProcessLease.cs</comment>
+  </data>
+  <data name="FilePickerService_SingBoxConfiguration" xml:space="preserve">
+    <value>sing-box 配置</value>
+    <comment>Source: Services\FilePickerService.cs</comment>
+  </data>
+  <data name="FilePickerService_TextFile" xml:space="preserve">
+    <value>文本文件</value>
+    <comment>Source: Services\FilePickerService.cs</comment>
+  </data>
+  <data name="FilePickerService_TestFilesMustBeInsideTheIsolatedData" xml:space="preserve">
+    <value>测试文件必须位于隔离数据目录。</value>
+    <comment>Source: Services\FilePickerService.cs</comment>
+  </data>
+  <data name="NodeProbeService_CannotStartTheConnectionTest" xml:space="preserve">
+    <value>无法启动连接测试。</value>
+    <comment>Source: Services\NodeProbeService.cs</comment>
+  </data>
+  <data name="NodeProbeService_GoogleHTTPSReturned0Expected204" xml:space="preserve">
+    <value>Google HTTPS 返回 {0}，预期为 204。</value>
+    <comment>Source: Services\NodeProbeService.cs</comment>
+  </data>
+  <data name="NodeProbeService_ConnectionTestFailed" xml:space="preserve">
+    <value>连接测试失败：</value>
+    <comment>Source: Services\NodeProbeService.cs</comment>
+  </data>
+  <data name="ProxyCoordinator_TheClientIsExiting" xml:space="preserve">
+    <value>客户端正在退出。</value>
+    <comment>Source: Services\ProxyCoordinator.cs</comment>
+  </data>
+  <data name="ProxyCoordinator_TUNIsManagedByTheLegacyJSONConfiguration" xml:space="preserve">
+    <value>完整配置模式的 TUN 由 JSON 管理；如要使用此开关，请切回表单生成模式。</value>
+    <comment>Source: Services\ProxyCoordinator.cs</comment>
+  </data>
+  <data name="ProxyCoordinator_ApplicationRoutingIsManagedByTheLegacyJSON" xml:space="preserve">
+    <value>完整配置模式的应用路由由 JSON 管理；如要使用应用表单，请切回表单生成模式。</value>
+    <comment>Source: Services\ProxyCoordinator.cs</comment>
+  </data>
+  <data name="RouteAddressValidator_InvalidRegularExpressionOnLine0" xml:space="preserve">
+    <value>第 {0} 行的正则表达式无效。</value>
+    <comment>Source: Services\RouteAddressValidator.cs</comment>
+  </data>
+  <data name="RouteAddressValidator_CIDRPrefixOutOfRangeOnLine0" xml:space="preserve">
+    <value>第 {0} 行的 CIDR 前缀超出范围。</value>
+    <comment>Source: Services\RouteAddressValidator.cs</comment>
+  </data>
+  <data name="RouteAddressValidator_InvalidIPCIDROnLine0DomainNames" xml:space="preserve">
+    <value>第 {0} 行的 IP/CIDR 无效；域名不要包含网址前缀或路径。</value>
+    <comment>Source: Services\RouteAddressValidator.cs</comment>
+  </data>
+  <data name="RouteAddressValidator_InvalidDomainNameOnLine0" xml:space="preserve">
+    <value>第 {0} 行的域名无效。</value>
+    <comment>Source: Services\RouteAddressValidator.cs</comment>
+  </data>
+  <data name="RouteAddressValidator_InvalidDomainNameOnLine0YouCan" xml:space="preserve">
+    <value>第 {0} 行的域名无效；可使用 full: 或 domain: 前缀。</value>
+    <comment>Source: Services\RouteAddressValidator.cs</comment>
+  </data>
+  <data name="RouteAddressValidator_EnterAtLeastOneDomainNameOrIP" xml:space="preserve">
+    <value>请填写至少一个域名或 IP/CIDR。</value>
+    <comment>Source: Services\RouteAddressValidator.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheServerConfigurationIsMissingType" xml:space="preserve">
+    <value>服务器配置缺少 type。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_ThisServerTypeRequiresTLS" xml:space="preserve">
+    <value>此服务器类型需要启用 TLS。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_Enter0" xml:space="preserve">
+    <value>请填写{0}。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_Invalid0" xml:space="preserve">
+    <value>{0}无效。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_0MustBeAnIntegerBetween1And" xml:space="preserve">
+    <value>{0}必须是 {1}–{2} 范围内的整数。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_InvalidUUIDFormat" xml:space="preserve">
+    <value>UUID 格式无效。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheDefaultServerMustBeOneOfThe" xml:space="preserve">
+    <value>默认服务器必须属于候选服务器。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheTestURLMustBeAnHTTPOr" xml:space="preserve">
+    <value>测速网址必须是 HTTP 或 HTTPS 地址。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheSnell6PreSharedKeyMustContain" xml:space="preserve">
+    <value>Snell 6 的预共享密钥应为 12–255 字节。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_VisionFlowRequiresTCPTransportAndTLSREALITY" xml:space="preserve">
+    <value>Vision Flow 需要 TCP 传输和 TLS / REALITY。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheREALITYPublicKeyMustBeA32" xml:space="preserve">
+    <value>REALITY 公钥应是 32 字节的 Base64URL 公钥（通常为 43 个字符）。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheREALITYShortIDMustContainAnEven" xml:space="preserve">
+    <value>REALITY Short ID 必须是最多 16 位、长度为偶数的十六进制字符。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheAuthenticationValueIsNotValidBase64" xml:space="preserve">
+    <value>认证内容不是有效的 Base64。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_UsePortsBetween1And65535OrA" xml:space="preserve">
+    <value>端口范围应为 1–65535 内的端口，或起始:结束（如 2000:3000）。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_ThisShadowsocks2022MethodRequiresA0Byte" xml:space="preserve">
+    <value>此 Shadowsocks 2022 方法需要 {0} 字节的 Base64 密钥；多用户密钥用冒号连接。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheConfigurationMustBeASingleOutboundJSON" xml:space="preserve">
+    <value>配置必须是单个 outbound JSON 对象。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_EnterAServerName" xml:space="preserve">
+    <value>请填写服务器名称。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheConfigurationIsMissingTheServerType" xml:space="preserve">
+    <value>配置缺少服务器类型。</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ProxyGroupManualSelection" xml:space="preserve">
+    <value>代理组 · 手动选择</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ProxyGroupAutomaticTesting" xml:space="preserve">
+    <value>代理组 · 自动测速</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_CandidateServers" xml:space="preserve">
+    <value>候选服务器</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_DefaultServer" xml:space="preserve">
+    <value>默认服务器</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_TestURL" xml:space="preserve">
+    <value>测速网址</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_TestInterval" xml:space="preserve">
+    <value>测速间隔</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_SwitchToleranceMs" xml:space="preserve">
+    <value>切换容差（毫秒）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_IdleTimeout" xml:space="preserve">
+    <value>空闲超时</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_InterruptExistingConnectionsWhenSwitchingServers" xml:space="preserve">
+    <value>切换节点时中断已有连接</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ServerAddress" xml:space="preserve">
+    <value>服务器地址</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PortSelection" xml:space="preserve">
+    <value>端口方式</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Port" xml:space="preserve">
+    <value>端口</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_HoppingPortsRangesSeparateWithCommasOrNew" xml:space="preserve">
+    <value>跳跃端口 / 范围（逗号或换行分隔，如 2000:3000）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_HoppingIntervalEG30sOptional" xml:space="preserve">
+    <value>跳跃间隔（如 30s，可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_SSHUser" xml:space="preserve">
+    <value>SSH 用户</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PasswordOptionalForKeyAuthentication" xml:space="preserve">
+    <value>密码（密钥认证时可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PrivateKeyFilePathOptional" xml:space="preserve">
+    <value>私钥文件路径（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PrivateKeyPassphraseOptional" xml:space="preserve">
+    <value>私钥口令（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ServerPublicKeysOnePerLineLeaveBlank" xml:space="preserve">
+    <value>服务器公钥（每行一项；留空接受任何公钥）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PublicKeyAlgorithmsOptional" xml:space="preserve">
+    <value>公钥算法（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_EncryptionAlgorithmsOptional" xml:space="preserve">
+    <value>加密算法（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_MACAlgorithmsOptional" xml:space="preserve">
+    <value>MAC 算法（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_KeyExchangeAlgorithmsOptional" xml:space="preserve">
+    <value>密钥交换算法（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ProtocolVersion" xml:space="preserve">
+    <value>协议版本</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Password" xml:space="preserve">
+    <value>密码</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PreSharedKey" xml:space="preserve">
+    <value>预共享密钥</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_UserKeyOptional" xml:space="preserve">
+    <value>用户密钥（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ReuseConnections" xml:space="preserve">
+    <value>复用连接</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Network" xml:space="preserve">
+    <value>网络</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ObfuscationType" xml:space="preserve">
+    <value>混淆方式</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ObfuscationHost" xml:space="preserve">
+    <value>混淆 Host</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_TrafficShaping" xml:space="preserve">
+    <value>流量整形</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_EncryptionMethod" xml:space="preserve">
+    <value>加密方式</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PasswordOptional" xml:space="preserve">
+    <value>密码（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_CongestionControl" xml:space="preserve">
+    <value>拥塞控制</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_UDPRelayMode" xml:space="preserve">
+    <value>UDP 转发模式</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PasswordKey" xml:space="preserve">
+    <value>密码 / 密钥</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Plugin" xml:space="preserve">
+    <value>插件</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PluginOptions" xml:space="preserve">
+    <value>插件参数</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_SOCKSVersion" xml:space="preserve">
+    <value>SOCKS 版本</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Username" xml:space="preserve">
+    <value>用户名</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_UsernameOptional" xml:space="preserve">
+    <value>用户名（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_AuthenticationFormat" xml:space="preserve">
+    <value>认证格式</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_AuthenticationValueOptional" xml:space="preserve">
+    <value>认证内容（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Base64AuthenticationValue" xml:space="preserve">
+    <value>Base64 认证内容</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_UploadBandwidthEG100Mbps" xml:space="preserve">
+    <value>上行带宽（如 100 Mbps）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_DownloadBandwidthEG100Mbps" xml:space="preserve">
+    <value>下行带宽（如 100 Mbps）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ObfuscationPasswordOptional" xml:space="preserve">
+    <value>混淆密码（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_UploadMbpsLeaveBlankForTheProtocolDefault" xml:space="preserve">
+    <value>上行 Mbps（留空使用协议默认）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_DownloadMbpsLeaveBlankForTheProtocolDefault" xml:space="preserve">
+    <value>下行 Mbps（留空使用协议默认）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Obfuscation" xml:space="preserve">
+    <value>混淆</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ObfuscationPassword" xml:space="preserve">
+    <value>混淆密码</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ConnectionSecurity" xml:space="preserve">
+    <value>连接安全</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_TLSSNILeaveBlankToUseTheServer" xml:space="preserve">
+    <value>TLS SNI（留空使用服务器地址）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_SkipCertificateVerification" xml:space="preserve">
+    <value>跳过证书验证</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ALPNSeparateWithCommasOrNewLinesOptional" xml:space="preserve">
+    <value>ALPN（逗号或换行分隔，可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_TLSFingerprint" xml:space="preserve">
+    <value>TLS 指纹</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_REALITYPublicKey" xml:space="preserve">
+    <value>REALITY 公钥</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_REALITYShortIDOptional" xml:space="preserve">
+    <value>REALITY Short ID（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Transport" xml:space="preserve">
+    <value>传输方式</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_RequestPath" xml:space="preserve">
+    <value>请求路径</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_WebSocketHostOptional" xml:space="preserve">
+    <value>WebSocket Host（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_HTTPHostSeparateWithCommasOrNewLines" xml:space="preserve">
+    <value>HTTP Host（逗号或换行分隔）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_HTTPUpgradeHostOptional" xml:space="preserve">
+    <value>HTTPUpgrade Host（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_GRPCServiceName" xml:space="preserve">
+    <value>gRPC 服务名称</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_WebSocketEarlyDataOptional" xml:space="preserve">
+    <value>WebSocket Early Data（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_EarlyDataHeaderOptional" xml:space="preserve">
+    <value>Early Data 请求头（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_UpstreamProxyOptional" xml:space="preserve">
+    <value>前置代理（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ConnectionTimeoutEG10sOptional" xml:space="preserve">
+    <value>连接超时（如 10s，可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_BindNetworkInterfaceOptional" xml:space="preserve">
+    <value>绑定网络接口（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_EnableMultiplexing" xml:space="preserve">
+    <value>启用多路复用</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_MultiplexingProtocol" xml:space="preserve">
+    <value>多路复用协议</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_MaximumMultiplexedConnectionsOptional" xml:space="preserve">
+    <value>最大复用连接数（可留空）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_DefaultREALITYUsesChrome" xml:space="preserve">
+    <value>默认（REALITY 使用 Chrome）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_NoneDefault" xml:space="preserve">
+    <value>无 / 默认</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_NoTLS" xml:space="preserve">
+    <value>无 TLS</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_TCPDefault" xml:space="preserve">
+    <value>TCP（默认）</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_SinglePort" xml:space="preserve">
+    <value>单个端口</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PortHopping" xml:space="preserve">
+    <value>端口跳跃</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Text" xml:space="preserve">
+    <value>文本</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerImportPreview_Line01" xml:space="preserve">
+    <value>第 {0} 行：{1}</value>
+    <comment>Source: Services\ServerImportPreview.cs</comment>
+  </data>
+  <data name="ServerImportPreview_Line0123" xml:space="preserve">
+    <value>第 {0} 行：{1} · {2} · {3}</value>
+    <comment>Source: Services\ServerImportPreview.cs</comment>
+  </data>
+  <data name="ServerImportPreview_PasteShareLinksOrSingBoxJSON" xml:space="preserve">
+    <value>请粘贴分享链接或 sing-box JSON。</value>
+    <comment>Source: Services\ServerImportPreview.cs</comment>
+  </data>
+  <data name="ServerImportPreview_InvalidOrUnsupportedFormatCheckThisEntry" xml:space="preserve">
+    <value>格式不正确或暂不支持；请检查这一项。</value>
+    <comment>Source: Services\ServerImportPreview.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_PasteServerShareLinksOrSingBoxOutbound" xml:space="preserve">
+    <value>请粘贴服务器分享链接或 sing-box outbound JSON。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_CannotImportThisEntryInvalidLinkFormatOr" xml:space="preserve">
+    <value>无法导入这一项：链接格式不正确或协议暂不支持。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_NoImportableShareLinksWereFound" xml:space="preserve">
+    <value>没有找到可导入的分享链接。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_TheJSONContentIsEmpty" xml:space="preserve">
+    <value>JSON 内容为空。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_EveryConfigurationEntryMustBeAnObjectContaining" xml:space="preserve">
+    <value>每个配置项必须是包含 type 的对象。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_TheConfigurationContainsNoServersOrEndpoints" xml:space="preserve">
+    <value>配置中没有服务器或端点。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_PasteASingleOutboundObjectAJSONArray" xml:space="preserve">
+    <value>请粘贴单个 outbound 对象、JSON 数组，或包含 outbounds 数组的 sing-box 配置。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_EveryOutboundMustContainATypeField" xml:space="preserve">
+    <value>每个 outbound 都必须包含 type 字段。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_VMessShareLinksMustUseBase64JSONAfter" xml:space="preserve">
+    <value>VMess 分享链接需要使用 vmess:// 后的 Base64 JSON 格式。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_0LinksAreNotRecognizedPasteSingBox" xml:space="preserve">
+    <value>暂不识别 {0}:// 链接。可粘贴 sing-box outbound JSON 导入此协议。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_TheVMessBase64ContentIsNotAJSON" xml:space="preserve">
+    <value>VMess Base64 内容不是 JSON 对象。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_TheVMessLinkIsMissingTheAddServer" xml:space="preserve">
+    <value>VMess 链接缺少 add 服务器地址。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_TheVMessLinkIsMissingAValidPort" xml:space="preserve">
+    <value>VMess 链接缺少有效端口。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_TheShadowsocksLinkIsMissingTheServerAddress" xml:space="preserve">
+    <value>Shadowsocks 链接缺少服务器地址。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_InvalidPortInTheShadowsocksLink" xml:space="preserve">
+    <value>Shadowsocks 链接端口无效。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_TheShadowsocksLinkRequiresMethodPassword" xml:space="preserve">
+    <value>Shadowsocks 链接需要 method:password。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_ThisShadowsocksShareLinkUsesPluginOptionsImport" xml:space="preserve">
+    <value>此 Shadowsocks 分享链接使用了插件参数，请改用 sing-box outbound JSON 导入。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_SingBoxDoesNotSupportV2RayMKCPTransport" xml:space="preserve">
+    <value>sing-box 不支持 V2Ray mKCP 传输；链接未导入。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_UnrecognizedV2RayTransport0UseSingBoxOutbound" xml:space="preserve">
+    <value>无法识别 V2Ray 传输方式 {0}；可改用 sing-box outbound JSON。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_InvalidBase64Content" xml:space="preserve">
+    <value>Base64 内容格式无效。</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="SettingsStore_TheConfigurationContentIsEmpty" xml:space="preserve">
+    <value>配置内容为空。</value>
+    <comment>Source: Services\SettingsStore.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_TheLocalProxyPortMustBeBetween1" xml:space="preserve">
+    <value>本地代理端口必须在 1–65535 之间。</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_AddAndSelectADefaultServerFirst" xml:space="preserve">
+    <value>请先添加并选择默认服务器。</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_TheServerSelectedForUnmatchedTrafficFinalNo" xml:space="preserve">
+    <value>未匹配流量（final）选择的服务器已不存在，请在路由页重新选择。</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_TheUnmatchedTrafficFinalActionIsInvalidSelect" xml:space="preserve">
+    <value>未匹配流量（final）的处理方式无效，请在路由页重新选择。</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_ApplicationGroup0HasNoExecutableFilesYet" xml:space="preserve">
+    <value>应用组“{0}”还没有可执行文件。</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_ProgramNotFoundInApplicationGroup01" xml:space="preserve">
+    <value>找不到应用组“{0}”中的程序：{1}</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_ApplicationGroup0ContainsADuplicateProgramA" xml:space="preserve">
+    <value>应用组“{0}”有重复程序；同一个程序只能属于一个已启用应用组。</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_DuplicateServerTag0GiveEachServerA" xml:space="preserve">
+    <value>服务器标签“{0}”重复；请在高级配置中为每个节点设置不同标签。</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_EnterBothAUsernameAndPasswordWhenSystem" xml:space="preserve">
+    <value>启用系统代理身份验证时，必须同时填写用户名和密码。</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_Server0IsMissingAValidAddressOr" xml:space="preserve">
+    <value>服务器“{0}”缺少有效地址或 UUID。</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_TheSingBoxJSONForServer0Is" xml:space="preserve">
+    <value>服务器“{0}”的 sing-box JSON 缺少 type 字段。</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_InvalidSingBoxJSONForServer01" xml:space="preserve">
+    <value>服务器“{0}”的 sing-box JSON 无效：{1}</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxCoreBundle_TheBundledSingBoxCoreResourceIsMissing" xml:space="preserve">
+    <value>应用中缺少内置 sing-box 核心资源。</value>
+    <comment>Source: Services\SingBoxCoreBundle.cs</comment>
+  </data>
+  <data name="SingBoxCoreBundle_TheBundledSingBoxCoreFailedItsIntegrity" xml:space="preserve">
+    <value>内置 sing-box 核心校验失败，请重新构建或安装应用。</value>
+    <comment>Source: Services\SingBoxCoreBundle.cs</comment>
+  </data>
+  <data name="SingBoxCoreBundle_BundledSingBoxCoreFileMissing0" xml:space="preserve">
+    <value>内置 sing-box 核心缺少文件：{0}。</value>
+    <comment>Source: Services\SingBoxCoreBundle.cs</comment>
+  </data>
+  <data name="SingBoxCoreBundle_UnexpectedBundledSingBoxCoreFileSize0" xml:space="preserve">
+    <value>内置 sing-box 核心文件大小异常：{0}。</value>
+    <comment>Source: Services\SingBoxCoreBundle.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheNewConfigurationFailedToStartAndThe" xml:space="preserve">
+    <value>新配置启动失败，旧配置也未能恢复：{0}
+{1}</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheNewConfigurationFailedToStartTheCore" xml:space="preserve">
+    <value>新配置启动失败，核心已恢复到上次运行配置：</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_CannotDetermineTheFluentSingBoxExecutablePath" xml:space="preserve">
+    <value>无法确定 fluent sing-box 程序路径。</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_CannotStartTheSingBoxCoreHostProcess" xml:space="preserve">
+    <value>无法启动 sing-box 核心宿主进程。</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_ApplicationProxyRequiresAdministratorPermissionToCreateTUN" xml:space="preserve">
+    <value>应用代理需要管理员权限来创建 TUN 路由；你取消了 Windows 权限提示。</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheSingBoxCoreDidNotReportReadiness" xml:space="preserve">
+    <value>sing-box 核心没有报告就绪。</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TimedOutWaitingForSingBoxToStart" xml:space="preserve">
+    <value>等待 sing-box 启动超时。
+{0}</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_CannotConnectToTheSingBoxCoreHost" xml:space="preserve">
+    <value>无法连接 sing-box 核心宿主。
+{0}</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheSingBoxBackgroundHostFailedToStart" xml:space="preserve">
+    <value>sing-box 后台宿主启动失败：{0}</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_CannotCreateTheSingBoxProcess" xml:space="preserve">
+    <value>无法创建 sing-box 进程。</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_NotExitedYet" xml:space="preserve">
+    <value>尚未退出</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_ExitCode0" xml:space="preserve">
+    <value>退出代码 {0}</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_SingBoxCouldNotStartAndListenOn" xml:space="preserve">
+    <value>sing-box 未能启动并监听本地端口 {0}（{1}）：{2}
+{3}</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheElevatedCoreHostHasNotExitedCleanup" xml:space="preserve">
+    <value>管理员核心宿主尚未退出，不能确认清理完成；请重试停止。</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheElevatedHostIsStillRunningAfterStartup" xml:space="preserve">
+    <value>启动失败后管理员宿主仍未退出，保留句柄与进程记录；请先完成停止。</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheCoreHasNotExitedItsProcessRecord" xml:space="preserve">
+    <value>核心尚未退出，保留进程记录并禁止重复启动。</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheCoreCouldNotBeStoppedAndIs" xml:space="preserve">
+    <value>核心停止失败，进程仍在运行；不会清除归属记录。</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_CannotReadTheSingBoxVersion" xml:space="preserve">
+    <value>无法读取 sing-box 版本。</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_UnrecognizedSingBoxVersionOutput0" xml:space="preserve">
+    <value>无法识别 sing-box 版本输出：{0}</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheCoreIsStillRunningButHasNot" xml:space="preserve">
+    <value>核心仍在运行但未开始监听</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheSingBoxProcessExitedWithCode0" xml:space="preserve">
+    <value>sing-box 进程已退出，代码 {0}。</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TimedOutWaitingForSingBoxToReport" xml:space="preserve">
+    <value>等待 sing-box 报告启动完成超时。</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="StartupPreflight_MultipleTUNInboundsUseTheSameAdapterName" xml:space="preserve">
+    <value>配置中多个 TUN 使用了相同网卡名称，请修正后再启动。</value>
+    <comment>Source: Services\StartupPreflight.cs</comment>
+  </data>
+  <data name="StartupPreflight_TUNAdapter0AlreadyExistsVerifiedOrphanedCores" xml:space="preserve">
+    <value>TUN 网卡 {0} 已存在。已清理可确认归属的旧核心，但无法确认此网卡的归属；为避免混用，不会删除它或启动新核心。请先关闭拥有该网卡的程序，并检查残留。</value>
+    <comment>Source: Services\StartupPreflight.cs</comment>
+  </data>
+  <data name="StartupPreflight_LocalPort0IsStillOccupiedProcessesWith" xml:space="preserve">
+    <value>本地端口 {0} 仍被占用；不会终止无法确认归属的进程。请关闭旧实例或更换端口。</value>
+    <comment>Source: Services\StartupPreflight.cs</comment>
+  </data>
+  <data name="StartupService_CannotChangeTheCurrentUserSStartupEntry" xml:space="preserve">
+    <value>无法修改当前用户的开机启动项。</value>
+    <comment>Source: Services\StartupService.cs</comment>
+  </data>
+  <data name="StartupService_CannotDetermineTheApplicationExecutablePath" xml:space="preserve">
+    <value>无法确定应用程序路径。</value>
+    <comment>Source: Services\StartupService.cs</comment>
+  </data>
+  <data name="TunShutdownCheck_TheCoreExitedButTUNAdaptersRemain" xml:space="preserve">
+    <value>核心已退出，但 TUN 网卡仍残留：</value>
+    <comment>Source: Services\TunShutdownCheck.cs</comment>
+  </data>
+  <data name="TunShutdownCheck_CleanupIsIncompleteAdaptersWithUnknownOwnershipWill" xml:space="preserve">
+    <value>。清理尚未完成，不会删除无法确认归属的网卡；请保留网络快照以便排查。</value>
+    <comment>Source: Services\TunShutdownCheck.cs</comment>
+  </data>
+  <data name="WindowsProxyConnection_FailedToSetTheWindowsConnectionProxy" xml:space="preserve">
+    <value>Windows 连接代理设置失败。</value>
+    <comment>Source: Services\WindowsProxyConnection.cs</comment>
+  </data>
+  <data name="WindowsProxyService_CannotOpenTheCurrentUserSWindowsNetwork" xml:space="preserve">
+    <value>无法打开当前用户的 Windows 网络代理设置。</value>
+    <comment>Source: Services\WindowsProxyService.cs</comment>
+  </data>
+  <data name="ConfigurationPage_UseTheApplicationSConfigurationFileForAll" xml:space="preserve">
+    <value>统一使用应用内的配置文件。导入会覆盖这份文件；编辑使用系统关联的软件。修改后下次启动核心生效。</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_EditConfiguration" xml:space="preserve">
+    <value>编辑配置</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_OpenTheApplicationConfigurationInAnExternalEditor" xml:space="preserve">
+    <value>在外部编辑器中打开应用配置文件；首次编辑时从当前设置生成。</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_Edit" xml:space="preserve">
+    <value>编辑</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ConfigurationFileOpenedSaveItExternallyThenCheck" xml:space="preserve">
+    <value>已打开配置文件。外部保存后可点击校验；下次启动核心使用文件最新内容。</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ImportConfiguration" xml:space="preserve">
+    <value>导入配置</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ValidateJSONBeforeReplacingTheApplicationConfigurationKeep" xml:space="preserve">
+    <value>校验 JSON 后覆盖应用配置文件，保留上一份备份。不会修改来源文件。</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_Import" xml:space="preserve">
+    <value>导入</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ConfigurationValidatedAndImportedFutureEditsAndStarts" xml:space="preserve">
+    <value>配置校验通过并已导入。后续编辑和启动使用应用自带文件；下次启动核心生效。</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ExportConfiguration" xml:space="preserve">
+    <value>导出配置</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ExportTheApplicationConfigurationIncludingServerCredentialsCopy" xml:space="preserve">
+    <value>导出应用配置文件，包含节点凭据；规则集等外部文件需另行复制。</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_Export" xml:space="preserve">
+    <value>导出</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ApplicationConfigurationExported" xml:space="preserve">
+    <value>已导出应用配置文件。</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_CheckConfiguration" xml:space="preserve">
+    <value>校验配置</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_RunTheSelectedSingBoxCoreSCheck" xml:space="preserve">
+    <value>调用当前 sing-box 核心的 check 命令检查启动配置，不启动核心。</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_Check" xml:space="preserve">
+    <value>校验</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ConfigurationCheckPassed" xml:space="preserve">
+    <value>配置校验通过。</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ConfigurationFile" xml:space="preserve">
+    <value>配置文件：</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_ConfigureDirectAndProxyDNSSettingsAreChecked" xml:space="preserve">
+    <value>设置直连和代理 DNS。保存前校验配置，下次启动代理时生效。</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_ALegacyJSONConfigurationIsActiveEditIts" xml:space="preserve">
+    <value>当前使用完整 JSON 配置模式。请在配置页面编辑完整配置中的 DNS。</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_DirectDNS" xml:space="preserve">
+    <value>直连 DNS</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_ProxyDNS" xml:space="preserve">
+    <value>代理 DNS</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_DNSPolicy" xml:space="preserve">
+    <value>DNS 策略</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_PreferIPv4" xml:space="preserve">
+    <value>优先 IPv4</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_PreferIPv6" xml:space="preserve">
+    <value>优先 IPv6</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_IPv4Only" xml:space="preserve">
+    <value>仅 IPv4</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_IPv6Only" xml:space="preserve">
+    <value>仅 IPv6</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_AddressStrategy" xml:space="preserve">
+    <value>地址策略</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_EnableDNSCache" xml:space="preserve">
+    <value>启用 DNS 缓存</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_RememberIPToDomainMappings" xml:space="preserve">
+    <value>记录 IP 与域名对应关系</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_UseDirectDNSForChineseDomains" xml:space="preserve">
+    <value>中国域名使用直连 DNS</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_UsageNotes" xml:space="preserve">
+    <value>使用提示</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_TheChineseDomainOptionFollowsTheDirectRouting" xml:space="preserve">
+    <value>中国域名设置随路由中的中国域名直连规则生效。明确指定服务器的应用 DNS 优先；DNS 和节点主机名通过系统 DNS 引导解析。高级 DNS 章节覆盖会优先于本页表单。</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_SaveDNSSettings" xml:space="preserve">
+    <value>保存 DNS 设置</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_EditTheDNSSettingsInTheJSONFile" xml:space="preserve">
+    <value>完整 JSON 配置的 DNS 请在配置页面编辑。</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_DNSConfigurationCheckedAndSavedChangesTakeEffect" xml:space="preserve">
+    <value>DNS 配置校验通过并已保存；下次启动代理时生效。</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_CheckAndSave" xml:space="preserve">
+    <value>校验并保存</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_SystemDNS" xml:space="preserve">
+    <value>系统 DNS</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_QueryProtocol" xml:space="preserve">
+    <value>解析协议</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_ServerPort" xml:space="preserve">
+    <value>服务器端口</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_TLSServerNameSNI" xml:space="preserve">
+    <value>TLS 服务器名称（SNI）</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_DoHRequestPath" xml:space="preserve">
+    <value>DoH 请求路径</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_WithSystemDNSWindowsHandlesQueriesTheyDo" xml:space="preserve">
+    <value>使用系统 DNS 时，查询由操作系统处理，不通过所选代理节点传输。</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="LogsPage_CoreStarting" xml:space="preserve">
+    <value>核心正在启动</value>
+    <comment>Source: Views\LogsPage.xaml.cs</comment>
+  </data>
+  <data name="LogsPage_CoreRunning" xml:space="preserve">
+    <value>核心正在运行</value>
+    <comment>Source: Views\LogsPage.xaml.cs</comment>
+  </data>
+  <data name="LogsPage_CoreStopping" xml:space="preserve">
+    <value>核心正在停止</value>
+    <comment>Source: Views\LogsPage.xaml.cs</comment>
+  </data>
+  <data name="LogsPage_CoreErrorOrUnexpectedStop" xml:space="preserve">
+    <value>核心发生错误或意外停止</value>
+    <comment>Source: Views\LogsPage.xaml.cs</comment>
+  </data>
+  <data name="LogsPage_CoreStopped" xml:space="preserve">
+    <value>核心已停止</value>
+    <comment>Source: Views\LogsPage.xaml.cs</comment>
+  </data>
+  <data name="LogsPage_CannotReadLogs" xml:space="preserve">
+    <value>无法读取日志：</value>
+    <comment>Source: Views\LogsPage.xaml.cs</comment>
+  </data>
+  <data name="LogsPage_ExportFailed" xml:space="preserve">
+    <value>导出失败：</value>
+    <comment>Source: Views\LogsPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_CannotConfigureGlobalTUN" xml:space="preserve">
+    <value>无法设置全局 TUN</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_CannotApplyServer" xml:space="preserve">
+    <value>无法应用服务器</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_NoServersYet" xml:space="preserve">
+    <value>还没有服务器</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_AddAServerBeforeCreatingAnApplicationGroup" xml:space="preserve">
+    <value>请先添加服务器，再创建应用组。</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_ProgramsAlreadyAdded" xml:space="preserve">
+    <value>程序已添加</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_AllSelectedProgramsAreAlreadyInAnApplication" xml:space="preserve">
+    <value>所选程序都已存在于应用组中。</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_ApplicationGroupName" xml:space="preserve">
+    <value>应用组名称</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_ForExampleCodex" xml:space="preserve">
+    <value>例如：Codex</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_AddApplicationGroup" xml:space="preserve">
+    <value>添加应用组</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_AddApplicationGroup0Programs" xml:space="preserve">
+    <value>添加应用组（{0} 个程序）</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_Add" xml:space="preserve">
+    <value>添加</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_Cancel" xml:space="preserve">
+    <value>取消</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_GroupNameRequired" xml:space="preserve">
+    <value>需要组名称</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_EnterANameForThisGroupOfPrograms" xml:space="preserve">
+    <value>请为这组程序填写名称。</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_ServerSelectionRequired" xml:space="preserve">
+    <value>需要选择服务器</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_SelectAServerForThisApplicationGroup" xml:space="preserve">
+    <value>请为这个应用组选择一台服务器。</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_CannotDeleteApplicationGroup" xml:space="preserve">
+    <value>无法删除应用组</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_CannotSwitchApplicationProxy" xml:space="preserve">
+    <value>无法切换应用代理</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_ProgramPathsOnePerLine" xml:space="preserve">
+    <value>程序路径（每行一个）</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_AddPrograms" xml:space="preserve">
+    <value>添加程序…</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_EditApplicationGroup" xml:space="preserve">
+    <value>编辑应用组</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_Save" xml:space="preserve">
+    <value>保存</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_ApplicationGroupInformationIsIncomplete" xml:space="preserve">
+    <value>应用组信息不完整</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_EnterANameAndKeepAtLeastOne" xml:space="preserve">
+    <value>请填写名称并至少保留一个程序路径。</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_DeleteApplicationGroup" xml:space="preserve">
+    <value>删除应用组</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_Delete0" xml:space="preserve">
+    <value>要删除“{0}”吗？</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_Delete" xml:space="preserve">
+    <value>删除</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_ProxyServer" xml:space="preserve">
+    <value>代理服务器</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_SelectServer" xml:space="preserve">
+    <value>选择服务器</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_KeepThePreviousModeSDefault" xml:space="preserve">
+    <value>沿用原模式默认值</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_UseDefaultServer" xml:space="preserve">
+    <value>使用默认服务器</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_Server0" xml:space="preserve">
+    <value>服务器：{0}</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_TheSelectedOutboundNoLongerExistsSelectAnother" xml:space="preserve">
+    <value>已选出口不存在，请重新选择</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_UnmatchedTrafficFinal0" xml:space="preserve">
+    <value>未匹配流量（final）：{0}</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_LegacyJSONConfigurationEditRouteFinalThroughThe" xml:space="preserve">
+    <value>完整 JSON 模式：请通过配置页的编辑按钮修改 route.final。</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_UseThisOutboundForUnmatchedSystemProxyAnd" xml:space="preserve">
+    <value>未匹配规则的系统代理和 TUN 流量使用此出口。原模式默认值：系统代理使用默认服务器，全局 TUN 使用默认服务器，应用 TUN 直连。保存后下次启动核心生效；DNS 单独设置。</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_CannotSaveDefaultOutbound" xml:space="preserve">
+    <value>无法保存默认出口</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_DeleteRule" xml:space="preserve">
+    <value>删除规则</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_CannotApplyRule" xml:space="preserve">
+    <value>无法应用规则</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_CannotSwitchRule" xml:space="preserve">
+    <value>无法切换规则</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_RuleName" xml:space="preserve">
+    <value>规则名称</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_ForExampleBlockAddresses" xml:space="preserve">
+    <value>例如：屏蔽地址</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_DomainNameOrIPCIDR" xml:space="preserve">
+    <value>域名或 IP/CIDR</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_OnePerLineEGBlockedExampleFull" xml:space="preserve">
+    <value>每行一个，例如 blocked.example、full:example.com 或 203.0.113.0/24</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_OnMatch" xml:space="preserve">
+    <value>匹配后</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_UseProxyServer" xml:space="preserve">
+    <value>使用代理服务器</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_ProxyServerUsedOnlyForProxyRouting" xml:space="preserve">
+    <value>代理服务器（仅使用代理时）</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_ScopeBlockingRulesAlwaysApplyToBothProxy" xml:space="preserve">
+    <value>生效范围（拦截规则始终适用于两种代理）</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_AddRoutingRule" xml:space="preserve">
+    <value>添加路由规则</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_EditRoutingRule" xml:space="preserve">
+    <value>编辑路由规则</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_EnterARuleName" xml:space="preserve">
+    <value>请填写规则名称。</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_RuleInformationIsIncomplete" xml:space="preserve">
+    <value>规则信息不完整</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_EnterARuleNameAndAtLeastOne" xml:space="preserve">
+    <value>请填写规则名称和至少一个地址。</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="ServerEditorForm_ServerType" xml:space="preserve">
+    <value>服务器类型</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_Name" xml:space="preserve">
+    <value>名称</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_ForExampleHKA" xml:space="preserve">
+    <value>例如：HK-A</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_0AdvancedConfiguration" xml:space="preserve">
+    <value>{0}（高级配置）</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_ThisTypeHasNoPredefinedFormItsOriginal" xml:space="preserve">
+    <value>此类型尚无预定义表单。原配置会保留，可编辑高级配置或在上方选择常用服务器类型。</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_AdvancedConfiguration" xml:space="preserve">
+    <value>高级配置</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_AddAtLeastOneServerFirst" xml:space="preserve">
+    <value>请先添加至少一个服务器。</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_NoUpstreamProxy" xml:space="preserve">
+    <value>不使用前置代理</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_FirstCandidateServer" xml:space="preserve">
+    <value>第一个候选服务器</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_Required" xml:space="preserve">
+    <value>必填</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_Optional" xml:space="preserve">
+    <value>可留空</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_NaiveRequiresACoreWithProtocolSupportAnd" xml:space="preserve">
+    <value>Naive 需要支持该协议的核心及配套 libcronet.dll。</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_FullConfiguration" xml:space="preserve">
+    <value>完整配置</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_EditCompleteJSONDirectlyTheContentBelowIs" xml:space="preserve">
+    <value>直接编辑完整 JSON（保存时采用下方内容）</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_AdvancedConfigurationOptional" xml:space="preserve">
+    <value>高级配置（可选）</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_TheAdvancedConfigurationTypeMustMatchTheServer" xml:space="preserve">
+    <value>高级配置的 type 必须与顶部选择的服务器类型一致。</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_CheckTheServerInformation" xml:space="preserve">
+    <value>请检查服务器信息</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_InvalidAdvancedConfigurationJSON" xml:space="preserve">
+    <value>高级配置 JSON 格式无效。</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServersPage_VmessVlessSsTrojanHysteria2OrSingBox" xml:space="preserve">
+    <value>vmess://、vless://、ss://、trojan://、hysteria2://… 或 sing-box outbound JSON</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_PreviewPastedEntriesOnlySelectedValidEntriesWill" xml:space="preserve">
+    <value>粘贴后预览；只有选中的有效项会导入。</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_PasteServerLinks" xml:space="preserve">
+    <value>粘贴服务器链接</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_ImportSelectedEntries" xml:space="preserve">
+    <value>导入选中项</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_0ValidEntries1UnrecognizedInvalidEntriesWill" xml:space="preserve">
+    <value>有效 {0} 项，无法识别 {1} 项。错误项不会导入。</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_ImportComplete" xml:space="preserve">
+    <value>导入完成</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_Added0Servers" xml:space="preserve">
+    <value>已添加 {0} 个服务器。</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_CannotImport" xml:space="preserve">
+    <value>无法导入</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_Copy" xml:space="preserve">
+    <value>（副本）</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_Testing0" xml:space="preserve">
+    <value>正在测试“{0}”…</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_ServerIsStillReferenced" xml:space="preserve">
+    <value>服务器仍被引用</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_EditTheFollowingServersOrProxyGroupsAnd" xml:space="preserve">
+    <value>请先编辑以下节点或代理组，移除对此服务器的引用：
+</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_Delete0" xml:space="preserve">
+    <value>删除“{0}”？</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_ApplicationsAndRoutesReferencingThisServerWillSwitch" xml:space="preserve">
+    <value>引用此节点的应用和路由会改用默认服务器。</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_AddServer" xml:space="preserve">
+    <value>添加服务器</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_EditServer" xml:space="preserve">
+    <value>编辑服务器</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_CannotEditServer" xml:space="preserve">
+    <value>无法编辑服务器</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_CannotUpdateStartupSettings" xml:space="preserve">
+    <value>无法更新开机启动设置</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_BundledWithTheApplicationSingBox0Windows" xml:space="preserve">
+    <value>随应用内置 · sing-box {0} · Windows x64</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_CustomCore0" xml:space="preserve">
+    <value>自定义核心 · {0}</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_TheCustomPathIsUnavailableFallingBackTo" xml:space="preserve">
+    <value>自定义路径不可用，将回退到内置核心 · sing-box {0}</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_UseBundledCore" xml:space="preserve">
+    <value>使用内置核心</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_SelectAnotherCore" xml:space="preserve">
+    <value>选择其他核心</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_GeneratingConfigurationAndRunningSingBoxCheck" xml:space="preserve">
+    <value>正在生成配置并调用 sing-box check…</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_ConfigurationCheckPassedTheCoreCanReadThis" xml:space="preserve">
+    <value>配置校验通过。此结果确认配置和规则文件可被核心读取，连通性需另行测试。</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_UpdatesAreNotConfigured" xml:space="preserve">
+    <value>更新尚未配置</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_ThisIsALocalDevelopmentPreviewUpdateChecking" xml:space="preserve">
+    <value>当前是本地开发预览版。确定发行仓库后，再接入更新检查和安装流程。</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_Feedback" xml:space="preserve">
+    <value>反馈内容</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_DescribeTheProblemOrImprovementYouWouldLike" xml:space="preserve">
+    <value>描述遇到的问题或想要的改进</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_SubmitFeedback" xml:space="preserve">
+    <value>提交反馈</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_CopyFeedback" xml:space="preserve">
+    <value>复制反馈</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_FluentSingBox010DevelopmentPreview" xml:space="preserve">
+    <value>fluent sing-box 0.1.0 开发预览
+Windows: {0}
+
+{1}</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_FeedbackCopied" xml:space="preserve">
+    <value>反馈已复制</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_PasteTheFeedbackIntoAnIssueOrEmail" xml:space="preserve">
+    <value>可以将反馈粘贴到问题单或邮件中。</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SystemProxyEnabled" xml:space="preserve">
+    <value>系统代理已启用。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml.cs</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SystemProxyDisabled" xml:space="preserve">
+    <value>系统代理已关闭。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml.cs</comment>
+  </data>
+  <data name="SystemProxySettingsControl_CannotSwitchSystemProxy" xml:space="preserve">
+    <value>无法切换系统代理</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml.cs</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsApplied" xml:space="preserve">
+    <value>设置已应用。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml.cs</comment>
+  </data>
+  <data name="SystemProxySettingsControl_CannotApplySettings" xml:space="preserve">
+    <value>无法应用设置</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml.cs</comment>
+  </data>
+  <data name="SystemProxySettingsControl_ThePortMustBeAnIntegerBetween1" xml:space="preserve">
+    <value>端口必须是 1 到 65535 之间的整数。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml.cs</comment>
+  </data>
+  <data name="SystemProxySettingsControl_TheUsernameAndPasswordMustBothBeProvided" xml:space="preserve">
+    <value>启用身份验证时，用户名和密码都不能为空。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml.cs</comment>
+  </data>
+  <data name="MainWindow_NavigationPaneToggleButton.AutomationProperties.Name" xml:space="preserve">
+    <value>显示导航菜单</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_BrandIconImage.AutomationProperties.Name" xml:space="preserve">
+    <value>fluent sing-box 图标</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem28.Content" xml:space="preserve">
+    <value>服务器</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem31.Content" xml:space="preserve">
+    <value>路由</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem34.Content" xml:space="preserve">
+    <value>代理</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem37.Content" xml:space="preserve">
+    <value>日志</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem43.Content" xml:space="preserve">
+    <value>配置</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_CoreSwitch.OffContent" xml:space="preserve">
+    <value>已停止</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_CoreSwitch.OnContent" xml:space="preserve">
+    <value>运行中</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_CoreSwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>启动或停止 sing-box</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_TextBlock49.Text" xml:space="preserve">
+    <value>配置修改后，关闭再开启核心生效。</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="ConfigurationPage_TextBlock4.Text" xml:space="preserve">
+    <value>配置</value>
+    <comment>Source: Views\ConfigurationPage.xaml</comment>
+  </data>
+  <data name="LogsPage_TextBlock4.Text" xml:space="preserve">
+    <value>日志</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_StatusText.Text" xml:space="preserve">
+    <value>核心尚未运行</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_PauseButton.Content" xml:space="preserve">
+    <value>暂停刷新</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_Button10.Content" xml:space="preserve">
+    <value>清空显示</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_Button11.Content" xml:space="preserve">
+    <value>导出脱敏日志</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_FilterBox.Header" xml:space="preserve">
+    <value>筛选</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_FilterBox.PlaceholderText" xml:space="preserve">
+    <value>输入关键词，例如 error、域名或程序名</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_EmptyHint.Text" xml:space="preserve">
+    <value>暂无日志。开启系统代理或应用代理后，核心日志会在这里更新。</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_TextBlock16.Text" xml:space="preserve">
+    <value>显示最近 128 KB；日志已遮盖已保存的凭据。清空显示不会删除核心文件。日志可能仍包含访问地址和本机路径。</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_TextBlock5.Text" xml:space="preserve">
+    <value>代理</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_TextBlock8.Text" xml:space="preserve">
+    <value>系统代理和全局 TUN 使用默认服务器；应用代理可以按程序选择服务器。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_TextBlock9.Text" xml:space="preserve">
+    <value>应用代理使用 TUN。可识别来源的 DNS 请求随应用组服务器解析；Windows 汇总后无法识别来源的 DNS 请求默认使用本地解析。未选中应用的业务连接默认直连。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsSection10.Header" xml:space="preserve">
+    <value>系统代理</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard13.Header" xml:space="preserve">
+    <value>默认服务器</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard13.Description" xml:space="preserve">
+    <value>系统代理和全局 TUN 未命中路由规则时使用此服务器。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_DefaultServerComboBox.PlaceholderText" xml:space="preserve">
+    <value>选择服务器</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsSection18.Header" xml:space="preserve">
+    <value>全局 TUN</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard20.Header" xml:space="preserve">
+    <value>启用全局 TUN</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard20.Description" xml:space="preserve">
+    <value>所有程序进入同一个 TUN，按路由规则处理，未匹配流量使用默认服务器。开启时忽略应用组；仅保存配置，在左下角重新启动核心后生效。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsSection22.Header" xml:space="preserve">
+    <value>应用代理</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsSection22.Description" xml:space="preserve">
+    <value>一个应用组可包含多个程序，并独立选择代理服务器。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_EmptyApplicationsMessage.Text" xml:space="preserve">
+    <value>还没有添加应用。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard33.Header" xml:space="preserve">
+    <value>启用应用代理</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard33.Description" xml:space="preserve">
+    <value>仅保存这组程序的代理配置；在左下角启动核心后生效。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_ToggleSwitch34.AutomationProperties.Name" xml:space="preserve">
+    <value>启用应用代理</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard35.Header" xml:space="preserve">
+    <value>代理服务器</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_ComboBox36.PlaceholderText" xml:space="preserve">
+    <value>选择服务器</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard37.Header" xml:space="preserve">
+    <value>包含的程序</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard42.Header" xml:space="preserve">
+    <value>编辑应用组</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_Button43.Content" xml:space="preserve">
+    <value>编辑</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard44.Header" xml:space="preserve">
+    <value>删除应用组</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_Button45.Content" xml:space="preserve">
+    <value>删除</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard46.Header" xml:space="preserve">
+    <value>添加应用组</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard46.Description" xml:space="preserve">
+    <value>选择一个或多个程序，并为这组程序选择服务器。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_Button49.Content" xml:space="preserve">
+    <value>添加应用组</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_TextBlock50.Text" xml:space="preserve">
+    <value>应用组开关只修改配置。左下角启动 sing-box 时，如配置包含 TUN 会请求管理员权限；修改后关闭再开启核心即可应用。未配置的程序默认直连。</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_TextBlock4.Text" xml:space="preserve">
+    <value>路由</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_TextBlock7.Text" xml:space="preserve">
+    <value>按地址选择直连、拦截或代理，并可单独启停中国绕过规则。</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsSection8.Header" xml:space="preserve">
+    <value>默认处理方式</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_FinalCard.Header" xml:space="preserve">
+    <value>未匹配流量（final）</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_FinalCard.Description" xml:space="preserve">
+    <value>没有匹配到路由规则时使用的出口。保存后，下次启动核心生效；DNS 在 DNS 页单独设置。</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_FinalSelector.AutomationProperties.Name" xml:space="preserve">
+    <value>未匹配流量（final）</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsSection14.Header" xml:space="preserve">
+    <value>添加路由规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard17.Header" xml:space="preserve">
+    <value>创建自定义路由规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard17.Description" xml:space="preserve">
+    <value>按域名、IP 地址或 CIDR 网段选择处理方式。</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button20.Content" xml:space="preserve">
+    <value>添加规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsSection21.Header" xml:space="preserve">
+    <value>路由规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_EmptyMessage.Text" xml:space="preserve">
+    <value>暂无自定义规则。</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard32.Header" xml:space="preserve">
+    <value>启用规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard32.Description" xml:space="preserve">
+    <value>关闭后不参与路由匹配。</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_ToggleSwitch33.AutomationProperties.Name" xml:space="preserve">
+    <value>启用规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard34.Header" xml:space="preserve">
+    <value>匹配内容</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard35.Header" xml:space="preserve">
+    <value>处理方式</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard36.Header" xml:space="preserve">
+    <value>生效范围</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard37.Header" xml:space="preserve">
+    <value>规则详情</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard37.Description" xml:space="preserve">
+    <value>在浏览器中查看规则来源或 sing-box 官方说明。</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard37.ActionIconToolTip" xml:space="preserve">
+    <value>在浏览器中打开</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard40.Header" xml:space="preserve">
+    <value>编辑规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button41.Content" xml:space="preserve">
+    <value>编辑</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard42.Header" xml:space="preserve">
+    <value>上移规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button43.Content" xml:space="preserve">
+    <value>上移</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard44.Header" xml:space="preserve">
+    <value>下移规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button45.Content" xml:space="preserve">
+    <value>下移</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard46.Header" xml:space="preserve">
+    <value>删除规则</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button47.Content" xml:space="preserve">
+    <value>删除</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="ServersPage_TextBlock4.Text" xml:space="preserve">
+    <value>服务器</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_TextBlock7.Text" xml:space="preserve">
+    <value>管理 sing-box 服务器；可粘贴分享链接，也可导入 outbound JSON。</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsSection9.Header" xml:space="preserve">
+    <value>添加服务器</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard12.Header" xml:space="preserve">
+    <value>从分享链接或配置添加服务器</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard12.Description" xml:space="preserve">
+    <value>支持粘贴服务器分享链接、导入 outbound JSON，或手动添加。</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button16.Content" xml:space="preserve">
+    <value>导入</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button16.AutomationProperties.Name" xml:space="preserve">
+    <value>导入服务器链接或配置</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button17.Content" xml:space="preserve">
+    <value>添加服务器</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsSection18.Header" xml:space="preserve">
+    <value>服务器列表</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_EmptyMessage.Text" xml:space="preserve">
+    <value>还没有服务器。可导入分享链接、outbound JSON，或按类型手动添加。</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_TextBlock33.Text" xml:space="preserve">
+    <value>· 默认</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard35.Header" xml:space="preserve">
+    <value>默认服务器</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard35.Description" xml:space="preserve">
+    <value>系统代理使用默认服务器；应用组可单独选择。</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button36.Content" xml:space="preserve">
+    <value>设为默认</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard37.Header" xml:space="preserve">
+    <value>连接测试</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard37.Description" xml:space="preserve">
+    <value>通过此服务器请求 Google HTTPS 204。</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button38.Content" xml:space="preserve">
+    <value>测试连接</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard39.Header" xml:space="preserve">
+    <value>编辑服务器</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard39.Description" xml:space="preserve">
+    <value>查看和修改服务器的协议、连接与安全设置。</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button40.Content" xml:space="preserve">
+    <value>编辑</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard41.Header" xml:space="preserve">
+    <value>复制服务器</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button42.Content" xml:space="preserve">
+    <value>复制</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard43.Header" xml:space="preserve">
+    <value>删除服务器</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button44.Content" xml:space="preserve">
+    <value>删除</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_TextBlock4.Text" xml:space="preserve">
+    <value>设置</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_TextBlock7.Text" xml:space="preserve">
+    <value>应用启动、外观和维护选项。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsSection8.Header" xml:space="preserve">
+    <value>外观</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard11.Header" xml:space="preserve">
+    <value>主题</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard11.Description" xml:space="preserve">
+    <value>默认读取 Windows 的浅色或深色设置。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_ComboBoxItem15.Content" xml:space="preserve">
+    <value>跟随系统</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_ComboBoxItem16.Content" xml:space="preserve">
+    <value>浅色</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_ComboBoxItem17.Content" xml:space="preserve">
+    <value>深色</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsSection18.Header" xml:space="preserve">
+    <value>启动</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard21.Header" xml:space="preserve">
+    <value>开机启动</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard21.Description" xml:space="preserve">
+    <value>登录 Windows 后自动启动 fluent sing-box。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_StartupSwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>开机启动</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsSection25.Header" xml:space="preserve">
+    <value>sing-box 核心</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard28.Header" xml:space="preserve">
+    <value>核心程序</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SingBoxPathDescription.Text" xml:space="preserve">
+    <value>尚未选择 sing-box.exe。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SingBoxCorePathButton.Content" xml:space="preserve">
+    <value>选择其他核心</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard34.Header" xml:space="preserve">
+    <value>验证生成配置</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard34.Description" xml:space="preserve">
+    <value>由当前选用的 sing-box 执行 check，检查完整配置及路由文件。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_CheckConfigurationButton.Content" xml:space="preserve">
+    <value>验证配置</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard37.Header" xml:space="preserve">
+    <value>内置路由规则</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard37.Description" xml:space="preserve">
+    <value>本地提供中国域名、中国 IP 和非中国域名规则。无需启动时下载；快照版本与来源见发行目录 ThirdParty/RuleSets/manifest.json。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsSection38.Header" xml:space="preserve">
+    <value>更新与反馈</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard41.Header" xml:space="preserve">
+    <value>检查更新</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard41.Description" xml:space="preserve">
+    <value>当前为开发预览版；配置发布源后可检查并安装更新。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_Button44.Content" xml:space="preserve">
+    <value>检查更新</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard45.Header" xml:space="preserve">
+    <value>反馈</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard45.Description" xml:space="preserve">
+    <value>填写反馈并复制内容，方便粘贴到问题单或邮件中。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_Button48.Content" xml:space="preserve">
+    <value>提交反馈</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard49.Header" xml:space="preserve">
+    <value>sing-box 文档</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard49.Description" xml:space="preserve">
+    <value>查看 sing-box 的协议和配置说明。</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard49.ActionIconToolTip" xml:space="preserve">
+    <value>在浏览器中打开</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_TextBlock54.Text" xml:space="preserve">
+    <value>fluent sing-box · 0.1.0 开发预览</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard3.Header" xml:space="preserve">
+    <value>启用系统代理</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard3.Description" xml:space="preserve">
+    <value>仅更新 Windows 代理设置；sing-box 在左下角单独启动。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SystemProxySwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>启用系统代理</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard5.Header" xml:space="preserve">
+    <value>协议</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard5.Description" xml:space="preserve">
+    <value>HTTP / SOCKS5 共用本地端口；Windows 系统代理使用 HTTP。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard6.Header" xml:space="preserve">
+    <value>监听地址</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard6.Description" xml:space="preserve">
+    <value>127.0.0.1 · 仅允许本机连接。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard7.Header" xml:space="preserve">
+    <value>监听端口</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard7.Description" xml:space="preserve">
+    <value>填写本地代理端口。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard9.Header" xml:space="preserve">
+    <value>身份验证</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard9.Description" xml:space="preserve">
+    <value>为本地代理配置用户名和密码。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_AuthenticationSwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>启用系统代理身份验证</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_UsernameCard.Header" xml:space="preserve">
+    <value>用户名</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_UsernameTextBox.PlaceholderText" xml:space="preserve">
+    <value>用户名</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_PasswordCard.Header" xml:space="preserve">
+    <value>密码</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_PasswordInput.PlaceholderText" xml:space="preserve">
+    <value>密码</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard15.Header" xml:space="preserve">
+    <value>应用设置</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard15.Description" xml:space="preserve">
+    <value>保存端口或身份验证更改；在左下角关闭再开启核心后应用配置。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_Button16.Content" xml:space="preserve">
+    <value>应用设置</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard17.Header" xml:space="preserve">
+    <value>使用提示</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard17.Description" xml:space="preserve">
+    <value>应用是否支持代理认证，取决于该应用自身。</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="Settings_Language.Header" xml:space="preserve">
+    <value>应用语言</value>
+  </data>
+  <data name="Settings_Language.Description" xml:space="preserve">
+    <value>跟随系统语言或选择语言；重启应用后生效。</value>
+  </data>
+  <data name="Settings_Language_System.Content" xml:space="preserve">
+    <value>跟随系统</value>
+  </data>
+  <data name="Settings_Language_Chinese.Content" xml:space="preserve">
+    <value>简体中文</value>
+  </data>
+  <data name="Settings_Language_English.Content" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Language_RestartRequired" xml:space="preserve">
+    <value>语言设置已保存，重启应用后生效。</value>
+  </data>
+  <data name="Language_SaveFailed" xml:space="preserve">
+    <value>无法保存语言设置</value>
+  </data>
+  <data name="ProxyPage_GlobalTunSwitch.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="ProxyPage_GlobalTunSwitch.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="ProxyPage_ToggleSwitch34.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="ProxyPage_ToggleSwitch34.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="RoutingPage_ToggleSwitch33.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="RoutingPage_ToggleSwitch33.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="SettingsPage_StartupSwitch.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="SettingsPage_StartupSwitch.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="SystemProxySettingsControl_SystemProxySwitch.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="SystemProxySettingsControl_SystemProxySwitch.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="SystemProxySettingsControl_AuthenticationSwitch.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="SystemProxySettingsControl_AuthenticationSwitch.OffContent" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="Common_On" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="Common_Off" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="ApplicationMatch_Mode" xml:space="preserve">
+    <value>匹配方式</value>
+  </data>
+  <data name="ApplicationMatch_Path" xml:space="preserve">
+    <value>程序路径</value>
+  </data>
+  <data name="ApplicationMatch_Name" xml:space="preserve">
+    <value>进程名称</value>
+  </data>
+  <data name="ApplicationMatch_Names" xml:space="preserve">
+    <value>进程名称（每行一个）</value>
+  </data>
+  <data name="ApplicationMatch_Help" xml:space="preserve">
+    <value>路径匹配指定位置的程序；名称匹配任意目录下同名的进程。</value>
+  </data>
+  <data name="ApplicationMatch_NameHelp" xml:space="preserve">
+    <value>填写 ChatGPT.exe 等进程名称，不要包含目录或通配符。</value>
+  </data>
+  <data name="ApplicationMatch_InvalidMode" xml:space="preserve">
+    <value>应用匹配方式无效。</value>
+  </data>
+  <data name="ApplicationMatch_InvalidName" xml:space="preserve">
+    <value>进程名称无效：{0}。请填写文件名，不包含目录或通配符。</value>
+  </data>
+  <data name="ApplicationMatch_DuplicateName" xml:space="preserve">
+    <value>进程名称 {0} 被多个已启用的应用组重复使用。</value>
+  </data>
+  <data name="Schema_GenerationFailed" xml:space="preserve">
+    <value>无法生成所选核心的配置 Schema。</value>
+  </data>
+  <data name="Schema_SourceChanged" xml:space="preserve">
+    <value>配置文件在页面打开后发生了变化，请重新载入后保存。</value>
+  </data>
+  <data name="Schema_Enabled" xml:space="preserve">
+    <value>启用</value>
+  </data>
+  <data name="Schema_Default" xml:space="preserve">
+    <value>默认／不填写</value>
+  </data>
+  <data name="Schema_OnePerLine" xml:space="preserve">
+    <value>每行一个值</value>
+  </data>
+  <data name="Schema_SourceDescription" xml:space="preserve">
+    <value>依据所选核心的 Schema 编辑自带配置；保存时校验，重启核心后生效。</value>
+  </data>
+  <data name="Schema_Reload" xml:space="preserve">
+    <value>重新载入配置</value>
+  </data>
+  <data name="Schema_DnsServers" xml:space="preserve">
+    <value>DNS 服务器 · servers</value>
+  </data>
+  <data name="Schema_DnsRules" xml:space="preserve">
+    <value>DNS 规则 · rules</value>
+  </data>
+  <data name="Schema_InboundPresets" xml:space="preserve">
+    <value>入站预设</value>
+  </data>
+  <data name="Schema_InboundDescription" xml:space="preserve">
+    <value>系统代理使用 mixed HTTP/SOCKS 入站；TUN 接管网络流量。这些只修改配置，核心由左下角开关启停。</value>
+  </data>
+  <data name="Schema_Inbounds" xml:space="preserve">
+    <value>入站 · inbounds</value>
+  </data>
+  <data name="Schema_AddTunPreset" xml:space="preserve">
+    <value>添加 TUN 预设</value>
+  </data>
+  <data name="Schema_Outbounds" xml:space="preserve">
+    <value>出站 · outbounds</value>
+  </data>
+  <data name="Schema_RouteRules" xml:space="preserve">
+    <value>路由规则 · route.rules</value>
+  </data>
+  <data name="Schema_CheckSave" xml:space="preserve">
+    <value>校验并保存</value>
+  </data>
+  <data name="Schema_Saved" xml:space="preserve">
+    <value>配置已校验并保存，重启核心后生效。</value>
+  </data>
+  <data name="Schema_Add" xml:space="preserve">
+    <value>添加</value>
+  </data>
+  <data name="Schema_Edit" xml:space="preserve">
+    <value>编辑</value>
+  </data>
+  <data name="Schema_Delete" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="Schema_MoveUp" xml:space="preserve">
+    <value>上移</value>
+  </data>
+  <data name="Schema_MoveDown" xml:space="preserve">
+    <value>下移</value>
+  </data>
+  <data name="Schema_SystemPreset" xml:space="preserve">
+    <value>系统代理预设</value>
+  </data>
+  <data name="Schema_SystemPresetHelp" xml:space="preserve">
+    <value>system-http 为系统代理保留的 mixed 入站，由代理页维护，不能在此重复创建标签和监听。</value>
+  </data>
+  <data name="SchemaField_final" xml:space="preserve">
+    <value>默认服务器／出站</value>
+  </data>
+  <data name="SchemaField_strategy" xml:space="preserve">
+    <value>地址策略</value>
+  </data>
+  <data name="SchemaField_disable_cache" xml:space="preserve">
+    <value>禁用 DNS 缓存</value>
+  </data>
+  <data name="SchemaField_disable_expire" xml:space="preserve">
+    <value>禁用缓存过期</value>
+  </data>
+  <data name="SchemaField_cache_capacity" xml:space="preserve">
+    <value>缓存容量</value>
+  </data>
+  <data name="SchemaField_optimistic" xml:space="preserve">
+    <value>乐观缓存</value>
+  </data>
+  <data name="SchemaField_timeout" xml:space="preserve">
+    <value>超时</value>
+  </data>
+  <data name="SchemaField_reverse_mapping" xml:space="preserve">
+    <value>记住 IP 到域名的映射</value>
+  </data>
+  <data name="SchemaField_client_subnet" xml:space="preserve">
+    <value>客户端子网</value>
+  </data>
+  <data name="SchemaField_enabled" xml:space="preserve">
+    <value>启用</value>
+  </data>
+  <data name="SchemaField_type" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="SchemaField_action" xml:space="preserve">
+    <value>处理动作</value>
+  </data>
+  <data name="SchemaField_tag" xml:space="preserve">
+    <value>标签</value>
+  </data>
+  <data name="SchemaField_server" xml:space="preserve">
+    <value>服务器</value>
+  </data>
+  <data name="SchemaField_server_port" xml:space="preserve">
+    <value>服务器端口</value>
+  </data>
+  <data name="SchemaField_detour" xml:space="preserve">
+    <value>连接所用出站</value>
+  </data>
+  <data name="SchemaField_inbound" xml:space="preserve">
+    <value>匹配入站标签</value>
+  </data>
+  <data name="SchemaField_outbound" xml:space="preserve">
+    <value>目标出站</value>
+  </data>
+  <data name="SchemaField_domain" xml:space="preserve">
+    <value>完整域名</value>
+  </data>
+  <data name="SchemaField_domain_suffix" xml:space="preserve">
+    <value>域名后缀</value>
+  </data>
+  <data name="SchemaField_domain_keyword" xml:space="preserve">
+    <value>域名关键词</value>
+  </data>
+  <data name="SchemaField_domain_regex" xml:space="preserve">
+    <value>域名正则表达式</value>
+  </data>
+  <data name="SchemaField_ip_cidr" xml:space="preserve">
+    <value>目标 IP 网段</value>
+  </data>
+  <data name="SchemaField_source_ip_cidr" xml:space="preserve">
+    <value>来源 IP 网段</value>
+  </data>
+  <data name="SchemaField_ip_is_private" xml:space="preserve">
+    <value>目标为私有 IP</value>
+  </data>
+  <data name="SchemaField_source_ip_is_private" xml:space="preserve">
+    <value>来源为私有 IP</value>
+  </data>
+  <data name="SchemaField_ip_version" xml:space="preserve">
+    <value>版本</value>
+  </data>
+  <data name="SchemaField_query_type" xml:space="preserve">
+    <value>查询类型</value>
+  </data>
+  <data name="SchemaField_network" xml:space="preserve">
+    <value>网络协议</value>
+  </data>
+  <data name="SchemaField_protocol" xml:space="preserve">
+    <value>识别的协议</value>
+  </data>
+  <data name="SchemaField_port" xml:space="preserve">
+    <value>目标端口</value>
+  </data>
+  <data name="SchemaField_source_port" xml:space="preserve">
+    <value>来源端口</value>
+  </data>
+  <data name="SchemaField_port_range" xml:space="preserve">
+    <value>目标端口范围</value>
+  </data>
+  <data name="SchemaField_source_port_range" xml:space="preserve">
+    <value>来源端口范围</value>
+  </data>
+  <data name="SchemaField_process_name" xml:space="preserve">
+    <value>进程名称</value>
+  </data>
+  <data name="SchemaField_process_path" xml:space="preserve">
+    <value>程序路径</value>
+  </data>
+  <data name="SchemaField_process_path_regex" xml:space="preserve">
+    <value>程序路径正则表达式</value>
+  </data>
+  <data name="SchemaField_package_name" xml:space="preserve">
+    <value>应用包名称</value>
+  </data>
+  <data name="SchemaField_package_name_regex" xml:space="preserve">
+    <value>应用包名称正则表达式</value>
+  </data>
+  <data name="SchemaField_user" xml:space="preserve">
+    <value>用户</value>
+  </data>
+  <data name="SchemaField_user_id" xml:space="preserve">
+    <value>用户 ID</value>
+  </data>
+  <data name="SchemaField_auth_user" xml:space="preserve">
+    <value>已认证用户</value>
+  </data>
+  <data name="SchemaField_rule_set" xml:space="preserve">
+    <value>规则集</value>
+  </data>
+  <data name="SchemaField_invert" xml:space="preserve">
+    <value>反转匹配</value>
+  </data>
+  <data name="SchemaField_mode" xml:space="preserve">
+    <value>逻辑模式</value>
+  </data>
+  <data name="SchemaField_rules" xml:space="preserve">
+    <value>嵌套规则</value>
+  </data>
+  <data name="SchemaField_method" xml:space="preserve">
+    <value>方式</value>
+  </data>
+  <data name="SchemaField_tls" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="SchemaField_server_name" xml:space="preserve">
+    <value>服务器名称</value>
+  </data>
+  <data name="SchemaField_insecure" xml:space="preserve">
+    <value>跳过证书验证</value>
+  </data>
+  <data name="SchemaField_path" xml:space="preserve">
+    <value>路径</value>
+  </data>
+  <data name="SchemaField_listen" xml:space="preserve">
+    <value>监听地址</value>
+  </data>
+  <data name="SchemaField_listen_port" xml:space="preserve">
+    <value>监听端口</value>
+  </data>
+  <data name="SchemaField_address" xml:space="preserve">
+    <value>网卡地址</value>
+  </data>
+  <data name="SchemaField_interface_name" xml:space="preserve">
+    <value>网卡名称</value>
+  </data>
+  <data name="SchemaField_auto_route" xml:space="preserve">
+    <value>自动路由</value>
+  </data>
+  <data name="SchemaField_strict_route" xml:space="preserve">
+    <value>严格路由</value>
+  </data>
+  <data name="SchemaField_stack" xml:space="preserve">
+    <value>网络栈</value>
+  </data>
+  <data name="SchemaField_mtu" xml:space="preserve">
+    <value>MTU</value>
+  </data>
+  <data name="SchemaField_default_domain_resolver" xml:space="preserve">
+    <value>默认域名解析器</value>
+  </data>
+  <data name="SchemaField_default_interface" xml:space="preserve">
+    <value>默认网卡</value>
+  </data>
+  <data name="SchemaField_auto_detect_interface" xml:space="preserve">
+    <value>自动检测默认网卡</value>
+  </data>
+  <data name="SchemaField_rule_set_ip_cidr_match_source" xml:space="preserve">
+    <value>规则集 IP 匹配来源</value>
+  </data>
+  <data name="SchemaField_network_type" xml:space="preserve">
+    <value>网络类型</value>
+  </data>
+  <data name="SchemaField_clash_mode" xml:space="preserve">
+    <value>Clash 模式</value>
+  </data>
+  <data name="SchemaField_wifi_ssid" xml:space="preserve">
+    <value>Wi-Fi 名称</value>
+  </data>
+  <data name="SchemaField_wifi_bssid" xml:space="preserve">
+    <value>Wi-Fi 接入点</value>
+  </data>
+  <data name="SchemaField_source_mac_address" xml:space="preserve">
+    <value>来源 MAC 地址</value>
+  </data>
+  <data name="SchemaField_source_hostname" xml:space="preserve">
+    <value>来源主机名称</value>
+  </data>
+  <data name="Schema_AddField" xml:space="preserve">
+    <value>＋ 添加字段</value>
+  </data>
+  <data name="Schema_RemoveField" xml:space="preserve">
+    <value>移除字段</value>
+  </data>
+  <data name="SchemaField_loopback_address" xml:space="preserve"><value>回环地址</value></data>
+  <data name="SchemaField_udp_mapping" xml:space="preserve"><value>UDP NAT 映射方式</value></data>
+  <data name="SchemaField_route_address" xml:space="preserve"><value>接管路由（CIDR）</value></data>
+  <data name="SchemaField_route_exclude_address_set" xml:space="preserve"><value>排除路由规则集</value></data>
+  <data name="SchemaField_udp_filtering" xml:space="preserve"><value>UDP NAT 过滤方式</value></data>
+  <data name="SchemaField_route_address_set" xml:space="preserve"><value>接管路由规则集</value></data>
+  <data name="SchemaField_udp_nat_max" xml:space="preserve"><value>UDP NAT 最大条目数</value></data>
+  <data name="SchemaField_dns_mode" xml:space="preserve"><value>DNS 处理模式</value></data>
+  <data name="SchemaField_route_exclude_address" xml:space="preserve"><value>排除路由（CIDR）</value></data>
+  <data name="SchemaField_dns_address" xml:space="preserve"><value>DNS 拦截地址</value></data>
+  <data name="TunCleanup_StopCore" xml:space="preserve"><value>请先停止核心并等待操作结束，再清理网卡。</value></data>
+  <data name="TunCleanup_ConfirmHelp" xml:space="preserve"><value>检测到以下 sing-tun 设备，但无法据此确定归属或是否残留。请先停止其他代理/VPN，只勾选你确认不再使用的网卡。操作将删除所选设备实例，保留驱动。</value></data>
+  <data name="TunCleanup_Remove" xml:space="preserve"><value>删除所选网卡</value></data>
+  <data name="TunCleanup_InvalidTarget" xml:space="preserve"><value>TUN 设备选择无效或重复。</value></data>
+  <data name="TunCleanup_Help" xml:space="preserve"><value>停止所有 sing-box 核心后，选择需要删除的网卡；操作需要管理员权限。</value></data>
+  <data name="TunCleanup_Done" xml:space="preserve"><value>所选网卡设备已清除。</value></data>
+  <data name="TunCleanup_Remaining" xml:space="preserve"><value>所选网卡仍然存在，清理未完成。</value></data>
+  <data name="TunCleanup_None" xml:space="preserve"><value>没有发现可清理的 sing-tun 网卡。</value></data>
+  <data name="TunCleanup_NoReport" xml:space="preserve"><value>清理没有返回结果，可能取消了管理员授权；请检查网卡状态。</value></data>
+  <data name="TunCleanup_Button" xml:space="preserve"><value>清除残留 TUN 网卡</value></data>
+  <data name="Diagnostics_PortBind" xml:space="preserve"><value>无法监听 {0}。SocketError：{1}；Windows 错误码：{2}。{4}{3}{4}AddressAlreadyInUse 表示端口冲突；AccessDenied 可能是权限或端口保留限制。不能据此认定 sing-box 进程残留。</value></data>
+  <data name="Diagnostics_TunAfterStop" xml:space="preserve"><value>核心已退出，但等待 3 秒后以下配置中的网卡名称仍存在：{0}。{2}{1}{2}此项检查只匹配名称，无法确认归属，也无法区分后来重新创建的网卡。清理未完成。</value></data>
+  <data name="Diagnostics_ProcessUnreadable" xml:space="preserve"><value>无法核实 PID {0} 的程序身份，未终止进程。Windows 返回：{1}</value></data>
+  <data name="Diagnostics_PathUnreadable" xml:space="preserve"><value>（路径不可读：可能权限不足或进程已退出）</value></data>
+  <data name="Diagnostics_CleanupRemaining" xml:space="preserve"><value>删除后设备仍存在：{0}；实例：{1}；同实例网卡数：{2}；PnP 设备存在：{3}。不能确认清理完成。</value></data>
+  <data name="Diagnostics_CleanupRunning" xml:space="preserve"><value>拒绝清理：检测到名为 sing-box 的运行进程：{0}{1}{0}此项按进程名检查，也包含 v2rayN 的核心，不代表这些进程是残留。请先停止所属客户端。</value></data>
+  <data name="Diagnostics_CleanupInvalid" xml:space="preserve"><value>Wintun 设备身份不匹配。预期：{0}；所选：{1}。已取消删除。</value></data>
+  <data name="Diagnostics_RecordInvalid" xml:space="preserve"><value>无法读取核心进程记录：{0}。未终止任何进程。{2}{1}</value></data>
+  <data name="Diagnostics_CleanupIdentity" xml:space="preserve"><value>设备身份发生变化，本步骤未删除设备。设备实例：{0}。{5}预期名称：{1}；GUID：{2}；描述：{3}。{5}实际：{4}</value></data>
+  <data name="Diagnostics_CleanupFailed" xml:space="preserve"><value>删除设备失败：{0}；实例：{1}；pnputil 退出码：{2}。{4}{3}</value></data>
+  <data name="Diagnostics_TunConflict" xml:space="preserve"><value>检测到 TUN 名称冲突，不能据此认定为残留。请求的 interface_name：{0}；入站 tag：{1}。{2}{3}{2}该网卡可能属于其他代理/VPN。未删除网卡；请停止其所属程序或更换网卡名称。</value></data>
+  <data name="TunPreference_Title" xml:space="preserve"><value>优先接管默认路由</value></data>
+  <data name="TunPreference_Help" xml:space="preserve"><value>使用 IPv4/IPv6 的 /1 路由优先于普通 /0 默认路由，并开启 auto_route。同样或更具体的路由仍可能优先。重启核心后生效，关闭恢复原接管范围。</value></data>
+  <data name="CoreButton_Starting" xml:space="preserve"><value>正在启动…</value></data>
+  <data name="TunPresence_CheckFailed" xml:space="preserve"><value>无法核实设备是否存在。网卡：{0}；设备实例：{1}；CONFIGRET：{2}。未删除设备。</value></data>
+  <data name="CoreButton_Stopping" xml:space="preserve"><value>正在停止…</value></data>
+  <data name="CoreButton_Start" xml:space="preserve"><value>启动 sing-box</value></data>
+  <data name="CoreButton_Stop" xml:space="preserve"><value>停止 sing-box</value></data>
+  <data name="ApplicationEditor_PathRequired" xml:space="preserve"><value>请填写至少一个程序路径。</value></data>
+  <data name="ApplicationEditor_GroupNameRequired" xml:space="preserve"><value>请填写应用组名称。</value></data>
+  <data name="ApplicationEditor_ProcessNameRequired" xml:space="preserve"><value>请填写至少一个进程名称；名称模式不需要程序路径。</value></data>
+</root>

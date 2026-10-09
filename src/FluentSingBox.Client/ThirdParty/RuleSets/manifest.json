@@ -1,0 +1,30 @@
+{
+  "downloadedAtUtc": "2026-09-30T22:33:22.5905727Z",
+  "files": [
+    {
+      "tag": "geosite-geolocation-cn",
+      "sha256": "87604BEFA9B3C969D514E6F26876EB3C6EEFD35B16706CDEEF9C2FDE3EE3AF55",
+      "file": "geosite-geolocation-cn.srs",
+      "bytes": 56185,
+      "source": "https://raw.githubusercontent.com/SagerNet/sing-geosite/417ea33286a8c3a77fdce9b68ce25d58565dad43/geosite-geolocation-cn.srs",
+      "commit": "417ea33286a8c3a77fdce9b68ce25d58565dad43"
+    },
+    {
+      "tag": "geosite-geolocation-!cn",
+      "sha256": "1A23DD9A81380727C02E60D97FDE1FF5EBE3A4DE46D4BB554D3DA0D0A135717A",
+      "file": "geosite-geolocation-!cn.srs",
+      "bytes": 168052,
+      "source": "https://raw.githubusercontent.com/SagerNet/sing-geosite/417ea33286a8c3a77fdce9b68ce25d58565dad43/geosite-geolocation-!cn.srs",
+      "commit": "417ea33286a8c3a77fdce9b68ce25d58565dad43"
+    },
+    {
+      "tag": "geoip-cn",
+      "sha256": "EBEE603FDF402314B44B9F653CDCF6D9CC9C41E84E2B3515E3123C5C920A93BC",
+      "file": "geoip-cn.srs",
+      "bytes": 34185,
+      "source": "https://raw.githubusercontent.com/SagerNet/sing-geoip/7fe82a879ad2666526730c195b55a6d8d9147908/geoip-cn.srs",
+      "commit": "7fe82a879ad2666526730c195b55a6d8d9147908"
+    }
+  ],
+  "coreVersion": "1.14.2"
+}

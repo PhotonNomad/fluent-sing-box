@@ -43,6 +43,6 @@ public static class SettingsStore
     private static async Task<AppSettingsData> ReadAsync(string path)
     {
         await using var input = File.OpenRead(path);
-        return await JsonSerializer.DeserializeAsync<AppSettingsData>(input, Options) ?? throw new JsonException("配置内容为空。");
+        return await JsonSerializer.DeserializeAsync<AppSettingsData>(input, Options) ?? throw new JsonException(Localization.Get("SettingsStore_TheConfigurationContentIsEmpty"));
     }
 }

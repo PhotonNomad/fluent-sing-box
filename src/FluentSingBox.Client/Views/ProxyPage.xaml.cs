@@ -9,10 +9,13 @@ public sealed partial class ProxyPage : Page
 {
     private bool _loading;
     private bool _observingApplications;
+    private bool _changingApplicationProxy;
+    private readonly TunConfigurationForm _tun;
 
     public ProxyPage()
     {
         InitializeComponent();
+        _tun = new TunConfigurationForm(this, TunForm);
         Loaded += ProxyPage_Loaded;
     }
 
@@ -24,6 +27,7 @@ public sealed partial class ProxyPage : Page
         DefaultServerComboBox.SelectedValuePath = nameof(ServerProfile.Id);
         DefaultServerComboBox.SelectedValue = App.State.Settings.DefaultServerId;
         ApplicationList.ItemsSource = App.State.Settings.Applications;
+
         UpdateEmptyApplicationsMessage();
         _loading = false;
 
@@ -52,7 +56,7 @@ public sealed partial class ProxyPage : Page
         }
         catch (Exception exception)
         {
-            await ShowMessageAsync("无法应用服务器", exception.Message);
+            await ShowMessageAsync(Localization.Get("ProxyPage_CannotApplyServer"), exception.Message);
         }
     }
 
@@ -60,65 +64,11 @@ public sealed partial class ProxyPage : Page
     {
         if (App.State.Settings.Servers.Count == 0)
         {
-            await ShowMessageAsync("还没有服务器", "请先添加服务器，再创建应用组。");
+            await ShowMessageAsync(Localization.Get("ProxyPage_NoServersYet"), Localization.Get("ProxyPage_AddAServerBeforeCreatingAnApplicationGroup"));
             return;
         }
 
-        var files = await FilePickerService.PickFilesAsync(".exe");
-        if (files.Count == 0) return;
-
-        var existingPaths = App.State.Settings.Applications
-            .SelectMany(profile => profile.ExecutablePaths)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var selected = files.Where(file => existingPaths.Add(file.Path)).ToArray();
-        if (selected.Length == 0)
-        {
-            await ShowMessageAsync("程序已添加", "所选程序都已存在于应用组中。");
-            return;
-        }
-
-        var groupName = new TextBox
-        {
-            Header = "应用组名称",
-            Text = Path.GetFileNameWithoutExtension(selected[0].Name),
-            PlaceholderText = "例如：Codex"
-        };
-        var serverComboBox = CreateServerComboBox(App.State.Settings.DefaultServerId);
-        var selectedNames = string.Join(Environment.NewLine, selected.Select(file => file.Name));
-        var dialog = new ContentDialog
-        {
-            Title = selected.Length == 1 ? "添加应用组" : $"添加应用组（{selected.Length} 个程序）",
-            Content = new StackPanel
-            {
-                Spacing = 10,
-                Children =
-                {
-                    groupName,
-                    serverComboBox,
-                    new TextBlock { Text = selectedNames, TextWrapping = TextWrapping.Wrap, FontSize = 12 }
-                }
-            },
-            PrimaryButtonText = "添加",
-            CloseButtonText = "取消",
-            DefaultButton = ContentDialogButton.Primary,
-            XamlRoot = XamlRoot
-        };
-        if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
-        if (string.IsNullOrWhiteSpace(groupName.Text))
-        {
-            await ShowMessageAsync("需要组名称", "请为这组程序填写名称。");
-            return;
-        }
-
-        if (serverComboBox.SelectedValue is not string serverId)
-        {
-            await ShowMessageAsync("需要选择服务器", "请为这个应用组选择一台服务器。");
-            return;
-        }
-
-        var profile = new ApplicationProxyProfile { Name = groupName.Text.Trim(), ServerId = serverId };
-        foreach (var file in selected) profile.ExecutablePaths.Add(file.Path);
-        App.State.AddApplication(profile);
+        await ManageApplicationAsync(new ApplicationProxyProfile { ServerId = App.State.Settings.DefaultServerId ?? string.Empty, MatchMode = "name" }, adding: true);
     }
 
     private async void EditApplication_Click(object sender, RoutedEventArgs e)
@@ -131,7 +81,7 @@ public sealed partial class ProxyPage : Page
         if (sender is FrameworkElement { DataContext: ApplicationProxyProfile profile })
         {
             try { await RemoveApplicationAsync(profile); }
-            catch (Exception exception) { await ShowMessageAsync("无法删除应用组", exception.Message); }
+            catch (Exception exception) { await ShowMessageAsync(Localization.Get("ProxyPage_CannotDeleteApplicationGroup"), exception.Message); }
         }
     }
 
@@ -146,13 +96,13 @@ public sealed partial class ProxyPage : Page
         {
             profile.ServerId = previous;
             await App.State.SaveAsync();
-            await ShowMessageAsync("无法应用服务器", exception.Message);
+            await ShowMessageAsync(Localization.Get("ProxyPage_CannotApplyServer"), exception.Message);
         }
     }
 
     private async void ApplicationProxySwitch_Toggled(object sender, RoutedEventArgs e)
     {
-        if (sender is not ToggleSwitch toggle
+        if (_loading || _changingApplicationProxy || sender is not ToggleSwitch toggle
             || toggle.DataContext is not ApplicationProxyProfile profile
             || toggle.IsOn == profile.IsEnabled)
         {
@@ -160,6 +110,9 @@ public sealed partial class ProxyPage : Page
         }
 
         var previousState = profile.IsEnabled;
+        _changingApplicationProxy = true;
+        ApplicationList.IsEnabled = false;
+        toggle.IsEnabled = false;
         try
         {
             await App.ProxyCoordinator.SetApplicationProxyEnabledAsync(profile, toggle.IsOn);
@@ -168,25 +121,46 @@ public sealed partial class ProxyPage : Page
         {
             profile.IsEnabled = previousState;
             toggle.IsOn = previousState;
-            await ShowMessageAsync("无法切换应用代理", exception.Message);
+            await ShowMessageAsync(Localization.Get("ProxyPage_CannotSwitchApplicationProxy"), exception.Message);
         }
+        finally { _changingApplicationProxy = false; toggle.IsEnabled = true; ApplicationList.IsEnabled = true; }
     }
 
-    private async Task ManageApplicationAsync(ApplicationProxyProfile profile)
+    private async Task ManageApplicationAsync(ApplicationProxyProfile profile, bool adding = false)
     {
-        var name = new TextBox { Header = "应用组名称", Text = profile.Name };
+        var name = new TextBox { Header = Localization.Get("ProxyPage_ApplicationGroupName"), Text = profile.Name };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(name, "ApplicationEditor_Name");
         var serverComboBox = CreateServerComboBox(profile.ServerId);
+        var mode = new ComboBox { Header = Localization.Get("ApplicationMatch_Mode"), SelectedValuePath = "Tag" };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(mode, "ApplicationEditor_MatchMode");
+        foreach (var value in new[] { "name", "path" })
+        {
+            var item = new ComboBoxItem { Content = Localization.Get(value == "path" ? "ApplicationMatch_Path" : "ApplicationMatch_Name"), Tag = value };
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(item, "ApplicationEditor_MatchMode_" + value);
+            mode.Items.Add(item);
+        }
+        mode.SelectedValue = profile.MatchMode;
         var programs = new TextBox
         {
-            Header = "程序路径（每行一个）",
+            Header = Localization.Get("ProxyPage_ProgramPathsOnePerLine"),
             Text = string.Join(Environment.NewLine, profile.ExecutablePaths),
             AcceptsReturn = true,
             TextWrapping = TextWrapping.Wrap,
             MinHeight = 110,
             MaxHeight = 180
         };
-        var choosePrograms = new Button { Content = "添加程序…", HorizontalAlignment = HorizontalAlignment.Left };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(programs, "ApplicationEditor_Paths");
+        var names = new TextBox { Header = Localization.Get("ApplicationMatch_Names"), Text = string.Join(Environment.NewLine, profile.ProcessNames), AcceptsReturn = true, MinHeight = 110, MaxHeight = 180 };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(names, "ApplicationEditor_Names");
+        var choosePrograms = new Button { Content = Localization.Get("ProxyPage_AddPrograms"), HorizontalAlignment = HorizontalAlignment.Left };
+        void UpdateMode()
+        {
+            var byName = mode.SelectedValue is "name";
+            programs.Visibility = choosePrograms.Visibility = byName ? Visibility.Collapsed : Visibility.Visible;
+            names.Visibility = byName ? Visibility.Visible : Visibility.Collapsed;
+        }
+        mode.SelectionChanged += (_, _) => UpdateMode();
+        UpdateMode();
         choosePrograms.Click += async (_, _) =>
         {
             var files = await FilePickerService.PickFilesAsync(".exe");
@@ -199,56 +173,80 @@ public sealed partial class ProxyPage : Page
         };
 
         var panel = new StackPanel { Spacing = 12 };
+        var editorError = new InfoBar { Severity = InfoBarSeverity.Error, IsClosable = true };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(editorError, "ApplicationEditor_Error");
+        panel.Children.Add(editorError);
         panel.Children.Add(name);
         panel.Children.Add(serverComboBox);
+        panel.Children.Add(mode);
+        panel.Children.Add(new TextBlock { Text = Localization.Get("ApplicationMatch_Help"), TextWrapping = TextWrapping.Wrap });
         panel.Children.Add(programs);
+        panel.Children.Add(names);
         panel.Children.Add(choosePrograms);
         var dialog = new ContentDialog
         {
-            Title = "编辑应用组",
+            Title = Localization.Get(adding ? "ProxyPage_AddApplicationGroup" : "ProxyPage_EditApplicationGroup"),
             Content = panel,
-            PrimaryButtonText = "保存",
-            CloseButtonText = "取消",
+            PrimaryButtonText = Localization.Get("ProxyPage_Save"),
+            CloseButtonText = Localization.Get("ProxyPage_Cancel"),
             DefaultButton = ContentDialogButton.Primary,
             XamlRoot = XamlRoot
         };
-        if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+        dialog.PrimaryButtonClick += (_, args) =>
+        {
+            var byName = mode.SelectedValue is "name";
+            var entries = (byName ? names.Text : programs.Text).Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var message = string.IsNullOrWhiteSpace(name.Text) ? Localization.Get("ApplicationEditor_GroupNameRequired")
+                : entries.Length == 0 ? Localization.Get(byName ? "ApplicationEditor_ProcessNameRequired" : "ApplicationEditor_PathRequired")
+                : byName && entries.Any(item => item.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) ? Localization.Get("ApplicationMatch_NameHelp")
+                : serverComboBox.SelectedValue is not string ? Localization.Get("ProxyPage_SelectAServerForThisApplicationGroup")
+                : null;
+            if (message is null) return;
+            args.Cancel = true;
+            editorError.Message = message;
+            editorError.IsOpen = true;
+        };
+        if (await DialogService.ShowAsync(dialog) != ContentDialogResult.Primary) return;
 
         var paths = programs.Text
             .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
-        if (string.IsNullOrWhiteSpace(name.Text) || paths.Length == 0)
-        {
-            await ShowMessageAsync("应用组信息不完整", "请填写名称并至少保留一个程序路径。");
-            return;
-        }
+        var processNames = names.Text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        var matchMode = mode.SelectedValue as string ?? "name";
 
         if (serverComboBox.SelectedValue is not string serverId)
         {
-            await ShowMessageAsync("需要选择服务器", "请为这个应用组选择一台服务器。");
+            await ShowMessageAsync(Localization.Get("ProxyPage_ServerSelectionRequired"), Localization.Get("ProxyPage_SelectAServerForThisApplicationGroup"));
             return;
         }
 
-        profile.Name = name.Text.Trim();
-        profile.ServerId = serverId;
-        profile.ExecutablePaths.Clear();
-        foreach (var path in paths) profile.ExecutablePaths.Add(path);
-        await App.ProxyCoordinator.RefreshApplicationProfileAsync(profile);
+        var updated = new ApplicationProxyProfile
+        {
+            Id = profile.Id, Name = name.Text.Trim(), ServerId = serverId, IsEnabled = profile.IsEnabled,
+            MatchMode = matchMode, ProcessNames = new(processNames), ExecutablePaths = new(paths)
+        };
+        if (adding) App.State.AddApplication(updated);
+        else
+        {
+            foreach (var server in App.State.Settings.Servers) updated.AvailableServers.Add(server);
+            App.State.Settings.Applications[App.State.Settings.Applications.IndexOf(profile)] = updated;
+            await App.ProxyCoordinator.RefreshApplicationProfileAsync(updated);
+        }
     }
 
     private async Task RemoveApplicationAsync(ApplicationProxyProfile profile)
     {
         var dialog = new ContentDialog
         {
-            Title = "删除应用组",
-            Content = $"要删除“{profile.Name}”吗？",
-            PrimaryButtonText = "删除",
-            CloseButtonText = "取消",
+            Title = Localization.Get("ProxyPage_DeleteApplicationGroup"),
+            Content = Localization.Format("ProxyPage_Delete0", profile.Name),
+            PrimaryButtonText = Localization.Get("ProxyPage_Delete"),
+            CloseButtonText = Localization.Get("ProxyPage_Cancel"),
             DefaultButton = ContentDialogButton.Close,
             XamlRoot = XamlRoot
         };
-        if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+        if (await DialogService.ShowAsync(dialog) != ContentDialogResult.Primary) return;
         App.State.RemoveApplication(profile);
         await App.ProxyCoordinator.ApplyConfigurationChangesAsync();
     }
@@ -257,11 +255,11 @@ public sealed partial class ProxyPage : Page
     {
         var comboBox = new ComboBox
         {
-            Header = "代理服务器",
+            Header = Localization.Get("ProxyPage_ProxyServer"),
             ItemsSource = App.State.Settings.Servers,
             DisplayMemberPath = nameof(ServerProfile.Name),
             SelectedValuePath = nameof(ServerProfile.Id),
-            PlaceholderText = "选择服务器",
+            PlaceholderText = Localization.Get("ProxyPage_SelectServer"),
             MinWidth = 280,
             HorizontalAlignment = HorizontalAlignment.Stretch
         };
@@ -273,7 +271,7 @@ public sealed partial class ProxyPage : Page
 
     private async Task ShowMessageAsync(string title, string message)
     {
-        var dialog = new ContentDialog { Title = title, Content = message, CloseButtonText = "关闭", XamlRoot = XamlRoot };
-        await dialog.ShowAsync();
+        var dialog = new ContentDialog { Title = title, Content = message, CloseButtonText = Localization.Get("App_Close"), XamlRoot = XamlRoot };
+        await DialogService.ShowAsync(dialog);
     }
 }

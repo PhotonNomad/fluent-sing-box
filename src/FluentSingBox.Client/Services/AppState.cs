@@ -20,6 +20,8 @@ public sealed class AppState
         _settingsPath = Path.Combine(directory, "settings.json");
 
         Settings = await SettingsStore.LoadAsync(_settingsPath);
+        Localization.Configure(Settings.LanguageChoice, Windows.Globalization.ApplicationLanguages.Languages.FirstOrDefault());
+        Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = Localization.Language;
 
         Settings.RemoveLegacyGeoRules();
         // A previous abrupt shutdown must not leave Windows pointing at a dead local proxy.
@@ -28,10 +30,7 @@ public sealed class AppState
             WindowsProxyService.Restore(Settings);
             Settings.SystemProxyEnabled = false;
         }
-        foreach (var app in Settings.Applications)
-        {
-            app.IsEnabled = false;
-        }
+
 
         if (!Settings.Servers.Any(server => server.Id == Settings.DefaultServerId))
         {
@@ -145,6 +144,7 @@ public sealed class AppState
         await _saveGate.WaitAsync();
         try
         {
+            await ConfigurationFileService.SynchronizeAsync(Settings);
             await SettingsStore.SaveAsync(_settingsPath, Settings);
         }
         finally

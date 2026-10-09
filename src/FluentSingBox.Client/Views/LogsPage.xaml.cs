@@ -24,11 +24,11 @@ public sealed partial class LogsPage : Page
     {
         StatusText.Text = App.CoreService.Status switch
         {
-            CoreStatus.Starting => "核心正在启动",
-            CoreStatus.Running => "核心正在运行",
-            CoreStatus.Stopping => "核心正在停止",
-            CoreStatus.Faulted => "核心发生错误或意外停止",
-            _ => "核心已停止"
+            CoreStatus.Starting => Localization.Get("LogsPage_CoreStarting"),
+            CoreStatus.Running => Localization.Get("LogsPage_CoreRunning"),
+            CoreStatus.Stopping => Localization.Get("LogsPage_CoreStopping"),
+            CoreStatus.Faulted => Localization.Get("LogsPage_CoreErrorOrUnexpectedStop"),
+            _ => Localization.Get("LogsPage_CoreStopped")
         };
         if (_refreshing || PauseButton.IsChecked == true) return;
         _refreshing = true;
@@ -41,7 +41,7 @@ public sealed partial class LogsPage : Page
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            ErrorBar.Message = "无法读取日志：" + e.Message;
+            ErrorBar.Message = Localization.Get("LogsPage_CannotReadLogs") + e.Message;
             ErrorBar.IsOpen = true;
         }
         finally { _refreshing = false; }
@@ -66,6 +66,6 @@ public sealed partial class LogsPage : Page
             var file = await FilePickerService.PickSaveTextAsync("fluent sing-box-log");
             if (file is not null) await FileIO.WriteTextAsync(file, LogText.Text);
         }
-        catch (Exception exception) { ErrorBar.Message = "导出失败：" + exception.Message; ErrorBar.IsOpen = true; }
+        catch (Exception exception) { ErrorBar.Message = Localization.Get("LogsPage_ExportFailed") + exception.Message; ErrorBar.IsOpen = true; }
     }
 }

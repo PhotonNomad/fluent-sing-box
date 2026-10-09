@@ -1,0 +1,2780 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <data name="App_FluentSingBoxCouldNotStart" xml:space="preserve">
+    <value>fluent sing-box could not start</value>
+    <comment>Source: App.xaml.cs</comment>
+  </data>
+  <data name="App_Close" xml:space="preserve">
+    <value>Close</value>
+    <comment>Source: App.xaml.cs</comment>
+  </data>
+  <data name="MainWindow_TheCoreStoppedUnexpectedlyPreviousSystemProxySettings" xml:space="preserve">
+    <value>The core stopped unexpectedly. Previous system proxy settings were restored. Application proxy preferences were kept; check the logs and restart the core using the bottom-left switch.</value>
+    <comment>Source: MainWindow.xaml.cs</comment>
+  </data>
+  <data name="MainWindow_TheCoreStoppedUnexpectedlyAnotherProgramChangedThe" xml:space="preserve">
+    <value>The core stopped unexpectedly. Another program changed the Windows proxy settings, which were left intact. Check the logs and restart the core using the bottom-left switch.</value>
+    <comment>Source: MainWindow.xaml.cs</comment>
+  </data>
+  <data name="MainWindow_TheCoreStoppedUnexpectedlyRecoveryFailed" xml:space="preserve">
+    <value>The core stopped unexpectedly; recovery failed: </value>
+    <comment>Source: MainWindow.xaml.cs</comment>
+  </data>
+  <data name="MainWindow_StartupPreflightFailed" xml:space="preserve">
+    <value>Startup preflight failed: </value>
+    <comment>Source: MainWindow.xaml.cs</comment>
+  </data>
+  <data name="MainWindow_CannotSwitchSingBox" xml:space="preserve">
+    <value>Cannot switch sing-box: </value>
+    <comment>Source: MainWindow.xaml.cs</comment>
+  </data>
+  <data name="MainWindow_ExitCleanupFailedPleaseRetry" xml:space="preserve">
+    <value>Exit cleanup failed; please retry: </value>
+    <comment>Source: MainWindow.xaml.cs</comment>
+  </data>
+  <data name="ProxyModels_NewServer" xml:space="preserve">
+    <value>New server</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_0CandidateServers" xml:space="preserve">
+    <value>{0} candidate servers</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_ProxyGroup" xml:space="preserve">
+    <value>Proxy group</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_NotConfigured" xml:space="preserve">
+    <value>Not configured</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_ProtocolDefault" xml:space="preserve">
+    <value>Protocol default</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_DefinedByOutboundJSON" xml:space="preserve">
+    <value>Defined by outbound JSON</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_Disabled" xml:space="preserve">
+    <value>Disabled</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_None" xml:space="preserve">
+    <value>None</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_Direct" xml:space="preserve">
+    <value>Direct</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_Block" xml:space="preserve">
+    <value>Block</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_SpecificServer" xml:space="preserve">
+    <value>Specific server</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_Proxy" xml:space="preserve">
+    <value>Proxy</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_ChineseDomainsGeositeGeolocationCn" xml:space="preserve">
+    <value>Chinese domains (geosite-geolocation-cn)</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_ChineseIPAddressesExcludingNonChineseDomains" xml:space="preserve">
+    <value>Chinese IP addresses (excluding non-Chinese domains)</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_BlockDoTQUICAndSTUN" xml:space="preserve">
+    <value>Block DoT, QUIC and STUN</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_ThisDeviceLANAndPrivateAddresses" xml:space="preserve">
+    <value>This device, LAN and private addresses</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_Enabled" xml:space="preserve">
+    <value>Enabled</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_Disabled2" xml:space="preserve">
+    <value>Disabled</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_SystemAndApplicationProxy" xml:space="preserve">
+    <value>System and application proxy</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_SystemProxy" xml:space="preserve">
+    <value>System proxy</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_NoProgramSelected" xml:space="preserve">
+    <value>No program selected</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_0Programs" xml:space="preserve">
+    <value>{0} programs</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_NoServerSelected" xml:space="preserve">
+    <value>No server selected</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_PrivateAddresses" xml:space="preserve">
+    <value>Private addresses</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_BlockQUICSTUNDoT" xml:space="preserve">
+    <value>Block QUIC / STUN / DoT</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_BlockCommonUDPAndEncryptedDNSTrafficThat" xml:space="preserve">
+    <value>Block common UDP and encrypted DNS traffic that may bypass the proxy</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_DirectConnectionForChineseDomains" xml:space="preserve">
+    <value>Direct connection for Chinese domains</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="ProxyModels_DirectConnectionForChineseIPAddresses" xml:space="preserve">
+    <value>Direct connection for Chinese IP addresses</value>
+    <comment>Source: Models\ProxyModels.cs</comment>
+  </data>
+  <data name="BundledRuleSets_TheBundledRuleSetManifestIsMissingExtract" xml:space="preserve">
+    <value>The bundled rule-set manifest is missing. Extract the complete release package again.</value>
+    <comment>Source: Services\BundledRuleSets.cs</comment>
+  </data>
+  <data name="BundledRuleSets_TheBundledRuleSetManifestIsInvalid" xml:space="preserve">
+    <value>The bundled rule-set manifest is invalid.</value>
+    <comment>Source: Services\BundledRuleSets.cs</comment>
+  </data>
+  <data name="BundledRuleSets_BundledRuleSetMissing0" xml:space="preserve">
+    <value>Bundled rule set missing: {0}.</value>
+    <comment>Source: Services\BundledRuleSets.cs</comment>
+  </data>
+  <data name="BundledRuleSets_InvalidRuleSetFileName" xml:space="preserve">
+    <value>Invalid rule-set file name.</value>
+    <comment>Source: Services\BundledRuleSets.cs</comment>
+  </data>
+  <data name="BundledRuleSets_RuleSetFileMissing0ExtractTheComplete" xml:space="preserve">
+    <value>Rule-set file missing: {0}. Extract the complete release package again.</value>
+    <comment>Source: Services\BundledRuleSets.cs</comment>
+  </data>
+  <data name="BundledRuleSets_RuleSetIntegrityCheckFailed0ExtractThe" xml:space="preserve">
+    <value>Rule-set integrity check failed: {0}. Extract the complete release package again.</value>
+    <comment>Source: Services\BundledRuleSets.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TUNIsManagedByTheLegacyJSONConfiguration" xml:space="preserve">
+    <value>TUN is managed by the legacy JSON configuration. Disable global TUN in the form.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TheLegacyJSONConfigurationCannotBeUsedWith" xml:space="preserve">
+    <value>The legacy JSON configuration cannot be used with enabled application proxy forms.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TheFullConfigurationMustBeAJSONObject" xml:space="preserve">
+    <value>The full configuration must be a JSON object.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TheFullConfigurationContainsInvalidJSON" xml:space="preserve">
+    <value>The full configuration contains invalid JSON.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_InboundsMustBeAnArray" xml:space="preserve">
+    <value>inbounds must be an array.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_LogMustBeAnObject" xml:space="preserve">
+    <value>log must be an object.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_CoreLoggingMustBeEnabledForTheClient" xml:space="preserve">
+    <value>Core logging must be enabled for the client to run.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_UnsupportedDNSType" xml:space="preserve">
+    <value>Unsupported DNS type.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TheDNSAddressMustBeAnIPAddress" xml:space="preserve">
+    <value>The DNS address must be an IP address or host name. Enter the port and path separately.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TheDNSPortMustBeBetween1And" xml:space="preserve">
+    <value>The DNS port must be between 1 and 65535.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TheDoHPathMustStartWith" xml:space="preserve">
+    <value>The DoH path must start with /.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_InvalidDNSAddressStrategy" xml:space="preserve">
+    <value>Invalid DNS address strategy.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_InvalidLogLevel" xml:space="preserve">
+    <value>Invalid log level.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_InvalidTUNStack" xml:space="preserve">
+    <value>Invalid TUN stack.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TUNMTUMustBeBetween1280And65535" xml:space="preserve">
+    <value>TUN MTU must be between 1280 and 65535.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_EnterAtLeastOneTUNAddress" xml:space="preserve">
+    <value>Enter at least one TUN address.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_TUNAddressesAndExcludedRoutesMustUseA" xml:space="preserve">
+    <value>TUN addresses and excluded routes must use a valid IP/prefix format.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_UnknownConfigurationSection" xml:space="preserve">
+    <value>Unknown configuration section: </value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_MustBeAJSONObject" xml:space="preserve">
+    <value> must be a JSON object.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_MustBeAJSONArray" xml:space="preserve">
+    <value> must be a JSON array.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_ContainsInvalidJSON" xml:space="preserve">
+    <value> contains invalid JSON.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_AdditionalInboundsCannotUseTheReservedTagSystem" xml:space="preserve">
+    <value>Additional inbounds cannot use the reserved tag system-http.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_DuplicateConfigurationTag" xml:space="preserve">
+    <value>Duplicate configuration tag: </value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_ControlLoggingWithTheLogLevelCoreLogging" xml:space="preserve">
+    <value>Control logging with the log level. Core logging must stay enabled for the client to run.</value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationComposer_AdvancedConfiguration" xml:space="preserve">
+    <value>Advanced configuration · </value>
+    <comment>Source: Services\ConfigurationComposer.cs</comment>
+  </data>
+  <data name="ConfigurationFileService_TheApplicationConfigurationMustBeAJSONObject" xml:space="preserve">
+    <value>The application configuration must be a JSON object.</value>
+    <comment>Source: Services\ConfigurationFileService.cs</comment>
+  </data>
+  <data name="ConfigurationFileService_TheApplicationConfigurationFileIsMissingImportIt" xml:space="preserve">
+    <value>The application configuration file is missing. Import it again.</value>
+    <comment>Source: Services\ConfigurationFileService.cs</comment>
+  </data>
+  <data name="ConfigurationFileService_AddADefaultServerFirstOrImportAn" xml:space="preserve">
+    <value>Add a default server first, or import an existing sing-box configuration.</value>
+    <comment>Source: Services\ConfigurationFileService.cs</comment>
+  </data>
+  <data name="ConfigurationFileService_TheConfigurationMustBeAJSONObject" xml:space="preserve">
+    <value>The configuration must be a JSON object.</value>
+    <comment>Source: Services\ConfigurationFileService.cs</comment>
+  </data>
+  <data name="ConfigurationFileService_TheConfigurationContainsInvalidJSON" xml:space="preserve">
+    <value>The configuration contains invalid JSON.</value>
+    <comment>Source: Services\ConfigurationFileService.cs</comment>
+  </data>
+  <data name="ConfigurationFileService_TheApplicationConfigurationMustBeAJSONObject2" xml:space="preserve">
+    <value>The application configuration must be a JSON object. Fix it in an external editor.</value>
+    <comment>Source: Services\ConfigurationFileService.cs</comment>
+  </data>
+  <data name="CoreCommand_CannotStartTheCoreConfigurationCheck" xml:space="preserve">
+    <value>Cannot start the core configuration check.</value>
+    <comment>Source: Services\CoreCommand.cs</comment>
+  </data>
+  <data name="CoreCommand_CoreConfigurationCheckFailed" xml:space="preserve">
+    <value>Core configuration check failed:
+</value>
+    <comment>Source: Services\CoreCommand.cs</comment>
+  </data>
+  <data name="CoreConsole_CannotCreateASeparateStopSignalChannelFor" xml:space="preserve">
+    <value>Cannot create a separate stop-signal channel for the core.</value>
+    <comment>Source: Services\CoreConsole.cs</comment>
+  </data>
+  <data name="CoreControlPipe_CannotIdentifyTheCurrentWindowsUser" xml:space="preserve">
+    <value>Cannot identify the current Windows user.</value>
+    <comment>Source: Services\CoreControlPipe.cs</comment>
+  </data>
+  <data name="CoreControlPipe_TimedOutWaitingForTheElevatedHostConnection" xml:space="preserve">
+    <value>Timed out waiting for the elevated host connection; the core is not confirmed ready.</value>
+    <comment>Source: Services\CoreControlPipe.cs</comment>
+  </data>
+  <data name="CoreControlPipe_TheConnectedProcessIsNotTheCoreHost" xml:space="preserve">
+    <value>The connected process is not the core host started by this instance.</value>
+    <comment>Source: Services\CoreControlPipe.cs</comment>
+  </data>
+  <data name="CoreProcessLease_InvalidCoreProcessRecord" xml:space="preserve">
+    <value>Invalid core process record.</value>
+    <comment>Source: Services\CoreProcessLease.cs</comment>
+  </data>
+  <data name="CoreProcessLease_TheCoreProcessRecordDoesNotMatchThe" xml:space="preserve">
+    <value>The core process record does not match the current configuration directory. Unknown processes will not be terminated.</value>
+    <comment>Source: Services\CoreProcessLease.cs</comment>
+  </data>
+  <data name="CoreProcessLease_TheOrphanedCoreExecutablePathDoesNotMatch" xml:space="preserve">
+    <value>The orphaned core executable path does not match. Unknown processes will not be terminated.</value>
+    <comment>Source: Services\CoreProcessLease.cs</comment>
+  </data>
+  <data name="CoreProcessLease_AnotherClientInstanceIsStillManagingThisCore" xml:space="preserve">
+    <value>Another client instance is still managing this core. Close that instance first.</value>
+    <comment>Source: Services\CoreProcessLease.cs</comment>
+  </data>
+  <data name="CoreProcessLease_TheOrphanedCoreHasNotExitedANew" xml:space="preserve">
+    <value>The orphaned core has not exited. A new core cannot be started safely.</value>
+    <comment>Source: Services\CoreProcessLease.cs</comment>
+  </data>
+  <data name="FilePickerService_SingBoxConfiguration" xml:space="preserve">
+    <value>sing-box configuration</value>
+    <comment>Source: Services\FilePickerService.cs</comment>
+  </data>
+  <data name="FilePickerService_TextFile" xml:space="preserve">
+    <value>Text file</value>
+    <comment>Source: Services\FilePickerService.cs</comment>
+  </data>
+  <data name="FilePickerService_TestFilesMustBeInsideTheIsolatedData" xml:space="preserve">
+    <value>Test files must be inside the isolated data directory.</value>
+    <comment>Source: Services\FilePickerService.cs</comment>
+  </data>
+  <data name="NodeProbeService_CannotStartTheConnectionTest" xml:space="preserve">
+    <value>Cannot start the connection test.</value>
+    <comment>Source: Services\NodeProbeService.cs</comment>
+  </data>
+  <data name="NodeProbeService_GoogleHTTPSReturned0Expected204" xml:space="preserve">
+    <value>Google HTTPS returned {0}; expected 204.</value>
+    <comment>Source: Services\NodeProbeService.cs</comment>
+  </data>
+  <data name="NodeProbeService_ConnectionTestFailed" xml:space="preserve">
+    <value>Connection test failed: </value>
+    <comment>Source: Services\NodeProbeService.cs</comment>
+  </data>
+  <data name="ProxyCoordinator_TheClientIsExiting" xml:space="preserve">
+    <value>The client is exiting.</value>
+    <comment>Source: Services\ProxyCoordinator.cs</comment>
+  </data>
+  <data name="ProxyCoordinator_TUNIsManagedByTheLegacyJSONConfiguration" xml:space="preserve">
+    <value>TUN is managed by the legacy JSON configuration. Edit the configuration file instead.</value>
+    <comment>Source: Services\ProxyCoordinator.cs</comment>
+  </data>
+  <data name="ProxyCoordinator_ApplicationRoutingIsManagedByTheLegacyJSON" xml:space="preserve">
+    <value>Application routing is managed by the legacy JSON configuration. Edit the configuration file instead.</value>
+    <comment>Source: Services\ProxyCoordinator.cs</comment>
+  </data>
+  <data name="RouteAddressValidator_InvalidRegularExpressionOnLine0" xml:space="preserve">
+    <value>Invalid regular expression on line {0}.</value>
+    <comment>Source: Services\RouteAddressValidator.cs</comment>
+  </data>
+  <data name="RouteAddressValidator_CIDRPrefixOutOfRangeOnLine0" xml:space="preserve">
+    <value>CIDR prefix out of range on line {0}.</value>
+    <comment>Source: Services\RouteAddressValidator.cs</comment>
+  </data>
+  <data name="RouteAddressValidator_InvalidIPCIDROnLine0DomainNames" xml:space="preserve">
+    <value>Invalid IP/CIDR on line {0}. Domain names must not contain a URL prefix or path.</value>
+    <comment>Source: Services\RouteAddressValidator.cs</comment>
+  </data>
+  <data name="RouteAddressValidator_InvalidDomainNameOnLine0" xml:space="preserve">
+    <value>Invalid domain name on line {0}.</value>
+    <comment>Source: Services\RouteAddressValidator.cs</comment>
+  </data>
+  <data name="RouteAddressValidator_InvalidDomainNameOnLine0YouCan" xml:space="preserve">
+    <value>Invalid domain name on line {0}. You can use the full: or domain: prefix.</value>
+    <comment>Source: Services\RouteAddressValidator.cs</comment>
+  </data>
+  <data name="RouteAddressValidator_EnterAtLeastOneDomainNameOrIP" xml:space="preserve">
+    <value>Enter at least one domain name or IP/CIDR.</value>
+    <comment>Source: Services\RouteAddressValidator.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheServerConfigurationIsMissingType" xml:space="preserve">
+    <value>The server configuration is missing type.</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_ThisServerTypeRequiresTLS" xml:space="preserve">
+    <value>This server type requires TLS.</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_Enter0" xml:space="preserve">
+    <value>Enter {0}.</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_Invalid0" xml:space="preserve">
+    <value>Invalid {0}.</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_0MustBeAnIntegerBetween1And" xml:space="preserve">
+    <value>{0} must be an integer between {1} and {2}.</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_InvalidUUIDFormat" xml:space="preserve">
+    <value>Invalid UUID format.</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheDefaultServerMustBeOneOfThe" xml:space="preserve">
+    <value>The default server must be one of the candidate servers.</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheTestURLMustBeAnHTTPOr" xml:space="preserve">
+    <value>The test URL must be an HTTP or HTTPS address.</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheSnell6PreSharedKeyMustContain" xml:space="preserve">
+    <value>The Snell 6 pre-shared key must contain 12–255 bytes.</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_VisionFlowRequiresTCPTransportAndTLSREALITY" xml:space="preserve">
+    <value>Vision Flow requires TCP transport and TLS / REALITY.</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheREALITYPublicKeyMustBeA32" xml:space="preserve">
+    <value>The REALITY public key must be a 32-byte Base64URL public key (usually 43 characters).</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheREALITYShortIDMustContainAnEven" xml:space="preserve">
+    <value>The REALITY Short ID must contain an even number of hexadecimal characters, up to 16.</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheAuthenticationValueIsNotValidBase64" xml:space="preserve">
+    <value>The authentication value is not valid Base64.</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_UsePortsBetween1And65535OrA" xml:space="preserve">
+    <value>Use ports between 1 and 65535, or a start:end range (such as 2000:3000).</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_ThisShadowsocks2022MethodRequiresA0Byte" xml:space="preserve">
+    <value>This Shadowsocks 2022 method requires a {0}-byte Base64 key. Separate multi-user keys with colons.</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheConfigurationMustBeASingleOutboundJSON" xml:space="preserve">
+    <value>The configuration must be a single outbound JSON object.</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_EnterAServerName" xml:space="preserve">
+    <value>Enter a server name.</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorDraft_TheConfigurationIsMissingTheServerType" xml:space="preserve">
+    <value>The configuration is missing the server type.</value>
+    <comment>Source: Services\ServerEditorDraft.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ProxyGroupManualSelection" xml:space="preserve">
+    <value>Proxy group · Manual selection</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ProxyGroupAutomaticTesting" xml:space="preserve">
+    <value>Proxy group · Automatic testing</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_CandidateServers" xml:space="preserve">
+    <value>Candidate servers</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_DefaultServer" xml:space="preserve">
+    <value>Default server</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_TestURL" xml:space="preserve">
+    <value>Test URL</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_TestInterval" xml:space="preserve">
+    <value>Test interval</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_SwitchToleranceMs" xml:space="preserve">
+    <value>Switch tolerance (ms)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_IdleTimeout" xml:space="preserve">
+    <value>Idle timeout</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_InterruptExistingConnectionsWhenSwitchingServers" xml:space="preserve">
+    <value>Interrupt existing connections when switching servers</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ServerAddress" xml:space="preserve">
+    <value>Server address</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PortSelection" xml:space="preserve">
+    <value>Port selection</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Port" xml:space="preserve">
+    <value>Port</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_HoppingPortsRangesSeparateWithCommasOrNew" xml:space="preserve">
+    <value>Hopping ports / ranges (separate with commas or new lines, e.g. 2000:3000)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_HoppingIntervalEG30sOptional" xml:space="preserve">
+    <value>Hopping interval (e.g. 30s; optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_SSHUser" xml:space="preserve">
+    <value>SSH user</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PasswordOptionalForKeyAuthentication" xml:space="preserve">
+    <value>Password (optional for key authentication)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PrivateKeyFilePathOptional" xml:space="preserve">
+    <value>Private key file path (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PrivateKeyPassphraseOptional" xml:space="preserve">
+    <value>Private key passphrase (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ServerPublicKeysOnePerLineLeaveBlank" xml:space="preserve">
+    <value>Server public keys (one per line; leave blank to accept any key)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PublicKeyAlgorithmsOptional" xml:space="preserve">
+    <value>Public key algorithms (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_EncryptionAlgorithmsOptional" xml:space="preserve">
+    <value>Encryption algorithms (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_MACAlgorithmsOptional" xml:space="preserve">
+    <value>MAC algorithms (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_KeyExchangeAlgorithmsOptional" xml:space="preserve">
+    <value>Key exchange algorithms (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ProtocolVersion" xml:space="preserve">
+    <value>Protocol version</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Password" xml:space="preserve">
+    <value>Password</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PreSharedKey" xml:space="preserve">
+    <value>Pre-shared key</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_UserKeyOptional" xml:space="preserve">
+    <value>User key (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ReuseConnections" xml:space="preserve">
+    <value>Reuse connections</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Network" xml:space="preserve">
+    <value>Network</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ObfuscationType" xml:space="preserve">
+    <value>Obfuscation type</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ObfuscationHost" xml:space="preserve">
+    <value>Obfuscation Host</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_TrafficShaping" xml:space="preserve">
+    <value>Traffic shaping</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_EncryptionMethod" xml:space="preserve">
+    <value>Encryption method</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PasswordOptional" xml:space="preserve">
+    <value>Password (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_CongestionControl" xml:space="preserve">
+    <value>Congestion control</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_UDPRelayMode" xml:space="preserve">
+    <value>UDP relay mode</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PasswordKey" xml:space="preserve">
+    <value>Password / key</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Plugin" xml:space="preserve">
+    <value>Plugin</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PluginOptions" xml:space="preserve">
+    <value>Plugin options</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_SOCKSVersion" xml:space="preserve">
+    <value>SOCKS version</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Username" xml:space="preserve">
+    <value>Username</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_UsernameOptional" xml:space="preserve">
+    <value>Username (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_AuthenticationFormat" xml:space="preserve">
+    <value>Authentication format</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_AuthenticationValueOptional" xml:space="preserve">
+    <value>Authentication value (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Base64AuthenticationValue" xml:space="preserve">
+    <value>Base64 authentication value</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_UploadBandwidthEG100Mbps" xml:space="preserve">
+    <value>Upload bandwidth (e.g. 100 Mbps)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_DownloadBandwidthEG100Mbps" xml:space="preserve">
+    <value>Download bandwidth (e.g. 100 Mbps)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ObfuscationPasswordOptional" xml:space="preserve">
+    <value>Obfuscation password (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_UploadMbpsLeaveBlankForTheProtocolDefault" xml:space="preserve">
+    <value>Upload Mbps (leave blank for the protocol default)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_DownloadMbpsLeaveBlankForTheProtocolDefault" xml:space="preserve">
+    <value>Download Mbps (leave blank for the protocol default)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Obfuscation" xml:space="preserve">
+    <value>Obfuscation</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ObfuscationPassword" xml:space="preserve">
+    <value>Obfuscation password</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ConnectionSecurity" xml:space="preserve">
+    <value>Connection security</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_TLSSNILeaveBlankToUseTheServer" xml:space="preserve">
+    <value>TLS SNI (leave blank to use the server address)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_SkipCertificateVerification" xml:space="preserve">
+    <value>Skip certificate verification</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ALPNSeparateWithCommasOrNewLinesOptional" xml:space="preserve">
+    <value>ALPN (separate with commas or new lines; optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_TLSFingerprint" xml:space="preserve">
+    <value>TLS fingerprint</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_REALITYPublicKey" xml:space="preserve">
+    <value>REALITY public key</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_REALITYShortIDOptional" xml:space="preserve">
+    <value>REALITY Short ID (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Transport" xml:space="preserve">
+    <value>Transport</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_RequestPath" xml:space="preserve">
+    <value>Request path</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_WebSocketHostOptional" xml:space="preserve">
+    <value>WebSocket Host (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_HTTPHostSeparateWithCommasOrNewLines" xml:space="preserve">
+    <value>HTTP Host (separate with commas or new lines)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_HTTPUpgradeHostOptional" xml:space="preserve">
+    <value>HTTPUpgrade Host (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_GRPCServiceName" xml:space="preserve">
+    <value>gRPC service name</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_WebSocketEarlyDataOptional" xml:space="preserve">
+    <value>WebSocket Early Data (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_EarlyDataHeaderOptional" xml:space="preserve">
+    <value>Early Data header (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_UpstreamProxyOptional" xml:space="preserve">
+    <value>Upstream proxy (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_ConnectionTimeoutEG10sOptional" xml:space="preserve">
+    <value>Connection timeout (e.g. 10s; optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_BindNetworkInterfaceOptional" xml:space="preserve">
+    <value>Bind network interface (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_EnableMultiplexing" xml:space="preserve">
+    <value>Enable multiplexing</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_MultiplexingProtocol" xml:space="preserve">
+    <value>Multiplexing protocol</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_MaximumMultiplexedConnectionsOptional" xml:space="preserve">
+    <value>Maximum multiplexed connections (optional)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_DefaultREALITYUsesChrome" xml:space="preserve">
+    <value>Default (REALITY uses Chrome)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_NoneDefault" xml:space="preserve">
+    <value>None / Default</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_NoTLS" xml:space="preserve">
+    <value>No TLS</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_TCPDefault" xml:space="preserve">
+    <value>TCP (default)</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_SinglePort" xml:space="preserve">
+    <value>Single port</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_PortHopping" xml:space="preserve">
+    <value>Port hopping</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerEditorSchema_Text" xml:space="preserve">
+    <value>Text</value>
+    <comment>Source: Services\ServerEditorSchema.cs</comment>
+  </data>
+  <data name="ServerImportPreview_Line01" xml:space="preserve">
+    <value>Line {0}: {1}</value>
+    <comment>Source: Services\ServerImportPreview.cs</comment>
+  </data>
+  <data name="ServerImportPreview_Line0123" xml:space="preserve">
+    <value>Line {0}: {1} · {2} · {3}</value>
+    <comment>Source: Services\ServerImportPreview.cs</comment>
+  </data>
+  <data name="ServerImportPreview_PasteShareLinksOrSingBoxJSON" xml:space="preserve">
+    <value>Paste share links or sing-box JSON.</value>
+    <comment>Source: Services\ServerImportPreview.cs</comment>
+  </data>
+  <data name="ServerImportPreview_InvalidOrUnsupportedFormatCheckThisEntry" xml:space="preserve">
+    <value>Invalid or unsupported format. Check this entry.</value>
+    <comment>Source: Services\ServerImportPreview.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_PasteServerShareLinksOrSingBoxOutbound" xml:space="preserve">
+    <value>Paste server share links or sing-box outbound JSON.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_CannotImportThisEntryInvalidLinkFormatOr" xml:space="preserve">
+    <value>Cannot import this entry: invalid link format or unsupported protocol.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_NoImportableShareLinksWereFound" xml:space="preserve">
+    <value>No importable share links were found.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_TheJSONContentIsEmpty" xml:space="preserve">
+    <value>The JSON content is empty.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_EveryConfigurationEntryMustBeAnObjectContaining" xml:space="preserve">
+    <value>Every configuration entry must be an object containing type.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_TheConfigurationContainsNoServersOrEndpoints" xml:space="preserve">
+    <value>The configuration contains no servers or endpoints.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_PasteASingleOutboundObjectAJSONArray" xml:space="preserve">
+    <value>Paste a single outbound object, a JSON array, or a sing-box configuration containing an outbounds array.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_EveryOutboundMustContainATypeField" xml:space="preserve">
+    <value>Every outbound must contain a type field.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_VMessShareLinksMustUseBase64JSONAfter" xml:space="preserve">
+    <value>VMess share links must use Base64 JSON after vmess://.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_0LinksAreNotRecognizedPasteSingBox" xml:space="preserve">
+    <value>{0}:// links are not recognized. Paste sing-box outbound JSON to import this protocol.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_TheVMessBase64ContentIsNotAJSON" xml:space="preserve">
+    <value>The VMess Base64 content is not a JSON object.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_TheVMessLinkIsMissingTheAddServer" xml:space="preserve">
+    <value>The VMess link is missing the add server address.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_TheVMessLinkIsMissingAValidPort" xml:space="preserve">
+    <value>The VMess link is missing a valid port.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_TheShadowsocksLinkIsMissingTheServerAddress" xml:space="preserve">
+    <value>The Shadowsocks link is missing the server address.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_InvalidPortInTheShadowsocksLink" xml:space="preserve">
+    <value>Invalid port in the Shadowsocks link.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_TheShadowsocksLinkRequiresMethodPassword" xml:space="preserve">
+    <value>The Shadowsocks link requires method:password.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_ThisShadowsocksShareLinkUsesPluginOptionsImport" xml:space="preserve">
+    <value>This Shadowsocks share link uses plugin options. Import sing-box outbound JSON instead.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_SingBoxDoesNotSupportV2RayMKCPTransport" xml:space="preserve">
+    <value>sing-box does not support V2Ray mKCP transport. The link was not imported.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_UnrecognizedV2RayTransport0UseSingBoxOutbound" xml:space="preserve">
+    <value>Unrecognized V2Ray transport {0}. Use sing-box outbound JSON instead.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="ServerLinkImporter_InvalidBase64Content" xml:space="preserve">
+    <value>Invalid Base64 content.</value>
+    <comment>Source: Services\ServerLinkImporter.cs</comment>
+  </data>
+  <data name="SettingsStore_TheConfigurationContentIsEmpty" xml:space="preserve">
+    <value>The configuration content is empty.</value>
+    <comment>Source: Services\SettingsStore.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_TheLocalProxyPortMustBeBetween1" xml:space="preserve">
+    <value>The local proxy port must be between 1 and 65535.</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_AddAndSelectADefaultServerFirst" xml:space="preserve">
+    <value>Add and select a default server first.</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_TheServerSelectedForUnmatchedTrafficFinalNo" xml:space="preserve">
+    <value>The server selected for unmatched traffic (final) no longer exists. Select another server on the Routing page.</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_TheUnmatchedTrafficFinalActionIsInvalidSelect" xml:space="preserve">
+    <value>The unmatched traffic (final) action is invalid. Select another action on the Routing page.</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_ApplicationGroup0HasNoExecutableFilesYet" xml:space="preserve">
+    <value>Application group "{0}" has no executable files yet.</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_ProgramNotFoundInApplicationGroup01" xml:space="preserve">
+    <value>Program not found in application group "{0}": {1}</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_ApplicationGroup0ContainsADuplicateProgramA" xml:space="preserve">
+    <value>Application group "{0}" contains a duplicate program. A program can belong to only one enabled group.</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_DuplicateServerTag0GiveEachServerA" xml:space="preserve">
+    <value>Duplicate server tag "{0}". Give each server a different tag in its JSON configuration.</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_EnterBothAUsernameAndPasswordWhenSystem" xml:space="preserve">
+    <value>Enter both a username and password when system proxy authentication is enabled.</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_Server0IsMissingAValidAddressOr" xml:space="preserve">
+    <value>Server "{0}" is missing a valid address or UUID.</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_TheSingBoxJSONForServer0Is" xml:space="preserve">
+    <value>The sing-box JSON for server "{0}" is missing type.</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxConfigBuilder_InvalidSingBoxJSONForServer01" xml:space="preserve">
+    <value>Invalid sing-box JSON for server "{0}": {1}</value>
+    <comment>Source: Services\SingBoxConfigBuilder.cs</comment>
+  </data>
+  <data name="SingBoxCoreBundle_TheBundledSingBoxCoreResourceIsMissing" xml:space="preserve">
+    <value>The bundled sing-box core resource is missing from the application.</value>
+    <comment>Source: Services\SingBoxCoreBundle.cs</comment>
+  </data>
+  <data name="SingBoxCoreBundle_TheBundledSingBoxCoreFailedItsIntegrity" xml:space="preserve">
+    <value>The bundled sing-box core failed its integrity check. Rebuild or reinstall the application.</value>
+    <comment>Source: Services\SingBoxCoreBundle.cs</comment>
+  </data>
+  <data name="SingBoxCoreBundle_BundledSingBoxCoreFileMissing0" xml:space="preserve">
+    <value>Bundled sing-box core file missing: {0}.</value>
+    <comment>Source: Services\SingBoxCoreBundle.cs</comment>
+  </data>
+  <data name="SingBoxCoreBundle_UnexpectedBundledSingBoxCoreFileSize0" xml:space="preserve">
+    <value>Unexpected bundled sing-box core file size: {0}.</value>
+    <comment>Source: Services\SingBoxCoreBundle.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheNewConfigurationFailedToStartAndThe" xml:space="preserve">
+    <value>The new configuration failed to start, and the previous configuration could not be restored: {0}
+{1}</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheNewConfigurationFailedToStartTheCore" xml:space="preserve">
+    <value>The new configuration failed to start. The core was restored to its previous running configuration: </value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_CannotDetermineTheFluentSingBoxExecutablePath" xml:space="preserve">
+    <value>Cannot determine the fluent sing-box executable path.</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_CannotStartTheSingBoxCoreHostProcess" xml:space="preserve">
+    <value>Cannot start the sing-box core host process.</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_ApplicationProxyRequiresAdministratorPermissionToCreateTUN" xml:space="preserve">
+    <value>Application proxy requires administrator permission to create TUN routes. The Windows permission prompt was cancelled.</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheSingBoxCoreDidNotReportReadiness" xml:space="preserve">
+    <value>The sing-box core did not report readiness.</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TimedOutWaitingForSingBoxToStart" xml:space="preserve">
+    <value>Timed out waiting for sing-box to start.
+{0}</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_CannotConnectToTheSingBoxCoreHost" xml:space="preserve">
+    <value>Cannot connect to the sing-box core host.
+{0}</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheSingBoxBackgroundHostFailedToStart" xml:space="preserve">
+    <value>The sing-box background host failed to start: {0}</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_CannotCreateTheSingBoxProcess" xml:space="preserve">
+    <value>Cannot create the sing-box process.</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_NotExitedYet" xml:space="preserve">
+    <value>Not exited yet</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_ExitCode0" xml:space="preserve">
+    <value>Exit code {0}</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_SingBoxCouldNotStartAndListenOn" xml:space="preserve">
+    <value>sing-box could not start and listen on local port {0} ({1}): {2}
+{3}</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheElevatedCoreHostHasNotExitedCleanup" xml:space="preserve">
+    <value>The elevated core host has not exited; cleanup is not confirmed complete. Retry stopping it.</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheElevatedHostIsStillRunningAfterStartup" xml:space="preserve">
+    <value>The elevated host is still running after startup failed. Handles and process records were kept. Finish stopping it first.</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheCoreHasNotExitedItsProcessRecord" xml:space="preserve">
+    <value>The core has not exited. Its process record was kept, and another core cannot be started.</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheCoreCouldNotBeStoppedAndIs" xml:space="preserve">
+    <value>The core could not be stopped and is still running. Its ownership record will not be cleared.</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_CannotReadTheSingBoxVersion" xml:space="preserve">
+    <value>Cannot read the sing-box version.</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_UnrecognizedSingBoxVersionOutput0" xml:space="preserve">
+    <value>Unrecognized sing-box version output: {0}</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheCoreIsStillRunningButHasNot" xml:space="preserve">
+    <value>The core is still running but has not started listening</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TheSingBoxProcessExitedWithCode0" xml:space="preserve">
+    <value>The sing-box process exited with code {0}.</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="SingBoxCoreService_TimedOutWaitingForSingBoxToReport" xml:space="preserve">
+    <value>Timed out waiting for sing-box to report startup completion.</value>
+    <comment>Source: Services\SingBoxCoreService.cs</comment>
+  </data>
+  <data name="StartupPreflight_MultipleTUNInboundsUseTheSameAdapterName" xml:space="preserve">
+    <value>Multiple TUN inbounds use the same adapter name. Fix the configuration before starting.</value>
+    <comment>Source: Services\StartupPreflight.cs</comment>
+  </data>
+  <data name="StartupPreflight_TUNAdapter0AlreadyExistsVerifiedOrphanedCores" xml:space="preserve">
+    <value>TUN adapter {0} already exists. Verified orphaned cores were cleaned up, but this adapter's owner is unknown. It will not be deleted, and a new core will not start. Close the program that owns the adapter and inspect the remaining network state.</value>
+    <comment>Source: Services\StartupPreflight.cs</comment>
+  </data>
+  <data name="StartupPreflight_LocalPort0IsStillOccupiedProcessesWith" xml:space="preserve">
+    <value>Local port {0} is still occupied. Processes with unknown ownership will not be terminated. Close the old instance or change the port.</value>
+    <comment>Source: Services\StartupPreflight.cs</comment>
+  </data>
+  <data name="StartupService_CannotChangeTheCurrentUserSStartupEntry" xml:space="preserve">
+    <value>Cannot change the current user's startup entry.</value>
+    <comment>Source: Services\StartupService.cs</comment>
+  </data>
+  <data name="StartupService_CannotDetermineTheApplicationExecutablePath" xml:space="preserve">
+    <value>Cannot determine the application executable path.</value>
+    <comment>Source: Services\StartupService.cs</comment>
+  </data>
+  <data name="TunShutdownCheck_TheCoreExitedButTUNAdaptersRemain" xml:space="preserve">
+    <value>The core exited, but TUN adapters remain: </value>
+    <comment>Source: Services\TunShutdownCheck.cs</comment>
+  </data>
+  <data name="TunShutdownCheck_CleanupIsIncompleteAdaptersWithUnknownOwnershipWill" xml:space="preserve">
+    <value>. Cleanup is incomplete. Adapters with unknown ownership will not be deleted. Keep network snapshots for diagnosis.</value>
+    <comment>Source: Services\TunShutdownCheck.cs</comment>
+  </data>
+  <data name="WindowsProxyConnection_FailedToSetTheWindowsConnectionProxy" xml:space="preserve">
+    <value>Failed to set the Windows connection proxy.</value>
+    <comment>Source: Services\WindowsProxyConnection.cs</comment>
+  </data>
+  <data name="WindowsProxyService_CannotOpenTheCurrentUserSWindowsNetwork" xml:space="preserve">
+    <value>Cannot open the current user's Windows network proxy settings.</value>
+    <comment>Source: Services\WindowsProxyService.cs</comment>
+  </data>
+  <data name="ConfigurationPage_UseTheApplicationSConfigurationFileForAll" xml:space="preserve">
+    <value>Use the application's configuration file for all operations. Import replaces this file; Edit opens its associated application. Changes take effect the next time the core starts.</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_EditConfiguration" xml:space="preserve">
+    <value>Edit configuration</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_OpenTheApplicationConfigurationInAnExternalEditor" xml:space="preserve">
+    <value>Open the application configuration in an external editor. If needed, create it from the current settings first.</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_Edit" xml:space="preserve">
+    <value>Edit</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ConfigurationFileOpenedSaveItExternallyThenCheck" xml:space="preserve">
+    <value>Configuration file opened. Save it externally, then check it here. The next core start reads its latest contents.</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ImportConfiguration" xml:space="preserve">
+    <value>Import configuration</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ValidateJSONBeforeReplacingTheApplicationConfigurationKeep" xml:space="preserve">
+    <value>Validate JSON before replacing the application configuration. Keep a backup of the previous file. The source file is left unchanged.</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_Import" xml:space="preserve">
+    <value>Import</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ConfigurationValidatedAndImportedFutureEditsAndStarts" xml:space="preserve">
+    <value>Configuration validated and imported. Future edits and starts use the application's own file. Changes take effect the next time the core starts.</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ExportConfiguration" xml:space="preserve">
+    <value>Export configuration</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ExportTheApplicationConfigurationIncludingServerCredentialsCopy" xml:space="preserve">
+    <value>Export the application configuration, including server credentials. Copy external files such as rule sets separately.</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_Export" xml:space="preserve">
+    <value>Export</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ApplicationConfigurationExported" xml:space="preserve">
+    <value>Application configuration exported.</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_CheckConfiguration" xml:space="preserve">
+    <value>Check configuration</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_RunTheSelectedSingBoxCoreSCheck" xml:space="preserve">
+    <value>Run the selected sing-box core's check command against the startup configuration without starting the core.</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_Check" xml:space="preserve">
+    <value>Check</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ConfigurationCheckPassed" xml:space="preserve">
+    <value>Configuration check passed.</value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="ConfigurationPage_ConfigurationFile" xml:space="preserve">
+    <value>Configuration file: </value>
+    <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_ConfigureDirectAndProxyDNSSettingsAreChecked" xml:space="preserve">
+    <value>Configure direct and proxy DNS. Settings are checked before saving and take effect the next time the core starts.</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_ALegacyJSONConfigurationIsActiveEditIts" xml:space="preserve">
+    <value>A legacy JSON configuration is active. Edit its DNS settings through the Configuration page.</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_DirectDNS" xml:space="preserve">
+    <value>Direct DNS</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_ProxyDNS" xml:space="preserve">
+    <value>Proxy DNS</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_DNSPolicy" xml:space="preserve">
+    <value>DNS policy</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_PreferIPv4" xml:space="preserve">
+    <value>Prefer IPv4</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_PreferIPv6" xml:space="preserve">
+    <value>Prefer IPv6</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_IPv4Only" xml:space="preserve">
+    <value>IPv4 only</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_IPv6Only" xml:space="preserve">
+    <value>IPv6 only</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_AddressStrategy" xml:space="preserve">
+    <value>Address strategy</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_EnableDNSCache" xml:space="preserve">
+    <value>Enable DNS cache</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_RememberIPToDomainMappings" xml:space="preserve">
+    <value>Remember IP-to-domain mappings</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_UseDirectDNSForChineseDomains" xml:space="preserve">
+    <value>Use direct DNS for Chinese domains</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_UsageNotes" xml:space="preserve">
+    <value>Usage notes</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_TheChineseDomainOptionFollowsTheDirectRouting" xml:space="preserve">
+    <value>The Chinese-domain option follows the direct-routing rule for Chinese domains. Explicit application DNS takes priority. DNS and server host names are bootstrapped through system DNS. Legacy DNS section overrides take priority over this form.</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_SaveDNSSettings" xml:space="preserve">
+    <value>Save DNS settings</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_EditTheDNSSettingsInTheJSONFile" xml:space="preserve">
+    <value>Edit the DNS settings in the JSON file through the Configuration page.</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_DNSConfigurationCheckedAndSavedChangesTakeEffect" xml:space="preserve">
+    <value>DNS configuration checked and saved. Changes take effect the next time the core starts.</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_CheckAndSave" xml:space="preserve">
+    <value>Check and save</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_SystemDNS" xml:space="preserve">
+    <value>System DNS</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_QueryProtocol" xml:space="preserve">
+    <value>Query protocol</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_ServerPort" xml:space="preserve">
+    <value>Server port</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_TLSServerNameSNI" xml:space="preserve">
+    <value>TLS server name (SNI)</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_DoHRequestPath" xml:space="preserve">
+    <value>DoH request path</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="DnsPage_WithSystemDNSWindowsHandlesQueriesTheyDo" xml:space="preserve">
+    <value>With system DNS, Windows handles queries. They do not travel through the selected proxy server.</value>
+    <comment>Source: Views\DnsPage.xaml.cs</comment>
+  </data>
+  <data name="LogsPage_CoreStarting" xml:space="preserve">
+    <value>Core starting</value>
+    <comment>Source: Views\LogsPage.xaml.cs</comment>
+  </data>
+  <data name="LogsPage_CoreRunning" xml:space="preserve">
+    <value>Core running</value>
+    <comment>Source: Views\LogsPage.xaml.cs</comment>
+  </data>
+  <data name="LogsPage_CoreStopping" xml:space="preserve">
+    <value>Core stopping</value>
+    <comment>Source: Views\LogsPage.xaml.cs</comment>
+  </data>
+  <data name="LogsPage_CoreErrorOrUnexpectedStop" xml:space="preserve">
+    <value>Core error or unexpected stop</value>
+    <comment>Source: Views\LogsPage.xaml.cs</comment>
+  </data>
+  <data name="LogsPage_CoreStopped" xml:space="preserve">
+    <value>Core stopped</value>
+    <comment>Source: Views\LogsPage.xaml.cs</comment>
+  </data>
+  <data name="LogsPage_CannotReadLogs" xml:space="preserve">
+    <value>Cannot read logs: </value>
+    <comment>Source: Views\LogsPage.xaml.cs</comment>
+  </data>
+  <data name="LogsPage_ExportFailed" xml:space="preserve">
+    <value>Export failed: </value>
+    <comment>Source: Views\LogsPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_CannotConfigureGlobalTUN" xml:space="preserve">
+    <value>Cannot configure global TUN</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_CannotApplyServer" xml:space="preserve">
+    <value>Cannot apply server</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_NoServersYet" xml:space="preserve">
+    <value>No servers yet</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_AddAServerBeforeCreatingAnApplicationGroup" xml:space="preserve">
+    <value>Add a server before creating an application group.</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_ProgramsAlreadyAdded" xml:space="preserve">
+    <value>Programs already added</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_AllSelectedProgramsAreAlreadyInAnApplication" xml:space="preserve">
+    <value>All selected programs are already in an application group.</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_ApplicationGroupName" xml:space="preserve">
+    <value>Application group name</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_ForExampleCodex" xml:space="preserve">
+    <value>For example: Codex</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_AddApplicationGroup" xml:space="preserve">
+    <value>Add application group</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_AddApplicationGroup0Programs" xml:space="preserve">
+    <value>Add application group ({0} programs)</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_Add" xml:space="preserve">
+    <value>Add</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_GroupNameRequired" xml:space="preserve">
+    <value>Group name required</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_EnterANameForThisGroupOfPrograms" xml:space="preserve">
+    <value>Enter a name for this group of programs.</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_ServerSelectionRequired" xml:space="preserve">
+    <value>Server selection required</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_SelectAServerForThisApplicationGroup" xml:space="preserve">
+    <value>Select a server for this application group.</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_CannotDeleteApplicationGroup" xml:space="preserve">
+    <value>Cannot delete application group</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_CannotSwitchApplicationProxy" xml:space="preserve">
+    <value>Cannot switch application proxy</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_ProgramPathsOnePerLine" xml:space="preserve">
+    <value>Program paths (one per line)</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_AddPrograms" xml:space="preserve">
+    <value>Add programs…</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_EditApplicationGroup" xml:space="preserve">
+    <value>Edit application group</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_Save" xml:space="preserve">
+    <value>Save</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_ApplicationGroupInformationIsIncomplete" xml:space="preserve">
+    <value>Application group information is incomplete</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_EnterANameAndKeepAtLeastOne" xml:space="preserve">
+    <value>Enter a name and keep at least one program path.</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_DeleteApplicationGroup" xml:space="preserve">
+    <value>Delete application group</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_Delete0" xml:space="preserve">
+    <value>Delete "{0}"?</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_Delete" xml:space="preserve">
+    <value>Delete</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_ProxyServer" xml:space="preserve">
+    <value>Proxy server</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="ProxyPage_SelectServer" xml:space="preserve">
+    <value>Select server</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_KeepThePreviousModeSDefault" xml:space="preserve">
+    <value>Keep the previous mode's default</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_UseDefaultServer" xml:space="preserve">
+    <value>Use default server</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_Server0" xml:space="preserve">
+    <value>Server: {0}</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_TheSelectedOutboundNoLongerExistsSelectAnother" xml:space="preserve">
+    <value>The selected outbound no longer exists. Select another.</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_UnmatchedTrafficFinal0" xml:space="preserve">
+    <value>Unmatched traffic (final): {0}</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_LegacyJSONConfigurationEditRouteFinalThroughThe" xml:space="preserve">
+    <value>Legacy JSON configuration: edit route.final through the Configuration page.</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_UseThisOutboundForUnmatchedSystemProxyAnd" xml:space="preserve">
+    <value>Use this outbound for unmatched system proxy and TUN traffic. Previous defaults: the default server for system proxy and global TUN, direct for application TUN. Changes take effect the next time the core starts. DNS is configured separately.</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_CannotSaveDefaultOutbound" xml:space="preserve">
+    <value>Cannot save default outbound</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_DeleteRule" xml:space="preserve">
+    <value>Delete rule</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_CannotApplyRule" xml:space="preserve">
+    <value>Cannot apply rule</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_CannotSwitchRule" xml:space="preserve">
+    <value>Cannot switch rule</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_RuleName" xml:space="preserve">
+    <value>Rule name</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_ForExampleBlockAddresses" xml:space="preserve">
+    <value>For example: Block addresses</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_DomainNameOrIPCIDR" xml:space="preserve">
+    <value>Domain name or IP/CIDR</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_OnePerLineEGBlockedExampleFull" xml:space="preserve">
+    <value>One per line, e.g. blocked.example, full:example.com or 203.0.113.0/24</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_OnMatch" xml:space="preserve">
+    <value>On match</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_UseProxyServer" xml:space="preserve">
+    <value>Use proxy server</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_ProxyServerUsedOnlyForProxyRouting" xml:space="preserve">
+    <value>Proxy server (used only for proxy routing)</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_ScopeBlockingRulesAlwaysApplyToBothProxy" xml:space="preserve">
+    <value>Scope (blocking rules always apply to both proxy types)</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_AddRoutingRule" xml:space="preserve">
+    <value>Add routing rule</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_EditRoutingRule" xml:space="preserve">
+    <value>Edit routing rule</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_EnterARuleName" xml:space="preserve">
+    <value>Enter a rule name.</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_RuleInformationIsIncomplete" xml:space="preserve">
+    <value>Rule information is incomplete</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="RoutingPage_EnterARuleNameAndAtLeastOne" xml:space="preserve">
+    <value>Enter a rule name and at least one address.</value>
+    <comment>Source: Views\RoutingPage.xaml.cs</comment>
+  </data>
+  <data name="ServerEditorForm_ServerType" xml:space="preserve">
+    <value>Server type</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_Name" xml:space="preserve">
+    <value>Name</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_ForExampleHKA" xml:space="preserve">
+    <value>For example: HK-A</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_0AdvancedConfiguration" xml:space="preserve">
+    <value>{0} (advanced configuration)</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_ThisTypeHasNoPredefinedFormItsOriginal" xml:space="preserve">
+    <value>This type has no predefined form. Its original configuration is preserved. Edit its JSON or select a supported server type above.</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_AdvancedConfiguration" xml:space="preserve">
+    <value>Advanced configuration</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_AddAtLeastOneServerFirst" xml:space="preserve">
+    <value>Add at least one server first.</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_NoUpstreamProxy" xml:space="preserve">
+    <value>No upstream proxy</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_FirstCandidateServer" xml:space="preserve">
+    <value>First candidate server</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_Required" xml:space="preserve">
+    <value>Required</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_Optional" xml:space="preserve">
+    <value>Optional</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_NaiveRequiresACoreWithProtocolSupportAnd" xml:space="preserve">
+    <value>Naive requires a core with protocol support and its matching libcronet.dll.</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_FullConfiguration" xml:space="preserve">
+    <value>Full configuration</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_EditCompleteJSONDirectlyTheContentBelowIs" xml:space="preserve">
+    <value>Edit complete JSON directly (the content below is used when saving)</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_AdvancedConfigurationOptional" xml:space="preserve">
+    <value>Advanced configuration (optional)</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_TheAdvancedConfigurationTypeMustMatchTheServer" xml:space="preserve">
+    <value>The advanced configuration type must match the server type selected above.</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_CheckTheServerInformation" xml:space="preserve">
+    <value>Check the server information</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServerEditorForm_InvalidAdvancedConfigurationJSON" xml:space="preserve">
+    <value>Invalid advanced configuration JSON.</value>
+    <comment>Source: Views\ServerEditorForm.cs</comment>
+  </data>
+  <data name="ServersPage_VmessVlessSsTrojanHysteria2OrSingBox" xml:space="preserve">
+    <value>vmess://, vless://, ss://, trojan://, hysteria2://… or sing-box outbound JSON</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_PreviewPastedEntriesOnlySelectedValidEntriesWill" xml:space="preserve">
+    <value>Preview pasted entries. Only selected valid entries will be imported.</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_PasteServerLinks" xml:space="preserve">
+    <value>Paste server links</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_ImportSelectedEntries" xml:space="preserve">
+    <value>Import selected entries</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_0ValidEntries1UnrecognizedInvalidEntriesWill" xml:space="preserve">
+    <value>{0} valid entries; {1} unrecognized. Invalid entries will not be imported.</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_ImportComplete" xml:space="preserve">
+    <value>Import complete</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_Added0Servers" xml:space="preserve">
+    <value>Added {0} servers.</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_CannotImport" xml:space="preserve">
+    <value>Cannot import</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_Copy" xml:space="preserve">
+    <value> (copy)</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_Testing0" xml:space="preserve">
+    <value>Testing "{0}"…</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_ServerIsStillReferenced" xml:space="preserve">
+    <value>Server is still referenced</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_EditTheFollowingServersOrProxyGroupsAnd" xml:space="preserve">
+    <value>Edit the following servers or proxy groups and remove their references to this server first:
+</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_Delete0" xml:space="preserve">
+    <value>Delete "{0}"?</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_ApplicationsAndRoutesReferencingThisServerWillSwitch" xml:space="preserve">
+    <value>Applications and routes referencing this server will switch to the default server.</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_AddServer" xml:space="preserve">
+    <value>Add server</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_EditServer" xml:space="preserve">
+    <value>Edit server</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="ServersPage_CannotEditServer" xml:space="preserve">
+    <value>Cannot edit server</value>
+    <comment>Source: Views\ServersPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_CannotUpdateStartupSettings" xml:space="preserve">
+    <value>Cannot update startup settings</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_BundledWithTheApplicationSingBox0Windows" xml:space="preserve">
+    <value>Bundled with the application · sing-box {0} · Windows x64</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_CustomCore0" xml:space="preserve">
+    <value>Custom core · {0}</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_TheCustomPathIsUnavailableFallingBackTo" xml:space="preserve">
+    <value>The custom path is unavailable. Falling back to the bundled core · sing-box {0}</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_UseBundledCore" xml:space="preserve">
+    <value>Use bundled core</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_SelectAnotherCore" xml:space="preserve">
+    <value>Select another core</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_GeneratingConfigurationAndRunningSingBoxCheck" xml:space="preserve">
+    <value>Generating configuration and running sing-box check…</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_ConfigurationCheckPassedTheCoreCanReadThis" xml:space="preserve">
+    <value>Configuration check passed. The core can read this configuration and its rule files; connectivity needs a separate test.</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_UpdatesAreNotConfigured" xml:space="preserve">
+    <value>Updates are not configured</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_ThisIsALocalDevelopmentPreviewUpdateChecking" xml:space="preserve">
+    <value>This is a local development preview. Update checking and installation can be added after a release repository is configured.</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_Feedback" xml:space="preserve">
+    <value>Feedback</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_DescribeTheProblemOrImprovementYouWouldLike" xml:space="preserve">
+    <value>Describe the problem or improvement you would like</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_SubmitFeedback" xml:space="preserve">
+    <value>Submit feedback</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_CopyFeedback" xml:space="preserve">
+    <value>Copy feedback</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_FluentSingBox010DevelopmentPreview" xml:space="preserve">
+    <value>fluent sing-box 0.1.0 development preview
+Windows: {0}
+
+{1}</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_FeedbackCopied" xml:space="preserve">
+    <value>Feedback copied</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SettingsPage_PasteTheFeedbackIntoAnIssueOrEmail" xml:space="preserve">
+    <value>Paste the feedback into an issue or email.</value>
+    <comment>Source: Views\SettingsPage.xaml.cs</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SystemProxyEnabled" xml:space="preserve">
+    <value>System proxy enabled.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml.cs</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SystemProxyDisabled" xml:space="preserve">
+    <value>System proxy disabled.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml.cs</comment>
+  </data>
+  <data name="SystemProxySettingsControl_CannotSwitchSystemProxy" xml:space="preserve">
+    <value>Cannot switch system proxy</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml.cs</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsApplied" xml:space="preserve">
+    <value>Settings applied.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml.cs</comment>
+  </data>
+  <data name="SystemProxySettingsControl_CannotApplySettings" xml:space="preserve">
+    <value>Cannot apply settings</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml.cs</comment>
+  </data>
+  <data name="SystemProxySettingsControl_ThePortMustBeAnIntegerBetween1" xml:space="preserve">
+    <value>The port must be an integer between 1 and 65535.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml.cs</comment>
+  </data>
+  <data name="SystemProxySettingsControl_TheUsernameAndPasswordMustBothBeProvided" xml:space="preserve">
+    <value>The username and password must both be provided when authentication is enabled.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml.cs</comment>
+  </data>
+  <data name="MainWindow_NavigationPaneToggleButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Show navigation menu</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_BrandIconImage.AutomationProperties.Name" xml:space="preserve">
+    <value>fluent sing-box icon</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem28.Content" xml:space="preserve">
+    <value>Servers</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem31.Content" xml:space="preserve">
+    <value>Routing</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem34.Content" xml:space="preserve">
+    <value>Proxy</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem37.Content" xml:space="preserve">
+    <value>Logs</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_NavigationViewItem43.Content" xml:space="preserve">
+    <value>Configuration</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_CoreSwitch.OffContent" xml:space="preserve">
+    <value>Stopped</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_CoreSwitch.OnContent" xml:space="preserve">
+    <value>Running</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_CoreSwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>Start or stop sing-box</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="MainWindow_TextBlock49.Text" xml:space="preserve">
+    <value>After changing configuration, stop and restart the core to apply it.</value>
+    <comment>Source: MainWindow.xaml</comment>
+  </data>
+  <data name="ConfigurationPage_TextBlock4.Text" xml:space="preserve">
+    <value>Configuration</value>
+    <comment>Source: Views\ConfigurationPage.xaml</comment>
+  </data>
+  <data name="LogsPage_TextBlock4.Text" xml:space="preserve">
+    <value>Logs</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_StatusText.Text" xml:space="preserve">
+    <value>Core is not running</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_PauseButton.Content" xml:space="preserve">
+    <value>Pause refresh</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_Button10.Content" xml:space="preserve">
+    <value>Clear display</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_Button11.Content" xml:space="preserve">
+    <value>Export redacted logs</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_FilterBox.Header" xml:space="preserve">
+    <value>Filter</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_FilterBox.PlaceholderText" xml:space="preserve">
+    <value>Enter a keyword, such as error, a domain or a program name</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_EmptyHint.Text" xml:space="preserve">
+    <value>No logs yet. Start the core using the bottom-left switch to display its logs here.</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="LogsPage_TextBlock16.Text" xml:space="preserve">
+    <value>Show the latest 128 KB. Saved credentials are redacted. Clearing the display does not delete core log files. Logs may still contain destination addresses and local paths.</value>
+    <comment>Source: Views\LogsPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_TextBlock5.Text" xml:space="preserve">
+    <value>Proxy</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_TextBlock8.Text" xml:space="preserve">
+    <value>System proxy and global TUN use the default server. Application proxy can select servers by program.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_TextBlock9.Text" xml:space="preserve">
+    <value>Application proxy uses TUN. DNS requests whose source is identifiable follow the application group's server. Requests aggregated by Windows with no identifiable source use local DNS by default. Other applications connect directly by default.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsSection10.Header" xml:space="preserve">
+    <value>System proxy</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard13.Header" xml:space="preserve">
+    <value>Default server</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard13.Description" xml:space="preserve">
+    <value>Used by system proxy and global TUN when the selected final policy uses the default server.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_DefaultServerComboBox.PlaceholderText" xml:space="preserve">
+    <value>Select server</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsSection18.Header" xml:space="preserve">
+    <value>Global TUN</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard20.Header" xml:space="preserve">
+    <value>Enable global TUN</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard20.Description" xml:space="preserve">
+    <value>All programs enter one TUN and follow routing rules. Unmatched traffic follows the final policy. Application groups are ignored while enabled. This only saves configuration; restart the core with the bottom-left switch to apply it.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsSection22.Header" xml:space="preserve">
+    <value>Application proxy</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsSection22.Description" xml:space="preserve">
+    <value>A group can contain multiple programs and select its own proxy server.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_EmptyApplicationsMessage.Text" xml:space="preserve">
+    <value>No applications added yet.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard33.Header" xml:space="preserve">
+    <value>Enable application proxy</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard33.Description" xml:space="preserve">
+    <value>Only save this group's proxy configuration. It takes effect when you start the core using the bottom-left switch.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_ToggleSwitch34.AutomationProperties.Name" xml:space="preserve">
+    <value>Enable application proxy</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard35.Header" xml:space="preserve">
+    <value>Proxy server</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_ComboBox36.PlaceholderText" xml:space="preserve">
+    <value>Select server</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard37.Header" xml:space="preserve">
+    <value>Included programs</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard42.Header" xml:space="preserve">
+    <value>Edit application group</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_Button43.Content" xml:space="preserve">
+    <value>Edit</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard44.Header" xml:space="preserve">
+    <value>Delete application group</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_Button45.Content" xml:space="preserve">
+    <value>Delete</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard46.Header" xml:space="preserve">
+    <value>Add application group</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_SettingsCard46.Description" xml:space="preserve">
+    <value>Select one or more programs and choose a server for this group.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_Button49.Content" xml:space="preserve">
+    <value>Add application group</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="ProxyPage_TextBlock50.Text" xml:space="preserve">
+    <value>Application group switches only change configuration. Starting sing-box using the bottom-left switch requests administrator permission if TUN is configured. Stop and restart the core after changes. Unconfigured programs connect directly by default.</value>
+    <comment>Source: Views\ProxyPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_TextBlock4.Text" xml:space="preserve">
+    <value>Routing</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_TextBlock7.Text" xml:space="preserve">
+    <value>Choose direct, blocked or proxied routing by address, and enable China bypass rules separately.</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsSection8.Header" xml:space="preserve">
+    <value>Default action</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_FinalCard.Header" xml:space="preserve">
+    <value>Unmatched traffic (final)</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_FinalCard.Description" xml:space="preserve">
+    <value>The outbound used when no routing rule matches. Saved changes take effect the next time the core starts. Configure DNS separately on the DNS page.</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_FinalSelector.AutomationProperties.Name" xml:space="preserve">
+    <value>Unmatched traffic (final)</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsSection14.Header" xml:space="preserve">
+    <value>Add routing rule</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard17.Header" xml:space="preserve">
+    <value>Create a custom routing rule</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard17.Description" xml:space="preserve">
+    <value>Choose an action by domain name, IP address or CIDR range.</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button20.Content" xml:space="preserve">
+    <value>Add rule</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsSection21.Header" xml:space="preserve">
+    <value>Routing rules</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_EmptyMessage.Text" xml:space="preserve">
+    <value>No custom rules yet.</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard32.Header" xml:space="preserve">
+    <value>Enable rule</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard32.Description" xml:space="preserve">
+    <value>Disabled rules do not participate in routing.</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_ToggleSwitch33.AutomationProperties.Name" xml:space="preserve">
+    <value>Enable rule</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard34.Header" xml:space="preserve">
+    <value>Match criteria</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard35.Header" xml:space="preserve">
+    <value>Action</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard36.Header" xml:space="preserve">
+    <value>Scope</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard37.Header" xml:space="preserve">
+    <value>Rule details</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard37.Description" xml:space="preserve">
+    <value>View the rule source or official sing-box documentation in your browser.</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard37.ActionIconToolTip" xml:space="preserve">
+    <value>Open in browser</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard40.Header" xml:space="preserve">
+    <value>Edit rule</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button41.Content" xml:space="preserve">
+    <value>Edit</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard42.Header" xml:space="preserve">
+    <value>Move rule up</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button43.Content" xml:space="preserve">
+    <value>Move up</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard44.Header" xml:space="preserve">
+    <value>Move rule down</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button45.Content" xml:space="preserve">
+    <value>Move down</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_SettingsCard46.Header" xml:space="preserve">
+    <value>Delete rule</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="RoutingPage_Button47.Content" xml:space="preserve">
+    <value>Delete</value>
+    <comment>Source: Views\RoutingPage.xaml</comment>
+  </data>
+  <data name="ServersPage_TextBlock4.Text" xml:space="preserve">
+    <value>Servers</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_TextBlock7.Text" xml:space="preserve">
+    <value>Manage sing-box servers. Paste share links or import outbound JSON.</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsSection9.Header" xml:space="preserve">
+    <value>Add server</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard12.Header" xml:space="preserve">
+    <value>Add servers from share links or configuration</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard12.Description" xml:space="preserve">
+    <value>Paste server share links, import outbound JSON or add servers manually.</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button16.Content" xml:space="preserve">
+    <value>Import</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button16.AutomationProperties.Name" xml:space="preserve">
+    <value>Import server links or configuration</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button17.Content" xml:space="preserve">
+    <value>Add server</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsSection18.Header" xml:space="preserve">
+    <value>Server list</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_EmptyMessage.Text" xml:space="preserve">
+    <value>No servers yet. Import share links or outbound JSON, or add a server manually by type.</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_TextBlock33.Text" xml:space="preserve">
+    <value>· Default</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard35.Header" xml:space="preserve">
+    <value>Default server</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard35.Description" xml:space="preserve">
+    <value>System proxy uses the default server; application groups can select their own.</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button36.Content" xml:space="preserve">
+    <value>Set as default</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard37.Header" xml:space="preserve">
+    <value>Connection test</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard37.Description" xml:space="preserve">
+    <value>Request Google HTTPS 204 through this server.</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button38.Content" xml:space="preserve">
+    <value>Test connection</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard39.Header" xml:space="preserve">
+    <value>Edit server</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard39.Description" xml:space="preserve">
+    <value>View and change this server's protocol, connection and security settings.</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button40.Content" xml:space="preserve">
+    <value>Edit</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard41.Header" xml:space="preserve">
+    <value>Copy server</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button42.Content" xml:space="preserve">
+    <value>Copy</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_SettingsCard43.Header" xml:space="preserve">
+    <value>Delete server</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="ServersPage_Button44.Content" xml:space="preserve">
+    <value>Delete</value>
+    <comment>Source: Views\ServersPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_TextBlock4.Text" xml:space="preserve">
+    <value>Settings</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_TextBlock7.Text" xml:space="preserve">
+    <value>Application startup, appearance and maintenance options.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsSection8.Header" xml:space="preserve">
+    <value>Appearance</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard11.Header" xml:space="preserve">
+    <value>Theme</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard11.Description" xml:space="preserve">
+    <value>Use the Windows light or dark theme by default.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_ComboBoxItem15.Content" xml:space="preserve">
+    <value>Use system setting</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_ComboBoxItem16.Content" xml:space="preserve">
+    <value>Light</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_ComboBoxItem17.Content" xml:space="preserve">
+    <value>Dark</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsSection18.Header" xml:space="preserve">
+    <value>Startup</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard21.Header" xml:space="preserve">
+    <value>Launch at startup</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard21.Description" xml:space="preserve">
+    <value>Start fluent sing-box automatically when you sign in to Windows.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_StartupSwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>Launch at startup</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsSection25.Header" xml:space="preserve">
+    <value>sing-box core</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard28.Header" xml:space="preserve">
+    <value>Core executable</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SingBoxPathDescription.Text" xml:space="preserve">
+    <value>No sing-box.exe selected yet.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SingBoxCorePathButton.Content" xml:space="preserve">
+    <value>Select another core</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard34.Header" xml:space="preserve">
+    <value>Validate generated configuration</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard34.Description" xml:space="preserve">
+    <value>Use the selected sing-box core's check command to verify the startup configuration and rule files.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_CheckConfigurationButton.Content" xml:space="preserve">
+    <value>Check configuration</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard37.Header" xml:space="preserve">
+    <value>Bundled routing rules</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard37.Description" xml:space="preserve">
+    <value>Chinese domains, Chinese IP addresses and non-Chinese domains are provided locally. No startup download is needed. See ThirdParty/RuleSets/manifest.json in the release folder for snapshot versions and sources.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsSection38.Header" xml:space="preserve">
+    <value>Updates and feedback</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard41.Header" xml:space="preserve">
+    <value>Check for updates</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard41.Description" xml:space="preserve">
+    <value>This is a development preview. Updates can be checked and installed after a release source is configured.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_Button44.Content" xml:space="preserve">
+    <value>Check for updates</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard45.Header" xml:space="preserve">
+    <value>Feedback</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard45.Description" xml:space="preserve">
+    <value>Write and copy feedback to paste into an issue or email.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_Button48.Content" xml:space="preserve">
+    <value>Submit feedback</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard49.Header" xml:space="preserve">
+    <value>sing-box documentation</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard49.Description" xml:space="preserve">
+    <value>Read about sing-box protocols and configuration.</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_SettingsCard49.ActionIconToolTip" xml:space="preserve">
+    <value>Open in browser</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SettingsPage_TextBlock54.Text" xml:space="preserve">
+    <value>fluent sing-box · 0.1.0 development preview</value>
+    <comment>Source: Views\SettingsPage.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard3.Header" xml:space="preserve">
+    <value>Enable system proxy</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard3.Description" xml:space="preserve">
+    <value>Only update Windows proxy settings. Start sing-box separately using the bottom-left switch.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SystemProxySwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>Enable system proxy</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard5.Header" xml:space="preserve">
+    <value>Protocol</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard5.Description" xml:space="preserve">
+    <value>HTTP / SOCKS5 share a local port. The Windows system proxy uses HTTP.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard6.Header" xml:space="preserve">
+    <value>Listen address</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard6.Description" xml:space="preserve">
+    <value>127.0.0.1 · Connections from this device only.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard7.Header" xml:space="preserve">
+    <value>Listen port</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard7.Description" xml:space="preserve">
+    <value>Enter the local proxy port.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard9.Header" xml:space="preserve">
+    <value>Authentication</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard9.Description" xml:space="preserve">
+    <value>Configure a username and password for the local proxy.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_AuthenticationSwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>Enable system proxy authentication</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_UsernameCard.Header" xml:space="preserve">
+    <value>Username</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_UsernameTextBox.PlaceholderText" xml:space="preserve">
+    <value>Username</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_PasswordCard.Header" xml:space="preserve">
+    <value>Password</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_PasswordInput.PlaceholderText" xml:space="preserve">
+    <value>Password</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard15.Header" xml:space="preserve">
+    <value>Apply settings</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard15.Description" xml:space="preserve">
+    <value>Save port or authentication changes. Stop and restart the core using the bottom-left switch to apply the configuration.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_Button16.Content" xml:space="preserve">
+    <value>Apply settings</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard17.Header" xml:space="preserve">
+    <value>Usage notes</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard17.Description" xml:space="preserve">
+    <value>Proxy authentication support depends on the application itself.</value>
+    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
+  </data>
+  <data name="Settings_Language.Header" xml:space="preserve">
+    <value>Application language</value>
+  </data>
+  <data name="Settings_Language.Description" xml:space="preserve">
+    <value>Use the system language or choose a language. Changes take effect after restarting the application.</value>
+  </data>
+  <data name="Settings_Language_System.Content" xml:space="preserve">
+    <value>Use system setting</value>
+  </data>
+  <data name="Settings_Language_Chinese.Content" xml:space="preserve">
+    <value>Chinese (Simplified)</value>
+  </data>
+  <data name="Settings_Language_English.Content" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Language_RestartRequired" xml:space="preserve">
+    <value>Language preference saved. Restart the application to apply it.</value>
+  </data>
+  <data name="Language_SaveFailed" xml:space="preserve">
+    <value>Cannot save language preference</value>
+  </data>
+  <data name="ProxyPage_GlobalTunSwitch.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="ProxyPage_GlobalTunSwitch.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="ProxyPage_ToggleSwitch34.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="ProxyPage_ToggleSwitch34.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="RoutingPage_ToggleSwitch33.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="RoutingPage_ToggleSwitch33.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="SettingsPage_StartupSwitch.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="SettingsPage_StartupSwitch.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="SystemProxySettingsControl_SystemProxySwitch.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="SystemProxySettingsControl_SystemProxySwitch.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="SystemProxySettingsControl_AuthenticationSwitch.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="SystemProxySettingsControl_AuthenticationSwitch.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Common_On" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Common_Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="ApplicationMatch_Mode" xml:space="preserve">
+    <value>Match by</value>
+  </data>
+  <data name="ApplicationMatch_Path" xml:space="preserve">
+    <value>Executable path</value>
+  </data>
+  <data name="ApplicationMatch_Name" xml:space="preserve">
+    <value>Process name</value>
+  </data>
+  <data name="ApplicationMatch_Names" xml:space="preserve">
+    <value>Process names (one per line)</value>
+  </data>
+  <data name="ApplicationMatch_Help" xml:space="preserve">
+    <value>Paths match a specific program location. Names match programs with the same executable name in any folder.</value>
+  </data>
+  <data name="ApplicationMatch_NameHelp" xml:space="preserve">
+    <value>Enter executable names such as ChatGPT.exe, without folders or wildcards.</value>
+  </data>
+  <data name="ApplicationMatch_InvalidMode" xml:space="preserve">
+    <value>Invalid application matching mode.</value>
+  </data>
+  <data name="ApplicationMatch_InvalidName" xml:space="preserve">
+    <value>Invalid process name: {0}. Enter a filename without folders or wildcards.</value>
+  </data>
+  <data name="ApplicationMatch_DuplicateName" xml:space="preserve">
+    <value>Process name {0} is assigned to multiple enabled application groups.</value>
+  </data>
+  <data name="Schema_GenerationFailed" xml:space="preserve">
+    <value>Cannot generate a schema for the selected core. </value>
+  </data>
+  <data name="Schema_SourceChanged" xml:space="preserve">
+    <value>The configuration changed since this page opened. Reload it before saving.</value>
+  </data>
+  <data name="Schema_Enabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="Schema_Default" xml:space="preserve">
+    <value>Use default / omit</value>
+  </data>
+  <data name="Schema_OnePerLine" xml:space="preserve">
+    <value>One value per line</value>
+  </data>
+  <data name="Schema_SourceDescription" xml:space="preserve">
+    <value>Edit the application configuration using the schema generated by the selected core. Save checks the configuration; restart the core to apply it.</value>
+  </data>
+  <data name="Schema_Reload" xml:space="preserve">
+    <value>Reload configuration</value>
+  </data>
+  <data name="Schema_DnsServers" xml:space="preserve">
+    <value>DNS servers · servers</value>
+  </data>
+  <data name="Schema_DnsRules" xml:space="preserve">
+    <value>DNS rules · rules</value>
+  </data>
+  <data name="Schema_InboundPresets" xml:space="preserve">
+    <value>Inbound presets</value>
+  </data>
+  <data name="Schema_InboundDescription" xml:space="preserve">
+    <value>System proxy uses mixed HTTP/SOCKS. TUN captures network traffic. These are configuration presets; only the footer switch starts the core.</value>
+  </data>
+  <data name="Schema_Inbounds" xml:space="preserve">
+    <value>Inbounds · inbounds</value>
+  </data>
+  <data name="Schema_AddTunPreset" xml:space="preserve">
+    <value>Add TUN preset</value>
+  </data>
+  <data name="Schema_Outbounds" xml:space="preserve">
+    <value>Outbounds · outbounds</value>
+  </data>
+  <data name="Schema_RouteRules" xml:space="preserve">
+    <value>Routing rules · route.rules</value>
+  </data>
+  <data name="Schema_CheckSave" xml:space="preserve">
+    <value>Check and save</value>
+  </data>
+  <data name="Schema_Saved" xml:space="preserve">
+    <value>Configuration checked and saved. Restart the core to apply changes.</value>
+  </data>
+  <data name="Schema_Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Schema_Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Schema_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Schema_MoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="Schema_MoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="Schema_SystemPreset" xml:space="preserve">
+    <value>System proxy preset</value>
+  </data>
+  <data name="Schema_SystemPresetHelp" xml:space="preserve">
+    <value>The reserved system-http mixed inbound is managed by Proxy settings. Its tag and listener cannot be duplicated here.</value>
+  </data>
+  <data name="SchemaField_final" xml:space="preserve">
+    <value>Default server / outbound</value>
+  </data>
+  <data name="SchemaField_strategy" xml:space="preserve">
+    <value>Address strategy</value>
+  </data>
+  <data name="SchemaField_disable_cache" xml:space="preserve">
+    <value>Disable DNS cache</value>
+  </data>
+  <data name="SchemaField_disable_expire" xml:space="preserve">
+    <value>Disable cache expiration</value>
+  </data>
+  <data name="SchemaField_cache_capacity" xml:space="preserve">
+    <value>Cache capacity</value>
+  </data>
+  <data name="SchemaField_optimistic" xml:space="preserve">
+    <value>Optimistic cache</value>
+  </data>
+  <data name="SchemaField_timeout" xml:space="preserve">
+    <value>Timeout</value>
+  </data>
+  <data name="SchemaField_reverse_mapping" xml:space="preserve">
+    <value>Remember IP-to-domain mappings</value>
+  </data>
+  <data name="SchemaField_client_subnet" xml:space="preserve">
+    <value>Client subnet</value>
+  </data>
+  <data name="SchemaField_enabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="SchemaField_type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="SchemaField_action" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="SchemaField_tag" xml:space="preserve">
+    <value>Tag</value>
+  </data>
+  <data name="SchemaField_server" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="SchemaField_server_port" xml:space="preserve">
+    <value>Server port</value>
+  </data>
+  <data name="SchemaField_detour" xml:space="preserve">
+    <value>Connect through outbound</value>
+  </data>
+  <data name="SchemaField_inbound" xml:space="preserve">
+    <value>Match inbound tags</value>
+  </data>
+  <data name="SchemaField_outbound" xml:space="preserve">
+    <value>Target outbound</value>
+  </data>
+  <data name="SchemaField_domain" xml:space="preserve">
+    <value>Exact domains</value>
+  </data>
+  <data name="SchemaField_domain_suffix" xml:space="preserve">
+    <value>Domain suffixes</value>
+  </data>
+  <data name="SchemaField_domain_keyword" xml:space="preserve">
+    <value>Domain keywords</value>
+  </data>
+  <data name="SchemaField_domain_regex" xml:space="preserve">
+    <value>Domain regular expressions</value>
+  </data>
+  <data name="SchemaField_ip_cidr" xml:space="preserve">
+    <value>Target IP ranges</value>
+  </data>
+  <data name="SchemaField_source_ip_cidr" xml:space="preserve">
+    <value>Source IP ranges</value>
+  </data>
+  <data name="SchemaField_ip_is_private" xml:space="preserve">
+    <value>Target is private IP</value>
+  </data>
+  <data name="SchemaField_source_ip_is_private" xml:space="preserve">
+    <value>Source is private IP</value>
+  </data>
+  <data name="SchemaField_ip_version" xml:space="preserve">
+    <value>IP version IP</value>
+  </data>
+  <data name="SchemaField_query_type" xml:space="preserve">
+    <value>DNS query types DNS</value>
+  </data>
+  <data name="SchemaField_network" xml:space="preserve">
+    <value>Network protocol</value>
+  </data>
+  <data name="SchemaField_protocol" xml:space="preserve">
+    <value>Detected protocols</value>
+  </data>
+  <data name="SchemaField_port" xml:space="preserve">
+    <value>Target ports</value>
+  </data>
+  <data name="SchemaField_source_port" xml:space="preserve">
+    <value>Source ports</value>
+  </data>
+  <data name="SchemaField_port_range" xml:space="preserve">
+    <value>Target port ranges</value>
+  </data>
+  <data name="SchemaField_source_port_range" xml:space="preserve">
+    <value>Source port ranges</value>
+  </data>
+  <data name="SchemaField_process_name" xml:space="preserve">
+    <value>Process names</value>
+  </data>
+  <data name="SchemaField_process_path" xml:space="preserve">
+    <value>Process paths</value>
+  </data>
+  <data name="SchemaField_process_path_regex" xml:space="preserve">
+    <value>Process path regular expressions</value>
+  </data>
+  <data name="SchemaField_package_name" xml:space="preserve">
+    <value>Package names</value>
+  </data>
+  <data name="SchemaField_package_name_regex" xml:space="preserve">
+    <value>Package name regular expressions</value>
+  </data>
+  <data name="SchemaField_user" xml:space="preserve">
+    <value>Users</value>
+  </data>
+  <data name="SchemaField_user_id" xml:space="preserve">
+    <value>User IDs</value>
+  </data>
+  <data name="SchemaField_auth_user" xml:space="preserve">
+    <value>Authenticated users</value>
+  </data>
+  <data name="SchemaField_rule_set" xml:space="preserve">
+    <value>Rule sets</value>
+  </data>
+  <data name="SchemaField_invert" xml:space="preserve">
+    <value>Invert match</value>
+  </data>
+  <data name="SchemaField_mode" xml:space="preserve">
+    <value>Logical mode</value>
+  </data>
+  <data name="SchemaField_rules" xml:space="preserve">
+    <value>Nested rules</value>
+  </data>
+  <data name="SchemaField_method" xml:space="preserve">
+    <value>Method</value>
+  </data>
+  <data name="SchemaField_tls" xml:space="preserve">
+    <value>TLS settings TLS</value>
+  </data>
+  <data name="SchemaField_server_name" xml:space="preserve">
+    <value>TLS server name TLS</value>
+  </data>
+  <data name="SchemaField_insecure" xml:space="preserve">
+    <value>Skip certificate verification</value>
+  </data>
+  <data name="SchemaField_path" xml:space="preserve">
+    <value>Path</value>
+  </data>
+  <data name="SchemaField_listen" xml:space="preserve">
+    <value>Listen address</value>
+  </data>
+  <data name="SchemaField_listen_port" xml:space="preserve">
+    <value>Listen port</value>
+  </data>
+  <data name="SchemaField_address" xml:space="preserve">
+    <value>Interface addresses</value>
+  </data>
+  <data name="SchemaField_interface_name" xml:space="preserve">
+    <value>Interface name</value>
+  </data>
+  <data name="SchemaField_auto_route" xml:space="preserve">
+    <value>Automatic routing</value>
+  </data>
+  <data name="SchemaField_strict_route" xml:space="preserve">
+    <value>Strict routing</value>
+  </data>
+  <data name="SchemaField_stack" xml:space="preserve">
+    <value>Network stack</value>
+  </data>
+  <data name="SchemaField_mtu" xml:space="preserve">
+    <value>MTU</value>
+  </data>
+  <data name="SchemaField_default_domain_resolver" xml:space="preserve">
+    <value>Default domain resolver</value>
+  </data>
+  <data name="SchemaField_default_interface" xml:space="preserve">
+    <value>Default interface</value>
+  </data>
+  <data name="SchemaField_auto_detect_interface" xml:space="preserve">
+    <value>Detect default interface</value>
+  </data>
+  <data name="SchemaField_rule_set_ip_cidr_match_source" xml:space="preserve">
+    <value>Match rule-set IPs against source</value>
+  </data>
+  <data name="SchemaField_network_type" xml:space="preserve">
+    <value>Network types</value>
+  </data>
+  <data name="SchemaField_clash_mode" xml:space="preserve">
+    <value>Clash mode</value>
+  </data>
+  <data name="SchemaField_wifi_ssid" xml:space="preserve">
+    <value>Wi-Fi names</value>
+  </data>
+  <data name="SchemaField_wifi_bssid" xml:space="preserve">
+    <value>Wi-Fi access points</value>
+  </data>
+  <data name="SchemaField_source_mac_address" xml:space="preserve">
+    <value>Source MAC addresses</value>
+  </data>
+  <data name="SchemaField_source_hostname" xml:space="preserve">
+    <value>Source hostnames</value>
+  </data>
+  <data name="Schema_AddField" xml:space="preserve">
+    <value>+ Add field</value>
+  </data>
+  <data name="Schema_RemoveField" xml:space="preserve">
+    <value>Remove field</value>
+  </data>
+  <data name="SchemaField_loopback_address" xml:space="preserve"><value>Loopback addresses</value></data>
+  <data name="SchemaField_udp_mapping" xml:space="preserve"><value>UDP NAT mapping</value></data>
+  <data name="SchemaField_route_address" xml:space="preserve"><value>Included routes (CIDR)</value></data>
+  <data name="SchemaField_route_exclude_address_set" xml:space="preserve"><value>Excluded route rule sets</value></data>
+  <data name="SchemaField_udp_filtering" xml:space="preserve"><value>UDP NAT filtering</value></data>
+  <data name="SchemaField_route_address_set" xml:space="preserve"><value>Included route rule sets</value></data>
+  <data name="SchemaField_udp_nat_max" xml:space="preserve"><value>Maximum UDP NAT entries</value></data>
+  <data name="SchemaField_dns_mode" xml:space="preserve"><value>DNS handling mode</value></data>
+  <data name="SchemaField_route_exclude_address" xml:space="preserve"><value>Excluded routes (CIDR)</value></data>
+  <data name="SchemaField_dns_address" xml:space="preserve"><value>DNS interception addresses</value></data>
+  <data name="TunCleanup_StopCore" xml:space="preserve"><value>Stop the core and wait for its operation to finish before clearing adapters.</value></data>
+  <data name="TunCleanup_ConfirmHelp" xml:space="preserve"><value>These are sing-tun devices, not proof of ownership or leftovers. Select only adapters you know are unused. Stop other proxy/VPN clients first. The selected device instances will be removed; drivers are kept.</value></data>
+  <data name="TunCleanup_Remove" xml:space="preserve"><value>Remove selected adapters</value></data>
+  <data name="TunCleanup_InvalidTarget" xml:space="preserve"><value>Invalid or duplicate TUN device selection.</value></data>
+  <data name="TunCleanup_Help" xml:space="preserve"><value>Select adapters to remove after stopping all sing-box cores. Administrator permission is required.</value></data>
+  <data name="TunCleanup_Done" xml:space="preserve"><value>Selected adapter devices removed.</value></data>
+  <data name="TunCleanup_Remaining" xml:space="preserve"><value>The selected adapter still exists. Cleanup is incomplete.</value></data>
+  <data name="TunCleanup_None" xml:space="preserve"><value>No removable sing-tun adapters were found.</value></data>
+  <data name="TunCleanup_NoReport" xml:space="preserve"><value>Cleanup did not return a result. UAC may have been cancelled; check the adapters.</value></data>
+  <data name="TunCleanup_Button" xml:space="preserve"><value>Clear leftover TUN adapters</value></data>
+  <data name="Diagnostics_PortBind" xml:space="preserve"><value>Cannot bind {0}. SocketError: {1}; Windows error: {2}.{4}{3}{4}AddressAlreadyInUse means a port conflict; AccessDenied may indicate permissions or a reserved port. This does not prove a leftover sing-box process.</value></data>
+  <data name="Diagnostics_TunAfterStop" xml:space="preserve"><value>The core exited, but these configured adapter names still exist after 3 seconds: {0}.{2}{1}{2}This check matches names only and cannot prove ownership or distinguish a recreated adapter. Cleanup is incomplete.</value></data>
+  <data name="Diagnostics_ProcessUnreadable" xml:space="preserve"><value>Cannot verify the executable identity of PID {0}; no process was terminated. Windows reported: {1}</value></data>
+  <data name="Diagnostics_PathUnreadable" xml:space="preserve"><value>(path unavailable: permission denied or process exited)</value></data>
+  <data name="Diagnostics_CleanupRemaining" xml:space="preserve"><value>Device remains after removal: {0}; instance: {1}; matching adapters: {2}; PnP device present: {3}. Removal is not confirmed complete.</value></data>
+  <data name="Diagnostics_CleanupRunning" xml:space="preserve"><value>Cleanup blocked because processes named sing-box are running:{0}{1}{0}This name-based check includes v2rayN cores and does not classify them as leftovers. Stop the owning client first.</value></data>
+  <data name="Diagnostics_CleanupInvalid" xml:space="preserve"><value>Wintun device identity mismatch. Expected: {0}; selected: {1}. Removal cancelled.</value></data>
+  <data name="Diagnostics_RecordInvalid" xml:space="preserve"><value>Cannot read the core process record: {0}. No process was terminated.{2}{1}</value></data>
+  <data name="Diagnostics_CleanupIdentity" xml:space="preserve"><value>Device identity changed; nothing was deleted in this step. Device: {0}.{5}Expected name: {1}; GUID: {2}; description: {3}.{5}Actual: {4}</value></data>
+  <data name="Diagnostics_CleanupFailed" xml:space="preserve"><value>Device removal failed: {0}; instance: {1}; pnputil exit code: {2}.{4}{3}</value></data>
+  <data name="Diagnostics_TunConflict" xml:space="preserve"><value>A TUN name conflict was detected, not a confirmed leftover. Requested interface_name: {0}; inbound tag: {1}.{2}{3}{2}Another proxy/VPN may own it. No adapter was deleted; stop its owner or use a different interface name.</value></data>
+  <data name="TunPreference_Title" xml:space="preserve"><value>Prefer this TUN for default traffic</value></data>
+  <data name="TunPreference_Help" xml:space="preserve"><value>Uses IPv4/IPv6 /1 routes to take precedence over ordinary /0 defaults. Enables auto_route. Equal or more specific routes may still take priority. Restart the core to apply; switching off restores the original route range.</value></data>
+  <data name="CoreButton_Starting" xml:space="preserve"><value>Starting…</value></data>
+  <data name="TunPresence_CheckFailed" xml:space="preserve"><value>Cannot verify device presence. Adapter: {0}; device: {1}; CONFIGRET: {2}. No device was removed.</value></data>
+  <data name="CoreButton_Stopping" xml:space="preserve"><value>Stopping…</value></data>
+  <data name="CoreButton_Start" xml:space="preserve"><value>Start sing-box</value></data>
+  <data name="CoreButton_Stop" xml:space="preserve"><value>Stop sing-box</value></data>
+  <data name="ApplicationEditor_PathRequired" xml:space="preserve"><value>Enter at least one program path.</value></data>
+  <data name="ApplicationEditor_GroupNameRequired" xml:space="preserve"><value>Enter an application group name.</value></data>
+  <data name="ApplicationEditor_ProcessNameRequired" xml:space="preserve"><value>Enter at least one process name. A program path is not required in name mode.</value></data>
+</root>
