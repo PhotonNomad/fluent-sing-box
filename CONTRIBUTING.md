@@ -77,4 +77,4 @@ dotnet run --project tests/Client.Regression -- "$PWD" --china-defaults-only
 
 提交前检查相对链接、脚本路径、本地化资源和 `git diff --check`。不要公开 UUID、密码、订阅地址、私钥或未经脱敏的完整配置。
 
-客户端代码尚未声明独立许可证，提交贡献前请确认你有权提供相关内容。
+客户端代码和文档采用 [MIT License](LICENSE)。提交的贡献应能够按照该许可证分发，请确认你有权提供相关内容；引入第三方内容时保留其原有许可与来源说明。

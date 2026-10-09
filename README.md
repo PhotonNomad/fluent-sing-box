@@ -98,7 +98,7 @@ dotnet run --project tests/Client.Regression -- "$PWD"
 
 ## 许可与致谢
 
-客户端代码目前没有单独声明许可证。公开源码不等同于授予特定开源许可证；第三方许可证仅适用于相应组件。
+本项目自行编写的客户端代码和文档采用 [MIT License](LICENSE)。第三方组件、规则集与其对应源码继续遵循各自的许可证，不受本项目 MIT 许可证替代。分发程序时须同时保留本项目和第三方许可文件。
 
 - [sing-box](https://github.com/SagerNet/sing-box)：保留 [LICENSE](src/FluentSingBox.Client/ThirdParty/SingBox/LICENSE)、[GPL-3.0 文本](src/FluentSingBox.Client/ThirdParty/SingBox/GPL-3.0.txt)、对应源码和[分发说明](src/FluentSingBox.Client/ThirdParty/SingBox/NOTICE.md)。
 - 国内分流数据：来源及许可见[规则集分发说明](src/FluentSingBox.Client/ThirdParty/RuleSets/NOTICE.md)。

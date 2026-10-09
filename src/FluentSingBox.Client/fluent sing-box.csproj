@@ -8,6 +8,7 @@
     <Product>fluent sing-box</Product>
     <Title>fluent sing-box</Title>
     <PackageId>fluent-sing-box</PackageId>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <ApplicationIcon>Assets\fluent-sing-box.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <UseWinUI>true</UseWinUI>
@@ -30,6 +31,7 @@
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <PRIResource Include="Strings\**\*.resw" />
     <None Update="ThirdParty\Schemas\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Update="Assets\fluent-sing-box.png" CopyToOutputDirectory="PreserveNewest" />
