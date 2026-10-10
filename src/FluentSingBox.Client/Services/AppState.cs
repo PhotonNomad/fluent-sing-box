@@ -20,6 +20,7 @@ public sealed class AppState
         _settingsPath = Path.Combine(directory, "settings.json");
 
         Settings = await SettingsStore.LoadAsync(_settingsPath);
+        Settings.CoreOnlyEnabled = false;
         Localization.Configure(Settings.LanguageChoice, Windows.Globalization.ApplicationLanguages.Languages.FirstOrDefault());
         Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = Localization.Language;
 
@@ -57,7 +58,7 @@ public sealed class AppState
         ObserveCollection(Settings.Applications);
         foreach (var item in Settings.Servers) Observe(item);
         foreach (var item in Settings.RoutingRules) Observe(item);
-        await SaveAsync();
+        await SavePreferencesAsync();
     }
 
     public void AddServer(ServerProfile server)
@@ -151,6 +152,15 @@ public sealed class AppState
         {
             _saveGate.Release();
         }
+    }
+
+    // Closing must not depend on reading, rebuilding or validating core configuration.
+    public async Task SavePreferencesAsync()
+    {
+        if (string.IsNullOrEmpty(_settingsPath)) return;
+        await _saveGate.WaitAsync();
+        try { await SettingsStore.SaveAsync(_settingsPath, Settings); }
+        finally { _saveGate.Release(); }
     }
 
     private void ObserveCollection<T>(System.Collections.ObjectModel.ObservableCollection<T> collection)

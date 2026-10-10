@@ -1,6 +1,7 @@
 param(
     [string]$ProjectRoot = (Resolve-Path "$PSScriptRoot/../..").Path,
-    [string]$ExecutablePath = (Join-Path $ProjectRoot 'artifacts/publish/Debug/fluent sing-box.exe')
+    [string]$ExecutablePath = (Join-Path $ProjectRoot 'artifacts/publish/Debug/fluent sing-box.exe'),
+    [switch]$RoutingOnly
 )
 $ErrorActionPreference = 'Stop'
 $taskWinapp = (Get-Command winapp -ErrorAction Stop).Source
@@ -38,6 +39,7 @@ function Expand-Dns([string]$Id) {
     Ui @('invoke',$inner.selector,'--action','expand') | Out-Null
 }
 function Case([string]$Name, [scriptblock]$Work) {
+    if ($RoutingOnly -and !$Name.StartsWith('routing/')) { return }
     try { & $Work; $taskResults.Add([pscustomobject]@{name=$Name;status='passed'}); Write-Output "PASS $Name" }
     catch { $taskResults.Add([pscustomobject]@{name=$Name;status='failed';message=$_.Exception.Message}); throw }
 }
@@ -84,11 +86,11 @@ try {
     $windows = @(& $taskWinapp ui list-windows -a "$($taskProcess.Id)" --json | Out-String | ConvertFrom-Json)
     Assert ($windows.Count -eq 1) 'Expected exactly one isolated test window'
     $taskWindow = $windows[0].hwnd
-    Case 'startup/preflight-finishes-without-starting-core' {
+    Case 'startup/opens-without-core-configuration-check' {
         Ui @('wait-for','Core_Toggle','--property','IsEnabled','--value','true') | Out-Null
-        $report = Get-Content -LiteralPath (Join-Path $taskRoot 'sing-box/startup-preflight.json') -Raw | ConvertFrom-Json
-        Assert ($report.outcome -eq 'passed') 'Initial configuration did not pass startup preflight'
-        Assert (!(Test-Path -LiteralPath (Join-Path $taskRoot 'sing-box/process.json'))) 'Startup preflight unexpectedly started a core'
+        Assert (!(Test-Path -LiteralPath (Join-Path $taskRoot 'sing-box/startup-preflight.json'))) 'Opening the app ran a startup preflight'
+        Assert (!(Test-Path -LiteralPath (Join-Path $taskRoot 'sing-box/config.validation.json'))) 'Opening the app checked core configuration'
+        Assert (!(Test-Path -LiteralPath (Join-Path $taskRoot 'sing-box/process.json'))) 'Opening the app started a core'
     }
     Case 'lifecycle/same-data-directory-rejects-second-window' {
         $second = Start-Process -FilePath $ExecutablePath -WorkingDirectory (Split-Path $ExecutablePath) -WindowStyle Hidden -PassThru
@@ -106,7 +108,7 @@ try {
         Ui @('invoke','Navigation_Routing') | Out-Null
         Ui @('wait-for','Routing_final') | Out-Null
         Choice 'Routing_final' 'Routing_final_proxy-ui-node'
-        Ui @('invoke','Routing_Save') | Out-Null
+        Assert (@(Tree | Where-Object automationId -eq 'Routing_Save').Count -eq 0) 'Manual route save button still exists'
         Ui @('wait-for','配置已校验并保存，重启核心后生效。','--type','Text') | Out-Null
         Assert ((Get-Content (Join-Path $taskRoot 'sing-box/user-config.json') -Raw | ConvertFrom-Json).route.final -eq 'proxy-ui-node') 'Final outbound was not saved'
         Ui @('invoke','Navigation_Proxy') | Out-Null
@@ -114,6 +116,31 @@ try {
         Ui @('wait-for','Routing_final') | Out-Null
         Assert ((Ui @('get-value','Routing_final')).text -eq 'proxy-ui-node') 'Final selection was not restored'
         Assert (!(Test-Path (Join-Path $taskRoot 'sing-box/process.json'))) 'Saving final started core'
+        Assert (!(Test-Path (Join-Path $taskRoot 'sing-box/sing-box.log'))) 'Startup or validation created runtime log'
+        $finalSelector = @(Tree | Where-Object automationId -eq 'Routing_final')[0].selector
+        Ui @('invoke',$finalSelector,'--action','expand') | Out-Null
+        Assert (@(Tree | Where-Object automationId -eq 'Routing_final_').Count -eq 0) 'Empty final option is still available'
+        $selectedItem = @(Tree | Where-Object { $_.automationId -eq 'Routing_final_proxy-ui-node' -and $_.type -eq 'ListItem' })[0].selector
+        Ui @('invoke',$selectedItem,'--action','select') | Out-Null
+        Ui @('scroll-into-view','Routing_final') | Out-Null
+        Ui @('screenshot','-o',(Join-Path $taskRoot 'routing.png')) | Out-Null
+    }
+    Case 'routing/rule-toggle-and-order-autosave' {
+        Ui @('invoke','Navigation_Routing') | Out-Null
+        Ui @('wait-for','Routing_Rules_0') | Out-Null
+        $path = Join-Path $taskRoot 'sing-box/user-config.json'
+        $before = Get-Content $path -Raw | ConvertFrom-Json
+        Expand-Dns 'Routing_Rules_0'
+        Ui @('invoke','Routing_Rules_0_Enabled','--action','toggle-off') | Out-Null
+        Ui @('wait-for','配置已校验并保存，重启核心后生效。','--type','Text') | Out-Null
+        $after = Get-Content $path -Raw | ConvertFrom-Json
+        Assert ($after.route.rules.Count -eq $before.route.rules.Count - 1) 'Disabled route rule was not automatically saved'
+        Ui @('invoke','Routing_Rules_0_Enabled','--action','toggle-on') | Out-Null
+        Ui @('wait-for','配置已校验并保存，重启核心后生效。','--type','Text') | Out-Null
+        Assert ((Get-Content $path -Raw | ConvertFrom-Json).route.rules.Count -eq $before.route.rules.Count) 'Enabled route rule was not restored'
+        Ui @('invoke','Routing_Rules_0_Down') | Out-Null
+        Ui @('wait-for','配置已校验并保存，重启核心后生效。','--type','Text') | Out-Null
+        Assert ((Get-Content $path -Raw | ConvertFrom-Json).route.rules[1].action -eq $before.route.rules[0].action) 'Route move was not automatically saved'
     }
     Case 'proxy/flat-settings-and-no-empty-status-row' {
         Ui @('invoke','Navigation_Proxy') | Out-Null
@@ -253,13 +280,12 @@ try {
         Ui @('invoke','Navigation_Routing') | Out-Null
         Ui @('wait-for','Routing_final') | Out-Null
         Choice 'Routing_final' 'Routing_final_direct'
-        Ui @('invoke','Routing_Save') | Out-Null
         Ui @('wait-for','配置已校验并保存，重启核心后生效。','--type','Text') | Out-Null
 
         $actual = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
         Assert ($actual.route.final -eq 'direct' -and $actual.log.level -eq 'warn') 'Form change failed to update file or lost manual field'
         Ui @('invoke','Navigation_DNS') | Out-Null
-        Ui @('wait-for','DNS_Save','--property','IsEnabled','--value','true') | Out-Null
+        Ui @('wait-for','DNS_final','--property','IsEnabled','--value','true') | Out-Null
         Assert (!(Test-Path (Join-Path $taskRoot 'client-errors.log'))) 'Managed configuration flow recorded exception'
     }
 }

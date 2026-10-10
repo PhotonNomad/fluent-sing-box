@@ -68,6 +68,8 @@ public sealed class SingBoxCoreService : IDisposable
 
     public async Task ValidateAsync(AppSettingsData settings)
     {
+        if (!string.IsNullOrWhiteSpace(settings.Configuration.ExternalFilePath) && !File.Exists(settings.Configuration.ExternalFilePath))
+            await ConfigurationFileService.EnsureAsync(settings);
         var executable = await SingBoxCoreBundle.ResolveExecutablePathAsync(settings.SingBoxExecutablePath);
         var directory = Path.Combine(AppPaths.DataDirectory, "sing-box");
         Directory.CreateDirectory(directory);
@@ -92,6 +94,8 @@ public sealed class SingBoxCoreService : IDisposable
         await _operationGate.WaitAsync();
         try
         {
+            if (!string.IsNullOrWhiteSpace(settings.Configuration.ExternalFilePath) && !File.Exists(settings.Configuration.ExternalFilePath))
+                await ConfigurationFileService.EnsureAsync(settings);
             var executable = await SingBoxCoreBundle.ResolveExecutablePathAsync(settings.SingBoxExecutablePath);
             var directory = Path.Combine(AppPaths.DataDirectory, "sing-box");
             Directory.CreateDirectory(directory);
@@ -123,6 +127,8 @@ public sealed class SingBoxCoreService : IDisposable
     private async Task StartInternalAsync(AppSettingsData settings)
     {
         if (IsRunning) return;
+        if (!string.IsNullOrWhiteSpace(settings.Configuration.ExternalFilePath) && !File.Exists(settings.Configuration.ExternalFilePath))
+            await ConfigurationFileService.EnsureAsync(settings);
         CleanupHandles();
         var executablePath = await SingBoxCoreBundle.ResolveExecutablePathAsync(settings.SingBoxExecutablePath);
 
@@ -143,6 +149,9 @@ public sealed class SingBoxCoreService : IDisposable
         _runningTunNames = TunShutdownCheck.Names(configText);
         if (File.Exists(logPath)) File.Copy(logPath, logPath + ".previous", overwrite: true);
         if (File.Exists(logPath)) File.Delete(logPath);
+        await DnsCachePolicy.TrackAsync(settings, configText);
+        DnsCachePolicy.ClearBeforeStart();
+        DnsCachePolicy.LogStrategy(settings, configText);
 
         var requiresElevation = ConfigurationComposer.RequiresElevation(configText);
         if (!requiresElevation)
@@ -368,6 +377,13 @@ public sealed class SingBoxCoreService : IDisposable
         _hostProcess = null;
         _coreProcess = null;
         _runningTunNames = [];
+    }
+
+    public void ReleaseStoppedResources()
+    {
+        if (IsRunning) throw new InvalidOperationException("Cannot release resources while the core or its host is still running.");
+        CleanupHandles();
+        _status = CoreStatus.Stopped;
     }
 
     private static bool IsProcessRunning(Process? process)

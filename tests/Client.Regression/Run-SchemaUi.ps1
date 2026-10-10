@@ -73,7 +73,8 @@ try {
     $script:sourcePath=Join-Path $directory 'sing-box/user-config.json'
     Start-Fixture $directory
     Case 'dns/official-order-and-local-schema' {
-        Ui @('invoke','Navigation_DNS') | Out-Null; Ui @('wait-for','DNS_Save') | Out-Null
+        Ui @('invoke','Navigation_DNS') | Out-Null; Ui @('wait-for','DNS_final') | Out-Null
+        Assert (@(Tree | Where-Object automationId -eq 'DNS_Save').Count -eq 0) 'Manual DNS save button remains'
         Assert-English
         $nodes=Tree
         foreach($id in @('DNS_final','DNS_strategy','DNS_disable_cache','DNS_disable_expire','DNS_cache_capacity','DNS_optimistic_Options','DNS_timeout','DNS_reverse_mapping','DNS_client_subnet')) { Assert (@($nodes | Where-Object automationId -eq $id).Count -eq 1) ('Missing DNS field '+$id) }
@@ -83,14 +84,15 @@ try {
     }
     Case 'dns/field-edit-save-and-invalid-preservation' {
         Ui @('set-value','DNS_timeout','3s') | Out-Null; Ui @('set-value','DNS_cache_capacity','2048') | Out-Null
-        Ui @('invoke','DNS_Save') | Out-Null
         Wait-Document {param($d) $d.dns.timeout -eq '3s' -and $d.dns.cache_capacity -eq 2048} | Out-Null
-        Ui @('wait-for','DNS_Save','--property','IsEnabled','--value','true') | Out-Null
+        Ui @('wait-for','DNS_final','--property','IsEnabled','--value','true') | Out-Null
         $hash=(Get-FileHash $script:sourcePath).Hash
-        Ui @('set-value','DNS_timeout','invalid-duration') | Out-Null; Ui @('invoke','DNS_Save') | Out-Null
-        Ui @('wait-for','DNS_Save','--property','IsEnabled','--value','true') | Out-Null
+        Ui @('set-value','DNS_timeout','invalid-duration') | Out-Null
+        Ui @('wait-for','invalid-duration','--type','Text') | Out-Null
+        Start-Sleep -Milliseconds 900
         Assert ((Get-FileHash $script:sourcePath).Hash -eq $hash) 'Invalid DNS config replaced the source'
-        Ui @('set-value','DNS_timeout','3s') | Out-Null
+        Ui @('set-value','DNS_timeout','4s') | Out-Null
+        Wait-Document {param($d) $d.dns.timeout -eq '4s'} | Out-Null
     }
     Case 'dns/add-modern-fakeip-server' {
         Ui @('invoke','DNS_Servers_Add') | Out-Null; Ui @('wait-for','DNS_Servers_Editor_type') | Out-Null
@@ -100,7 +102,7 @@ try {
         Ui @('set-value','DNS_Servers_Editor_tag','fake-dns') | Out-Null
         Ui @('set-value','DNS_Servers_Editor_inet4_range','198.18.0.0/15') | Out-Null
         Ui @('set-value','DNS_Servers_Editor_inet6_range','fc00::/18') | Out-Null
-        Save-Dialog; Ui @('wait-for','DNS_Servers_3') | Out-Null; Ui @('invoke','DNS_Save') | Out-Null
+        Save-Dialog; Ui @('wait-for','DNS_Servers_3') | Out-Null
         Wait-Document {param($d) @($d.dns.servers | Where-Object {$_.type -eq 'fakeip' -and $_.tag -eq 'fake-dns'}).Count -eq 1} | Out-Null
     }
     Case 'dns/optimistic-cache-and-conflict-protection' {
@@ -109,21 +111,24 @@ try {
         Ui @('invoke','DNS_optimistic_Enabled','--action','toggle') | Out-Null
         Ui @('wait-for','DNS_optimistic_timeout') | Out-Null
         Ui @('set-value','DNS_optimistic_timeout','1h') | Out-Null
-        Ui @('invoke','DNS_Save') | Out-Null
         Wait-Document {param($d) $d.dns.optimistic.enabled -eq $true -and $d.dns.optimistic.timeout -eq '1h'} | Out-Null
         $hash=(Get-FileHash $script:sourcePath).Hash
-        Choice 'DNS_disable_cache' 'true'; Ui @('invoke','DNS_Save') | Out-Null
-        Ui @('wait-for','DNS_Save','--property','IsEnabled','--value','true') | Out-Null
+        Choice 'DNS_disable_cache' 'true'
+        Start-Sleep -Milliseconds 1500
+        Ui @('wait-for','DNS_final','--property','IsEnabled','--value','true') | Out-Null
         Assert ((Get-FileHash $script:sourcePath).Hash -eq $hash) 'Conflicting cache settings were saved'
         Choice 'DNS_disable_cache' 'false'
+        Start-Sleep -Milliseconds 1000
     }
     Case 'dns/rule-fields-and-reject-action' {
         Ui @('invoke','DNS_Rules_Add') | Out-Null; Ui @('wait-for','DNS_Rules_Editor_action') | Out-Null
-        Assert (@(Tree | Where-Object automationId -eq 'DNS_Rules_Editor_process_name').Count -eq 1) 'DNS process matching unavailable'
+        Assert (@(Tree | Where-Object automationId -eq 'DNS_Rules_Editor_process_name').Count -eq 0) 'Optional DNS field visible before adding'
         Choice 'DNS_Rules_Editor_action' 'reject'
+        Ui @('invoke','DNS_Rules_Editor_AddField') | Out-Null
+        Ui @('invoke','DNS_Rules_Editor_AddField_domain_suffix') | Out-Null
         Ui @('set-value','DNS_Rules_Editor_domain_suffix','blocked.example') | Out-Null
         Assert (@(Tree | Where-Object automationId -eq 'DNS_Rules_Editor_server').Count -eq 0) 'Reject retained server field'
-        Save-Dialog; Ui @('wait-for','DNS_Rules_2') | Out-Null; Ui @('invoke','DNS_Save') | Out-Null
+        Save-Dialog; Ui @('wait-for','DNS_Rules_2') | Out-Null
         Wait-Document {param($d) @($d.dns.rules | Where-Object {$_.action -eq 'reject'}).Count -eq 1} | Out-Null
     }
     Case 'route/presets-and-comprehensive-rule-editor' {

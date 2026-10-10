@@ -27,6 +27,7 @@ public sealed partial class ProxyPage : Page
         DefaultServerComboBox.SelectedValuePath = nameof(ServerProfile.Id);
         DefaultServerComboBox.SelectedValue = App.State.Settings.DefaultServerId;
         ApplicationList.ItemsSource = App.State.Settings.Applications;
+        ApplicationDnsHelp.Text = Localization.Get("Dns_DefaultNodeHelp");
 
         UpdateEmptyApplicationsMessage();
         _loading = false;
@@ -38,8 +39,15 @@ public sealed partial class ProxyPage : Page
         }
     }
 
-    private void UpdateEmptyApplicationsMessage() =>
+    private void UpdateEmptyApplicationsMessage()
+    {
         EmptyApplicationsMessage.Visibility = App.State.Settings.Applications.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        var warnings = ApplicationMatching.PathWarnings(App.State.Settings).ToList();
+        if (App.State.Settings.Applications.Any(profile => profile.MatchMode == "path" && profile.ExecutablePaths.Any(path => ApplicationMatching.StorePathRegex(path) is not null)))
+            warnings.Add(Localization.Get("ApplicationMatch_StorePath"));
+        ApplicationWarnings.Message = string.Join(Environment.NewLine, warnings);
+        ApplicationWarnings.IsOpen = warnings.Count > 0;
+    }
 
     private async void DefaultServer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -131,7 +139,7 @@ public sealed partial class ProxyPage : Page
         var name = new TextBox { Header = Localization.Get("ProxyPage_ApplicationGroupName"), Text = profile.Name };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(name, "ApplicationEditor_Name");
         var serverComboBox = CreateServerComboBox(profile.ServerId);
-        var mode = new ComboBox { Header = Localization.Get("ApplicationMatch_Mode"), SelectedValuePath = "Tag" };
+        var mode = new ComboBox { Header = Localization.Get("ApplicationMatch_Mode") };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(mode, "ApplicationEditor_MatchMode");
         foreach (var value in new[] { "name", "path" })
         {
@@ -139,7 +147,7 @@ public sealed partial class ProxyPage : Page
             Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(item, "ApplicationEditor_MatchMode_" + value);
             mode.Items.Add(item);
         }
-        mode.SelectedValue = profile.MatchMode;
+        mode.SelectedIndex = profile.MatchMode == "name" ? 0 : 1;
         var programs = new TextBox
         {
             Header = Localization.Get("ProxyPage_ProgramPathsOnePerLine"),
@@ -153,9 +161,33 @@ public sealed partial class ProxyPage : Page
         var names = new TextBox { Header = Localization.Get("ApplicationMatch_Names"), Text = string.Join(Environment.NewLine, profile.ProcessNames), AcceptsReturn = true, MinHeight = 110, MaxHeight = 180 };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(names, "ApplicationEditor_Names");
         var choosePrograms = new Button { Content = Localization.Get("ProxyPage_AddPrograms"), HorizontalAlignment = HorizontalAlignment.Left };
+        var chooseProcesses = new Button { Content = Localization.Get("ApplicationMatch_ChooseRunning"), HorizontalAlignment = HorizontalAlignment.Left };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(chooseProcesses, "ApplicationEditor_ChooseProcesses");
+        var processChoices = new ListView { SelectionMode = ListViewSelectionMode.Multiple, DisplayMemberPath = nameof(RunningApplication.Display), MaxHeight = 160, Visibility = Visibility.Collapsed };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(processChoices, "ApplicationEditor_RunningProcesses");
+        IReadOnlyList<RunningApplication> running = [];
+        var processSearch = new TextBox { PlaceholderText = Localization.Get("ApplicationMatch_SearchProcesses"), Visibility = Visibility.Collapsed };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(processSearch, "ApplicationEditor_ProcessSearch");
+        processSearch.TextChanged += (_, _) => processChoices.ItemsSource = running.Where(item => item.Display.Contains(processSearch.Text, StringComparison.OrdinalIgnoreCase)).ToArray();
+        var addProcesses = new Button { Content = Localization.Get("ApplicationMatch_AddSelected"), HorizontalAlignment = HorizontalAlignment.Left, Visibility = Visibility.Collapsed };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(addProcesses, "ApplicationEditor_AddProcesses");
+        chooseProcesses.Click += async (_, _) =>
+        {
+            running = await Task.Run(ApplicationMatching.RunningProcesses);
+            processChoices.ItemsSource = running.Where(item => item.Display.Contains(processSearch.Text, StringComparison.OrdinalIgnoreCase)).ToArray();
+            processSearch.Visibility = processChoices.Visibility = addProcesses.Visibility = Visibility.Visible;
+        };
+        addProcesses.Click += (_, _) =>
+        {
+            // Names survive Store updates and CLI bin/<hash> upgrades.
+            mode.SelectedIndex = 0;
+            names.Text = string.Join(Environment.NewLine, names.Text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Concat(processChoices.SelectedItems.Cast<RunningApplication>().Select(item => item.Name)).Distinct(StringComparer.OrdinalIgnoreCase));
+            processSearch.Visibility = processChoices.Visibility = addProcesses.Visibility = Visibility.Collapsed;
+        };
         void UpdateMode()
         {
-            var byName = mode.SelectedValue is "name";
+            var byName = mode.SelectedIndex == 0;
             programs.Visibility = choosePrograms.Visibility = byName ? Visibility.Collapsed : Visibility.Visible;
             names.Visibility = byName ? Visibility.Visible : Visibility.Collapsed;
         }
@@ -183,10 +215,14 @@ public sealed partial class ProxyPage : Page
         panel.Children.Add(programs);
         panel.Children.Add(names);
         panel.Children.Add(choosePrograms);
+        panel.Children.Add(chooseProcesses);
+        panel.Children.Add(processSearch);
+        panel.Children.Add(processChoices);
+        panel.Children.Add(addProcesses);
         var dialog = new ContentDialog
         {
             Title = Localization.Get(adding ? "ProxyPage_AddApplicationGroup" : "ProxyPage_EditApplicationGroup"),
-            Content = panel,
+            Content = new ScrollViewer { Content = panel, MaxHeight = 600, VerticalScrollBarVisibility = ScrollBarVisibility.Auto },
             PrimaryButtonText = Localization.Get("ProxyPage_Save"),
             CloseButtonText = Localization.Get("ProxyPage_Cancel"),
             DefaultButton = ContentDialogButton.Primary,
@@ -194,8 +230,29 @@ public sealed partial class ProxyPage : Page
         };
         dialog.PrimaryButtonClick += (_, args) =>
         {
-            var byName = mode.SelectedValue is "name";
+            var byName = mode.SelectedIndex == 0;
             var entries = (byName ? names.Text : programs.Text).Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (byName)
+            {
+                try
+                {
+                    var resolved = ApplicationMatching.RunningProcesses().Select(item => item.Name).ToList();
+                    foreach (var directory in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries))
+                        foreach (var entry in entries.Where(item => !Path.HasExtension(item) && item.IndexOfAny(Path.GetInvalidFileNameChars()) < 0))
+                        {
+                            var file = Path.Combine(directory, entry + ".exe");
+                            if (File.Exists(file))
+                            {
+                                try { resolved.AddRange(Directory.EnumerateFiles(directory, entry + ".exe").Select(Path.GetFileName).OfType<string>()); }
+                                catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
+                            }
+                        }
+                    entries = entries.Select(entry => ApplicationMatching.NormalizeName(entry, resolved)).ToArray();
+                    names.Text = string.Join(Environment.NewLine, entries.Distinct(StringComparer.OrdinalIgnoreCase));
+                }
+                catch (Exception error) when (error is InvalidOperationException or ArgumentException)
+                { args.Cancel = true; editorError.Message = error.Message; editorError.IsOpen = true; return; }
+            }
             var message = string.IsNullOrWhiteSpace(name.Text) ? Localization.Get("ApplicationEditor_GroupNameRequired")
                 : entries.Length == 0 ? Localization.Get(byName ? "ApplicationEditor_ProcessNameRequired" : "ApplicationEditor_PathRequired")
                 : byName && entries.Any(item => item.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) ? Localization.Get("ApplicationMatch_NameHelp")
@@ -213,7 +270,7 @@ public sealed partial class ProxyPage : Page
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
         var processNames = names.Text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-        var matchMode = mode.SelectedValue as string ?? "name";
+        var matchMode = mode.SelectedIndex == 0 ? "name" : "path";
 
         if (serverComboBox.SelectedValue is not string serverId)
         {

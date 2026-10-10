@@ -2437,16 +2437,16 @@ Windows: {0}
     <value>进程名称（每行一个）</value>
   </data>
   <data name="ApplicationMatch_Help" xml:space="preserve">
-    <value>路径匹配指定位置的程序；名称匹配任意目录下同名的进程。</value>
+    <value>名称模式可避免升级后路径失效，请使用含 .exe 的完整文件名并按实际大小写书写，或从运行中的进程选择。Store 路径跨版本匹配；CLI 的 bin/&lt;哈希&gt; 路径建议改用名称模式。</value>
   </data>
   <data name="ApplicationMatch_NameHelp" xml:space="preserve">
-    <value>填写 ChatGPT.exe 等进程名称，不要包含目录或通配符。</value>
+    <value>Windows 进程名必须是含 .exe 的完整文件名，大小写请按真实文件名书写。CLI 的 bin/&lt;哈希&gt; 路径会随升级变化，建议使用名称模式。</value>
   </data>
   <data name="ApplicationMatch_InvalidMode" xml:space="preserve">
     <value>应用匹配方式无效。</value>
   </data>
   <data name="ApplicationMatch_InvalidName" xml:space="preserve">
-    <value>进程名称无效：{0}。请填写文件名，不包含目录或通配符。</value>
+    <value>无效的 Windows 进程名：{0}。请使用含 .exe 的完整文件名，大小写按真实文件名书写。</value>
   </data>
   <data name="ApplicationMatch_DuplicateName" xml:space="preserve">
     <value>进程名称 {0} 被多个已启用的应用组重复使用。</value>
@@ -2777,4 +2777,18 @@ Windows: {0}
   <data name="ApplicationEditor_PathRequired" xml:space="preserve"><value>请填写至少一个程序路径。</value></data>
   <data name="ApplicationEditor_GroupNameRequired" xml:space="preserve"><value>请填写应用组名称。</value></data>
   <data name="ApplicationEditor_ProcessNameRequired" xml:space="preserve"><value>请填写至少一个进程名称；名称模式不需要程序路径。</value></data>
+  <data name="Schema_RouteAutoSaveDescription" xml:space="preserve"><value>修改后自动校验并保存，重启核心后生效。校验失败时保留原配置。</value></data>
+  <data name="Schema_SelectOutbound" xml:space="preserve"><value>请选择已有出站，默认出站不能为空。</value></data>
+  <data name="Schema_SelectDnsServer" xml:space="preserve"><value>请选择已有 DNS 服务器，默认 DNS 服务器不能为空。</value></data>
+  <data name="Dns_AutoIpv4Only" xml:space="preserve"><value>无可用 IPv6 时自动使用仅 IPv4</value></data>
+  <data name="Dns_Ipv6Available" xml:space="preserve"><value>已检测到全局 IPv6 地址和默认路由，保留所选解析策略。</value></data>
+  <data name="Dns_AutoIpv4Active" xml:space="preserve"><value>未检测到可用 IPv6，运行时已使用仅 IPv4 解析。</value></data>
+  <data name="Dns_Ipv6Unavailable" xml:space="preserve"><value>未检测到可用 IPv6；自动调整已关闭，保留所选策略。</value></data>
+  <data name="Dns_ExplicitIpv6Only" xml:space="preserve"><value>未检测到可用 IPv6；保留您明确选择的仅 IPv6，解析结果可能无法连接。</value></data>
+  <data name="Dns_DefaultNodeHelp" xml:space="preserve"><value>局域网和国内域名使用本地 DNS，其余域名使用默认节点的 DoH。应用自己的节点仅作用于连接。DNS 设置变更后，会在下次启动核心前清理应用缓存。</value></data>
+  <data name="ApplicationMatch_ChooseRunning" xml:space="preserve"><value>从正在运行的进程选择</value></data>
+  <data name="ApplicationMatch_AddSelected" xml:space="preserve"><value>添加选中的进程名称</value></data>
+  <data name="ApplicationMatch_StorePath" xml:space="preserve"><value>Store 应用已按版本无关方式匹配。</value></data>
+  <data name="ApplicationMatch_MissingPath" xml:space="preserve"><value>应用 {0} 的程序路径不存在（Store 应用可能已更新）：{1}；建议改用名称模式或重新选择程序。</value></data>
+  <data name="ApplicationMatch_SearchProcesses" xml:space="preserve"><value>搜索进程名称或路径</value></data>
 </root>

@@ -1,0 +1,38 @@
+{
+  "$schema": "../ThirdParty/Schemas/sing-box-1.14.2.schema.json",
+  "log": { "level": "info", "timestamp": true },
+  "dns": {
+    "servers": [{ "type": "local", "tag": "local" }],
+    "final": "local",
+    "strategy": "prefer_ipv4",
+    "reverse_mapping": true
+  },
+  "inbounds": [
+    { "type": "mixed", "tag": "system-http", "listen": "127.0.0.1", "listen_port": 10809 }
+  ],
+  "outbounds": [{ "type": "direct", "tag": "direct" }],
+  "route": {
+    "rules": [
+      { "action": "sniff" },
+      { "inbound": ["system-http"], "action": "resolve" },
+      { "ip_is_private": true, "action": "route", "outbound": "direct" },
+      { "rule_set": "geosite-geolocation-cn", "action": "route", "outbound": "direct" },
+      {
+        "type": "logical", "mode": "and",
+        "rules": [
+          { "rule_set": "geoip-cn" },
+          { "rule_set": "geosite-geolocation-!cn", "invert": true }
+        ],
+        "action": "route", "outbound": "direct"
+      }
+    ],
+    "rule_set": [
+      { "type": "local", "tag": "geosite-geolocation-cn", "format": "binary", "path": "../ThirdParty/RuleSets/geosite-geolocation-cn.srs" },
+      { "type": "local", "tag": "geosite-geolocation-!cn", "format": "binary", "path": "../ThirdParty/RuleSets/geosite-geolocation-!cn.srs" },
+      { "type": "local", "tag": "geoip-cn", "format": "binary", "path": "../ThirdParty/RuleSets/geoip-cn.srs" }
+    ],
+    "final": "direct",
+    "default_domain_resolver": "local",
+    "auto_detect_interface": true
+  }
+}

@@ -49,6 +49,7 @@ dotnet run --project tests/Client.Regression -- "$PWD"
 
 ```powershell
 dotnet run --project tests/Client.Regression -- "$PWD" --china-defaults-only
+dotnet run --project tests/Client.Regression -- "$PWD" --configuration-recovery-only
 ```
 
 统一开发回归：
@@ -65,6 +66,8 @@ dotnet run --project tests/Client.Regression -- "$PWD" --china-defaults-only
 ./tests/Client.Regression/Run-SchemaUi.ps1
 ./tests/Client.Regression/Run-ConfigurationUi.ps1
 ./tests/Client.Regression/Run-LocalizationUi.ps1
+./tests/Client.Regression/Run-StartupDialogUi.ps1
+./tests/Client.Regression/Run-ChinaRoutingUi.ps1
 ```
 
 测试使用独立 `FLUENTSINGBOX_DATA_DIR`，只清理测试创建的进程。常规自动回归不应修改宿主机系统代理或创建真实 TUN。UI、CIM 和 Windows SDK 访问可能受到执行环境限制；命令在沙箱中不可用时，应比较命令解析、PATH、安装路径与权限，再判断是否缺少依赖。

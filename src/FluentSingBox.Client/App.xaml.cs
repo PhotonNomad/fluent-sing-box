@@ -45,12 +45,16 @@ public sealed partial class App : Application
             {
                 State.Settings.LaunchAtStartup = StartupService.IsEnabled();
             }
-            await State.SaveAsync();
+            // Opening the editor must not execute the core or validate its configuration.
+            // Missing managed files still get a template; custom paths are checked on start.
+            var external = State.Settings.Configuration.ExternalFilePath;
+            if (!State.Settings.Configuration.NativeEnabled && (string.IsNullOrWhiteSpace(external) || string.Equals(Path.GetFullPath(external), Path.GetFullPath(ConfigurationFileService.FilePath), StringComparison.OrdinalIgnoreCase)))
+                await ConfigurationFileService.EnsureAsync(State.Settings, validateWithCore: false);
+            await State.SavePreferencesAsync();
 
             MainWindow = new MainWindow();
             if (AppPaths.HasDataOverride && Environment.GetEnvironmentVariable("FLUENTSINGBOX_TEST_BACKGROUND") == "1") MainWindow.AppWindow.Show(activateWindow: false);
             else MainWindow.Activate();
-            await MainWindow.CheckStartupAsync();
         }
         catch (Exception exception)
         {
@@ -60,15 +64,17 @@ public sealed partial class App : Application
                 Content = exception.Message,
                 CloseButtonText = Localization.Get("App_Close")
             };
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(dialog, "Startup_ErrorDialog");
 
             if (MainWindow is null)
             {
                 MainWindow = new MainWindow();
-                MainWindow.Activate();
+                if (AppPaths.HasDataOverride && Environment.GetEnvironmentVariable("FLUENTSINGBOX_TEST_BACKGROUND") == "1") MainWindow.AppWindow.Show(activateWindow: false);
+                else MainWindow.Activate();
             }
             if (MainWindow is not null)
             {
-                dialog.XamlRoot = MainWindow.Content.XamlRoot;
+                // DialogService waits for the owner's Loaded event when needed.
                 await DialogService.ShowAsync(dialog);
             }
         }

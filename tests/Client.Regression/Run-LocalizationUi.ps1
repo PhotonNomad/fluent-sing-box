@@ -57,7 +57,7 @@ try {
         try {
             foreach ($page in @('Servers','Routing','Proxy','DNS','Configuration','Logs','Settings')) {
                 Ui @('invoke',('Navigation_' + $page)) | Out-Null
-                $ready = switch ($page) { 'Servers'{'Servers_Add'} 'Routing'{'Routing_final'} 'Proxy'{'Proxy_PortTextBox'} 'DNS'{'DNS_Save'} 'Configuration'{'Configuration_Check'} 'Logs'{'Logs_Filter'} 'Settings'{'Settings_Language'} }
+                $ready = switch ($page) { 'Servers'{'Servers_Add'} 'Routing'{'Routing_final'} 'Proxy'{'Proxy_PortTextBox'} 'DNS'{'DNS_final'} 'Configuration'{'Configuration_Check'} 'Logs'{'Logs_Filter'} 'Settings'{'Settings_Language'} }
                 if ($page -ne 'Logs') { Ui @('wait-for',$ready) | Out-Null }
                 $nodes = Tree
                 if ($language -eq 'en-US') { Assert-English }

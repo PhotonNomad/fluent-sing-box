@@ -38,22 +38,116 @@ public static class ConfigurationFileService
         return new SingBoxConfigBuilder().Build(settings, Path.Combine(AppPaths.DataDirectory, "sing-box", "sing-box.log"), true, validateApplicationPaths: false);
     }
 
-    public static async Task<string> EnsureAsync(AppSettingsData settings)
+    public static async Task<string> EnsureAsync(AppSettingsData settings, bool validateWithCore = true)
     {
         if (!string.IsNullOrWhiteSpace(settings.Configuration.ExternalFilePath))
         {
-            if (!File.Exists(settings.Configuration.ExternalFilePath)) throw new FileNotFoundException(Localization.Get("ConfigurationFileService_TheApplicationConfigurationFileIsMissingImportIt"), settings.Configuration.ExternalFilePath);
-            return settings.Configuration.ExternalFilePath;
+            if (File.Exists(settings.Configuration.ExternalFilePath)) return settings.Configuration.ExternalFilePath;
+            if (!string.Equals(Path.GetFullPath(settings.Configuration.ExternalFilePath), Path.GetFullPath(FilePath), StringComparison.OrdinalIgnoreCase))
+                throw new FileNotFoundException(Localization.Get("ConfigurationFileService_TheApplicationConfigurationFileIsMissingImportIt"), settings.Configuration.ExternalFilePath);
+            return await RestoreManagedFileAsync(settings, validateWithCore);
         }
         // Migrate active old file/inline configuration without losing manual changes.
-        var json = settings.Configuration.NativeEnabled
-            ? string.IsNullOrWhiteSpace(settings.Configuration.NativeFilePath) ? settings.Configuration.NativeJson : await File.ReadAllTextAsync(settings.Configuration.NativeFilePath)
-            : Generated(settings) ?? throw new InvalidOperationException(Localization.Get("ConfigurationFileService_AddADefaultServerFirstOrImportAn"));
-        await ImportAsync(settings, json);
-        return FilePath;
+        if (settings.Configuration.NativeEnabled)
+        {
+            var json = string.IsNullOrWhiteSpace(settings.Configuration.NativeFilePath)
+                ? settings.Configuration.NativeJson : await File.ReadAllTextAsync(settings.Configuration.NativeFilePath);
+            await ImportAsync(settings, json, validateWithCore: validateWithCore);
+            return FilePath;
+        }
+        return await RestoreManagedFileAsync(settings, validateWithCore);
     }
 
-    public static async Task ImportAsync(AppSettingsData settings, string json, string? expectedSource = null)
+    private static string DefaultJson(AppSettingsData settings)
+    {
+        // The embedded copy survives accidental deletion of the distributed template.
+        using var stream = typeof(ConfigurationFileService).Assembly.GetManifestResourceStream("FluentSingBox.Client.Resources.default-user-config.json")
+            ?? throw new InvalidOperationException("The embedded default configuration is missing.");
+        using var reader = new StreamReader(stream);
+        var config = JsonNode.Parse(reader.ReadToEnd())!.AsObject();
+        foreach (var ruleSet in config["route"]!["rule_set"]!.AsArray().OfType<JsonObject>())
+            ruleSet["path"] = BundledRuleSets.Resolve(ruleSet["tag"]!.ToString());
+        var schema = Path.Combine(AppContext.BaseDirectory, "ThirdParty", "Schemas", "sing-box-1.14.2.schema.json");
+        if (File.Exists(schema)) config["$schema"] = schema;
+        else config.Remove("$schema");
+        config["inbounds"] = new JsonArray(SingBoxConfigBuilder.BuildManagedInbound(settings));
+        return config.ToJsonString(JsonOptions);
+    }
+
+    private static void BindManagedFile(AppSettingsData settings)
+    {
+        settings.Configuration.ExternalFilePath = FilePath;
+        settings.Configuration.NativeEnabled = false;
+        settings.Configuration.NativeFilePath = "";
+        settings.Configuration.NativeJson = "{}";
+    }
+
+    private static async Task<string> RestoreManagedFileAsync(AppSettingsData settings, bool validateWithCore)
+    {
+        await Gate.WaitAsync();
+        var staging = FilePath + ".restore-" + Guid.NewGuid().ToString("N") + ".json";
+        try
+        {
+            // Another caller may already have restored it while we waited.
+            if (File.Exists(FilePath)) { BindManagedFile(settings); return FilePath; }
+            Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
+            string? restored = null;
+            var source = "generated";
+            async Task Validate(string json)
+            {
+                var node = JsonNode.Parse(json) as JsonObject ?? throw new JsonException("Configuration must be an object.");
+                if (!validateWithCore) return;
+                await File.WriteAllTextAsync(staging, node.ToJsonString(JsonOptions));
+                var candidate = Snapshot(settings);
+                candidate.Configuration.ExternalFilePath = staging;
+                candidate.Configuration.NativeEnabled = false;
+                using var core = new SingBoxCoreService();
+                await core.ValidateAsync(candidate);
+            }
+            if (File.Exists(FilePath + ".backup"))
+            {
+                var backup = await File.ReadAllTextAsync(FilePath + ".backup");
+                try { await Validate(backup); restored = backup; source = "backup"; }
+                catch (Exception error) when (error is JsonException or InvalidOperationException)
+                {
+                    // Retain malformed backups. Core checks are deferred when opening the app.
+                }
+            }
+            if (restored is null)
+            {
+                restored = Generated(settings);
+                if (restored is null) { restored = DefaultJson(settings); source = "default"; }
+                await Validate(restored);
+            }
+            var baseline = restored;
+            if (source == "backup")
+            {
+                if (File.Exists(BaselinePath))
+                {
+                    var previous = await File.ReadAllTextAsync(BaselinePath);
+                    try { if (JsonNode.Parse(previous) is JsonObject) baseline = previous; }
+                    catch (JsonException) { }
+                }
+                else
+                {
+                    try { baseline = Generated(settings) ?? "{}"; }
+                    catch (InvalidOperationException) { baseline = "{}"; }
+                }
+            }
+            await ReplacePairAsync(FilePath, restored, baseline);
+            await DnsCachePolicy.TrackAsync(settings, restored);
+            BindManagedFile(settings);
+            await File.WriteAllTextAsync(FilePath + ".recovery.json", JsonSerializer.Serialize(new { source, restoredAtUtc = DateTimeOffset.UtcNow }, JsonOptions));
+            return FilePath;
+        }
+        finally
+        {
+            try { if (File.Exists(staging)) File.Delete(staging); }
+            finally { Gate.Release(); }
+        }
+    }
+
+    public static async Task ImportAsync(AppSettingsData settings, string json, string? expectedSource = null, bool validateWithCore = true)
     {
         await Gate.WaitAsync();
         var staging = FilePath + ".import-" + Guid.NewGuid().ToString("N") + ".json";
@@ -68,14 +162,18 @@ public static class ConfigurationFileService
             candidate.Configuration.ExternalFilePath = staging;
             candidate.Configuration.NativeEnabled = false;
             // Check the configuration that the client will actually start, before replacing its source.
-            using var core = new SingBoxCoreService();
-            await core.ValidateAsync(candidate);
+            if (validateWithCore)
+            {
+                using var core = new SingBoxCoreService();
+                await core.ValidateAsync(candidate);
+            }
             string? baseline;
             try { baseline = Generated(settings); }
             catch (InvalidOperationException) { baseline = null; } // A valid imported file need not have valid GUI profiles.
             if (expectedSource is not null && await File.ReadAllTextAsync(FilePath) != expectedSource)
                 throw new InvalidOperationException(Localization.Get("Schema_SourceChanged"));
             await ReplacePairAsync(FilePath, node.ToJsonString(JsonOptions), baseline ?? "{}");
+            await DnsCachePolicy.TrackAsync(settings, node.ToJsonString());
             settings.Configuration.ExternalFilePath = FilePath;
             settings.Configuration.NativeEnabled = false;
             settings.Configuration.NativeFilePath = "";
@@ -88,6 +186,7 @@ public static class ConfigurationFileService
     public static async Task SynchronizeAsync(AppSettingsData settings)
     {
         if (settings.Configuration.NativeEnabled && string.IsNullOrWhiteSpace(settings.Configuration.ExternalFilePath)) return;
+        await EnsureAsync(settings);
         await Gate.WaitAsync();
         try
         {
@@ -103,11 +202,16 @@ public static class ConfigurationFileService
             }
             var next = JsonNode.Parse(generated)!.AsObject();
             var previous = File.Exists(BaselinePath) ? JsonNode.Parse(await File.ReadAllTextAsync(BaselinePath))!.AsObject() : new JsonObject();
-            if (JsonNode.DeepEquals(previous, next)) return;
+            if (JsonNode.DeepEquals(previous, next))
+            {
+                await DnsCachePolicy.TrackAsync(settings, await File.ReadAllTextAsync(settings.Configuration.ExternalFilePath));
+                return;
+            }
             var path = settings.Configuration.ExternalFilePath;
             var current = JsonNode.Parse(await File.ReadAllTextAsync(path)) as JsonObject ?? throw new InvalidOperationException(Localization.Get("ConfigurationFileService_TheApplicationConfigurationMustBeAJSONObject2"));
             ApplyChanges(current, previous, next);
             await ReplacePairAsync(path, current.ToJsonString(JsonOptions), generated);
+            await DnsCachePolicy.TrackAsync(settings, current.ToJsonString());
         }
         finally { Gate.Release(); }
     }
@@ -151,15 +255,25 @@ public static class ConfigurationFileService
     // Only replace rules still identical to the previous generated version.
     private static void ApplyRuleChanges(JsonArray current, JsonArray previous, JsonArray next)
     {
-        var insertion = current.Count;
         foreach (var old in previous.Where(item => !next.Any(candidate => JsonNode.DeepEquals(item, candidate))))
         {
             var index = current.ToList().FindIndex(item => JsonNode.DeepEquals(item, old));
-            if (index >= 0) { insertion = Math.Min(insertion, index); current.RemoveAt(index); }
+            if (index >= 0) current.RemoveAt(index);
         }
-        foreach (var added in next.Where(item => !previous.Any(candidate => JsonNode.DeepEquals(item, candidate))))
+        for (var position = 0; position < next.Count; position++)
         {
-            if (!current.Any(item => JsonNode.DeepEquals(item, added))) current.Insert(Math.Min(insertion++, current.Count), added?.DeepClone());
+            var added = next[position];
+            if (previous.Any(item => JsonNode.DeepEquals(item, added)) || current.Any(item => JsonNode.DeepEquals(item, added))) continue;
+            var insertion = -1;
+            for (var before = position - 1; before >= 0 && insertion < 0; before--)
+            {
+                var index = current.ToList().FindIndex(item => JsonNode.DeepEquals(item, next[before]));
+                if (index >= 0) insertion = index + 1;
+            }
+            // No predecessor survived a manual edit: anchor before a successor.
+            for (var after = position + 1; after < next.Count && insertion < 0; after++)
+                insertion = current.ToList().FindIndex(item => JsonNode.DeepEquals(item, next[after]));
+            current.Insert(insertion < 0 ? 0 : insertion, added?.DeepClone());
         }
     }
 

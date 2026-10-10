@@ -19,7 +19,9 @@ internal sealed class SchemaObjectForm
     private readonly bool _sparse;
     private readonly HashSet<string> _visible;
     private JsonObject _value;
+    private bool _refreshingReferences;
     private readonly List<Action<JsonObject>> _readers = [];
+    public event Action? Changed;
     public StackPanel View { get; } = new() { Spacing = 2 };
     private readonly InfoBar _error = new() { Severity = InfoBarSeverity.Error, IsClosable = true };
     public SchemaObjectForm(ConfigurationSchema catalog, JsonObject schema, JsonObject value, JsonObject document, string id, int depth = 0, bool sparse = false)
@@ -34,6 +36,13 @@ internal sealed class SchemaObjectForm
         foreach (var reader in _readers) reader(result);
         return result;
     }
+    public void RefreshReferences()
+    {
+        _refreshingReferences = true;
+        try { _value = Read(); }
+        finally { _refreshingReferences = false; }
+        Render();
+    }
     public void UpdatePreservedFields(JsonObject saved)
     {
         var exposed = _catalog.Properties(_schema, _value).Keys.ToHashSet(StringComparer.Ordinal);
@@ -45,7 +54,13 @@ internal sealed class SchemaObjectForm
         _readers.Clear(); View.Children.Clear(); View.Children.Add(_error);
         var fields = _catalog.Properties(_schema, _value);
         var required = _catalog.Required(_schema, _value);
+        if (_id == "Routing_RuleSets_Editor")
+        {
+            required.Add("tag");
+            if (_value["type"]?.ToString() is "local" or "remote") required.Add(_value["type"]!.ToString() == "local" ? "path" : "url");
+        }
         if (fields.ContainsKey("outbound")) required.Add("outbound");
+        if (_id.StartsWith("DNS_Rules_", StringComparison.Ordinal) && fields.ContainsKey("server")) required.Add("server");
         foreach (var selector in new[] { "type", "action" })
         {
             var values = _catalog.Choices(_schema, selector).Where(item => item.Length > 0).ToArray();
@@ -59,12 +74,11 @@ internal sealed class SchemaObjectForm
                     var next = Read(); next[selector] = combo.SelectedValue?.ToString();
                     var newFields = _catalog.Properties(_schema, next);
                     foreach (var field in fields.Keys.Except(newFields.Keys)) next.Remove(field);
-                    _value = next; Render();
+                    _value = next; Render(); Changed?.Invoke();
                 }
                 catch (Exception exception) { _error.Message = exception.Message; _error.IsOpen = true; combo.SelectedValue = previous; }
             };
             var selectorCard = Card(selector, combo);
-            if (_sparse) selectorCard.Margin = new Thickness(0, 0, 40, 0);
             View.Children.Add(selectorCard); fields.Remove(selector);
         }
         foreach (var (key, property) in fields)
@@ -75,22 +89,25 @@ internal sealed class SchemaObjectForm
             var field = Field(key, schema);
             if (!_sparse || required.Contains(key))
             {
-                if (_sparse) field.Margin = new Thickness(0, 0, 40, 0);
                 View.Children.Add(field); continue;
             }
-            var row = new Grid();
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            row.Children.Add(field);
-            var remove = new Button { Content = new SymbolIcon(Symbol.Delete), Width = 32, Height = 32, Padding = new Thickness(0), Margin = new Thickness(8, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+            var remove = new Button { Content = new SymbolIcon(Symbol.Delete), Width = 28, Height = 28, MinWidth = 0, MinHeight = 0, Padding = new Thickness(0), VerticalAlignment = VerticalAlignment.Center };
             AutomationProperties.SetName(remove, Localization.Get("Schema_RemoveField") + " " + Label(key));
             AutomationProperties.SetAutomationId(remove, _id + "_RemoveField_" + key);
             remove.Click += (_, _) =>
             {
-                try { _value = Read(); _value.Remove(key); _visible.Remove(key); Render(); }
+                try { _value = Read(); _value.Remove(key); _visible.Remove(key); Render(); Changed?.Invoke(); }
                 catch (Exception exception) { _error.Message = exception.Message; _error.IsOpen = true; }
             };
-            Grid.SetColumn(remove, 1); row.Children.Add(remove); View.Children.Add(row);
+            if (field is SettingsCard card)
+            {
+                var input = (UIElement)card.Content;
+                var controls = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+                controls.Children.Add(remove); controls.Children.Add(input);
+                card.Content = controls;
+            }
+            else if (field is SettingsExpander expander) expander.Content = remove;
+            View.Children.Add(field);
         }
         if (_sparse)
         {
@@ -102,7 +119,7 @@ internal sealed class SchemaObjectForm
                 AutomationProperties.SetAutomationId(option, _id + "_AddField_" + key);
                 option.Click += (_, _) =>
                 {
-                    try { _value = Read(); _visible.Add(key); Render(); }
+                    try { _value = Read(); _visible.Add(key); Render(); Changed?.Invoke(); }
                     catch (Exception exception) { _error.Message = exception.Message; _error.IsOpen = true; }
                 };
                 menu.Items.Add(option);
@@ -133,10 +150,12 @@ internal sealed class SchemaObjectForm
             {
                 referenceBox = new TextBox { Text = current is JsonValue ? current.ToString() : "", MinWidth = 240, PlaceholderText = Localization.Get("Schema_Default") };
                 AutomationProperties.SetAutomationId(referenceBox, _id + "_" + key);
+                referenceBox.TextChanged += (_, _) => Changed?.Invoke();
                 expander.Items.Add(new SettingsCard { Header = Label(key), Description = key, Content = referenceBox });
             }
             nested.View.Visibility = enable.IsOn ? Visibility.Visible : Visibility.Collapsed;
-            enable.Toggled += (_, _) => nested.View.Visibility = enable.IsOn ? Visibility.Visible : Visibility.Collapsed;
+            enable.Toggled += (_, _) => { nested.View.Visibility = enable.IsOn ? Visibility.Visible : Visibility.Collapsed; Changed?.Invoke(); };
+            nested.Changed += () => Changed?.Invoke();
             expander.Items.Add(new SettingsCard { Header = Localization.Get("Schema_Enabled"), Content = enable });
             expander.Items.Add(new SettingsCard { Content = nested.View, ContentAlignment = ContentAlignment.Vertical, HorizontalContentAlignment = HorizontalAlignment.Stretch });
             _readers.Add(result =>
@@ -151,18 +170,32 @@ internal sealed class SchemaObjectForm
         var enums = variants.SelectMany(item => (item["enum"] as JsonArray)?.Select(node => node!.ToString()) ?? []).Distinct().ToArray();
         var reference = schema["x-tag-reference"]?.ToString();
         if (reference is not null) enums = Tags(reference).ToArray();
-        if (enums.Length > 0 && !variants.Any(item => item["type"]?.ToString() == "array"))
+        var routeFinal = _id == "Routing" && key == "final";
+        var dnsFinal = _id == "DNS" && key == "final";
+        var requiredFinal = routeFinal || dnsFinal;
+        if ((enums.Length > 0 || requiredFinal) && !variants.Any(item => item["type"]?.ToString() == "array"))
         {
-            var choices = new[] { "" }.Concat(enums).Concat(current is null ? [] : new[] { current.ToString() }).Distinct().ToArray();
-            var combo = Combo(key, choices, current?.ToString() ?? "");
-            combo.IsEditable = reference is not null;
-            _readers.Add(result => Put(result, key, combo.SelectedValue?.ToString() ?? combo.Text));
+            var choices = requiredFinal ? Tags(dnsFinal ? "dns_server" : "outbound").Distinct().ToArray() : new[] { "" }.Concat(enums).Concat(current is null ? [] : new[] { current.ToString() }).Distinct().ToArray();
+            var combo = Combo(key, choices, current?.ToString() ?? (requiredFinal ? choices.FirstOrDefault() ?? "" : ""));
+            combo.IsEditable = reference is not null && !requiredFinal;
+            _readers.Add(result =>
+            {
+                var selected = combo.SelectedValue?.ToString() ?? combo.Text;
+                if (requiredFinal && (string.IsNullOrWhiteSpace(selected) || !choices.Contains(selected)))
+                {
+                    if (_refreshingReferences) { result[key] = current?.DeepClone(); return; }
+                    throw new InvalidOperationException(Localization.Get(dnsFinal ? "Schema_SelectDnsServer" : "Schema_SelectOutbound"));
+                }
+                Put(result, key, selected);
+            });
+            combo.SelectionChanged += (_, _) => Changed?.Invoke();
             return Card(key, combo);
         }
         if (variants.All(item => item["type"]?.ToString() == "boolean"))
         {
             var combo = Combo(key, ["", "false", "true"], current?.ToString().ToLowerInvariant() ?? "");
             _readers.Add(result => { var value = combo.SelectedValue?.ToString(); if (string.IsNullOrEmpty(value)) result.Remove(key); else result[key] = value == "true"; });
+            combo.SelectionChanged += (_, _) => Changed?.Invoke();
             return Card(key, combo);
         }
         var arraySchema = variants.FirstOrDefault(item => item["type"]?.ToString() == "array");
@@ -174,6 +207,7 @@ internal sealed class SchemaObjectForm
             Text = current is JsonArray array && simpleArray ? string.Join(Environment.NewLine, array.Select(item => item!.ToString())) : complex ? current?.ToJsonString() ?? "" : current?.ToString() ?? "",
             PlaceholderText = simpleArray ? Localization.Get("Schema_OnePerLine") : complex ? "JSON" : Localization.Get("Schema_Default") };
         AutomationProperties.SetAutomationId(box, _id + "_" + key);
+        box.TextChanged += (_, _) => Changed?.Invoke();
         var integer = variants.All(item => item["type"]?.ToString() is "integer" or "number");
         _readers.Add(result =>
         {
@@ -183,6 +217,7 @@ internal sealed class SchemaObjectForm
             if (simpleArray)
             {
                 var values = text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                if (_id == "Routing_RuleSets_Editor" && key == "tag" && values.Length == 1) { result[key] = values[0]; return; }
                 result[key] = new JsonArray(values.Select(value => arrayItems!["type"]!.ToString() == "string" ? (JsonNode?)JsonValue.Create(value) : JsonValue.Create(long.Parse(value, CultureInfo.InvariantCulture))).ToArray());
             }
             else if (complex) result[key] = JsonNode.Parse(text);
@@ -217,7 +252,7 @@ internal sealed class SchemaObjectForm
     }
     private SettingsCard Card(string key, object content)
     {
-        if (_sparse && content is FrameworkElement input) { input.Width = 320; input.MinWidth = 0; input.HorizontalAlignment = HorizontalAlignment.Right; }
+        if (_sparse && content is FrameworkElement input) { input.Width = 280; input.MinWidth = 0; input.HorizontalAlignment = HorizontalAlignment.Right; }
         return new SettingsCard { Header = Label(key), Description = key, Content = content, ContentAlignment = ContentAlignment.Right };
     }
 }

@@ -1,0 +1,31 @@
+{
+  "LanguageChoice": "system",
+  "ThemeChoice": "system",
+  "LaunchAtStartup": false,
+  "SystemProxyEnabled": false,
+  "GlobalTunEnabled": false,
+  "SystemProxyPort": 10809,
+  "SystemProxyAuthEnabled": false,
+  "RouteFinalMode": "auto",
+  "Servers": [],
+  "Applications": [],
+  "RoutingRules": [],
+  "Configuration": {
+    "ExternalFilePath": "",
+    "NativeEnabled": false,
+    "DirectDns": { "Type": "local" },
+    "ProxyDns": {
+      "Type": "https",
+      "Server": "1.1.1.1",
+      "Port": 443,
+      "ServerName": "cloudflare-dns.com",
+      "Path": "/dns-query"
+    },
+    "DnsStrategy": "prefer_ipv4",
+    "AutoIpv4OnlyWhenNoIpv6": true,
+    "DnsCacheEnabled": true,
+    "DnsReverseMapping": true,
+    "ChinaDnsDirect": true,
+    "SniffEnabled": true
+  }
+}

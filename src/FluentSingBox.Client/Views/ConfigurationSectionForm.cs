@@ -20,10 +20,18 @@ internal sealed class ConfigurationSectionForm
     private string _source = "";
     private SchemaObjectForm? _options;
     private readonly List<CollectionForm> _collections = [];
+    private readonly Microsoft.UI.Dispatching.DispatcherQueueTimer _saveTimer;
+    private readonly SemaphoreSlim _saveGate = new(1, 1);
+    private bool _pendingSave;
     private string Prefix => _dns ? "DNS" : "Routing";
     public ConfigurationSectionForm(Page page, StackPanel view, bool dns)
     {
         _page = page; _view = view; _dns = dns;
+        _saveTimer = page.DispatcherQueue.CreateTimer();
+        _saveTimer.Interval = TimeSpan.FromMilliseconds(500);
+        _saveTimer.IsRepeating = false;
+        _saveTimer.Tick += async (_, _) => await SaveAsync();
+        page.Unloaded += async (_, _) => { _saveTimer.Stop(); if (_pendingSave) await SaveAsync(); };
         AutomationProperties.SetAutomationId(_status, Prefix + "_Status");
         page.Loaded += async (_, _) => await LoadAsync();
     }
@@ -44,13 +52,44 @@ internal sealed class ConfigurationSectionForm
     }
     private void Render()
     {
-        _view.Children.Clear(); _collections.Clear(); _status.IsOpen = false;
-        _view.Children.Add(new TextBlock { Text = Localization.Get("Schema_SourceDescription"), TextWrapping = TextWrapping.Wrap });
+        _view.Children.Clear(); _collections.Clear(); _status.IsOpen = false; _options = null;
+        _view.Children.Add(new TextBlock { Text = Localization.Get("Schema_RouteAutoSaveDescription"), TextWrapping = TextWrapping.Wrap });
         _view.Children.Add(_status);
         if (_dns)
         {
             _document["dns"] ??= new JsonObject();
             var dns = _document["dns"]!.AsObject();
+            var automatic = new ToggleSwitch { Header = Localization.Get("Dns_AutoIpv4Only"), IsOn = App.State.Settings.Configuration.AutoIpv4OnlyWhenNoIpv6, OnContent = Localization.Get("Common_On"), OffContent = Localization.Get("Common_Off") };
+            AutomationProperties.SetAutomationId(automatic, "DNS_AutoIpv4Only");
+            var networkStatus = new TextBlock { TextWrapping = TextWrapping.Wrap };
+            AutomationProperties.SetAutomationId(networkStatus, "DNS_NetworkStatus");
+            void RefreshNetworkStatus()
+            {
+                var available = Ipv6Availability.IsAvailable(Ipv6Availability.Capture());
+                var requested = dns["strategy"]?.ToString() ?? App.State.Settings.Configuration.DnsStrategy;
+                try { requested = _options?.Read()["strategy"]?.ToString() ?? requested; }
+                catch (Exception error) when (error is InvalidOperationException or FormatException) { }
+                var effective = Ipv6Availability.EffectiveStrategy(requested, automatic.IsOn, available);
+                networkStatus.Text = Localization.Get(available ? "Dns_Ipv6Available"
+                    : automatic.IsOn && requested == "ipv6_only" ? "Dns_ExplicitIpv6Only"
+                    : automatic.IsOn && effective == "ipv4_only" ? "Dns_AutoIpv4Active" : "Dns_Ipv6Unavailable");
+            }
+            automatic.Toggled += async (_, _) =>
+            {
+                var previous = App.State.Settings.Configuration.AutoIpv4OnlyWhenNoIpv6;
+                try
+                {
+                    if (_pendingSave) await SaveAsync();
+                    App.State.Settings.Configuration.AutoIpv4OnlyWhenNoIpv6 = automatic.IsOn;
+                    await App.State.SaveAsync();
+                    await LoadAsync();
+                }
+                catch (Exception error) { App.State.Settings.Configuration.AutoIpv4OnlyWhenNoIpv6 = previous; ShowError(error); }
+            };
+            RefreshNetworkStatus();
+            _view.Children.Add(automatic);
+            _view.Children.Add(networkStatus);
+            _view.Children.Add(new TextBlock { Text = Localization.Get("Dns_DefaultNodeHelp"), TextWrapping = TextWrapping.Wrap });
             AddCollection(Localization.Get("Schema_DnsServers"), dns, "servers", "DNSServer", "DNS_Servers", false);
             AddCollection(Localization.Get("Schema_DnsRules"), dns, "rules", "DNSRule", "DNS_Rules", true);
             var properties = _schema.Properties(_schema.Definition("DNS"), dns);
@@ -58,10 +97,18 @@ internal sealed class ConfigurationSectionForm
             foreach (var key in new[] { "final", "strategy", "disable_cache", "disable_expire", "cache_capacity", "optimistic", "timeout", "reverse_mapping", "client_subnet" })
                 if (properties.TryGetValue(key, out var property)) ordered[key] = property.DeepClone();
             _options = new SchemaObjectForm(_schema, new JsonObject { ["properties"] = ordered }, dns, _document, "DNS");
+            _options.Changed += () => { ScheduleSave(); RefreshNetworkStatus(); };
             _view.Children.Add(_options.View);
         }
         else
         {
+            var warnings = ApplicationMatching.PathWarnings(App.State.Settings).ToArray();
+            if (warnings.Length > 0)
+            {
+                var warning = new InfoBar { Severity = InfoBarSeverity.Warning, IsOpen = true, IsClosable = false, Message = string.Join(Environment.NewLine, warnings) };
+                AutomationProperties.SetAutomationId(warning, "Routing_PathWarnings");
+                _view.Children.Add(warning);
+            }
             _document["route"] ??= new JsonObject();
             var route = _document["route"]!.AsObject();
             AddCollection(Localization.Get("Schema_RouteRules"), route, "rules", "Rule", "Routing_Rules", true);
@@ -69,10 +116,16 @@ internal sealed class ConfigurationSectionForm
             var objectProperties = new JsonObject();
             objectProperties["final"] = properties["final"].DeepClone();
             _options = new SchemaObjectForm(_schema, new JsonObject { ["properties"] = objectProperties }, route, _document, "Routing");
+            _options.Changed += ScheduleSave;
             _view.Children.Add(_options.View);
             AddCollection("rule_set", route, "rule_set", "RuleSet", "Routing_RuleSets", false);
         }
-        _view.Children.Add(Action(Localization.Get("Schema_CheckSave"), Prefix + "_Save", SaveAsync));
+    }
+    private void ScheduleSave()
+    {
+        _pendingSave = true;
+        _status.IsOpen = false;
+        _saveTimer.Stop(); _saveTimer.Start();
     }
     private void AddCollection(string title, JsonObject parent, string key, string definition, string id, bool rules)
     {
@@ -80,8 +133,17 @@ internal sealed class ConfigurationSectionForm
         var form = new CollectionForm(this, title, parent, key, definition, id, rules);
         _collections.Add(form); _view.Children.Add(form.View);
     }
+    private void RefreshDnsServerReferences()
+    {
+        // Keep server choices in sync with the draft, including an invalid deletion or rename.
+        foreach (var collection in _collections) collection.Write(new());
+        _options?.RefreshReferences();
+    }
     private async Task SaveAsync()
     {
+        await _saveGate.WaitAsync();
+        if (!_pendingSave) { _saveGate.Release(); return; }
+        _pendingSave = false;
         try
         {
             _page.IsEnabled = false;
@@ -92,14 +154,22 @@ internal sealed class ConfigurationSectionForm
                 if (!options.ContainsKey(field)) _document[section]!.AsObject().Remove(field);
             var disabled = new Dictionary<string, List<DisabledConfigurationRule>>(App.State.Settings.Configuration.DisabledRules);
             foreach (var collection in _collections) collection.Write(disabled);
+            if (_dns)
+            {
+                var dns = _document["dns"]!.AsObject();
+                var final = dns["final"]?.ToString();
+                if (string.IsNullOrWhiteSpace(final) || !dns["servers"]!.AsArray().OfType<JsonObject>().Any(server => server["tag"]?.ToString() == final))
+                    throw new InvalidOperationException(Localization.Get("Schema_SelectDnsServer"));
+            }
             await ConfigurationFileService.ImportAsync(App.State.Settings, _document.ToJsonString(), _source);
             App.State.Settings.Configuration.DisabledRules = disabled;
             await App.State.SaveAsync();
             _source = await File.ReadAllTextAsync(ConfigurationFileService.FilePath);
+            if (_dns) _options.RefreshReferences();
             _status.Message = Localization.Get("Schema_Saved"); _status.Severity = InfoBarSeverity.Success; _status.IsOpen = true;
         }
         catch (Exception exception) { ShowError(exception); }
-        finally { _page.IsEnabled = true; }
+        finally { _page.IsEnabled = true; _saveGate.Release(); }
     }
     private void ShowError(Exception exception) { _status.Message = LogReader.Redact(exception.Message, App.State.Settings); _status.Severity = InfoBarSeverity.Error; _status.IsOpen = true; }
     private SettingsCard Action(string title, string id, Func<Task> action)
@@ -137,7 +207,8 @@ internal sealed class ConfigurationSectionForm
             }));
             Render();
         }
-        public void Add(JsonObject value) { if (value["tag"] is not null && _entries.Any(item => item.Value["tag"]?.ToString() == value["tag"]!.ToString())) return; _entries.Add(new(value, true)); Render(); }
+        private void NotifyChanged() { if (_owner._dns && Key == "servers") _owner.RefreshDnsServerReferences(); _owner.ScheduleSave(); }
+        public void Add(JsonObject value) { if (value["tag"] is not null && _entries.Any(item => item.Value["tag"]?.ToString() == value["tag"]!.ToString())) return; _entries.Add(new(value, true)); Render(); NotifyChanged(); }
         public void Write(Dictionary<string, List<DisabledConfigurationRule>> disabled)
         {
             _parent[Key] = new JsonArray(_entries.Where(item => item.Enabled).Select(item => (JsonNode?)item.Value.DeepClone()).ToArray());
@@ -156,23 +227,23 @@ internal sealed class ConfigurationSectionForm
                 {
                     var enable = new ToggleSwitch { IsOn = entry.Enabled, OnContent = Localization.Get("Common_On"), OffContent = Localization.Get("Common_Off") };
                     AutomationProperties.SetAutomationId(enable, _id + "_" + index + "_Enabled");
-                    enable.Toggled += (_, _) => entry.Enabled = enable.IsOn;
+                    enable.Toggled += (_, _) => { entry.Enabled = enable.IsOn; NotifyChanged(); };
                     expander.Items.Add(new SettingsCard { Header = Localization.Get("Schema_Enabled"), Content = enable });
                 }
                 var managedSystem = Key == "inbounds" && entry.Value["tag"]?.ToString() == "system-http";
                 if (managedSystem) expander.Items.Add(new SettingsCard { Header = Localization.Get("Schema_SystemPreset"), Description = Localization.Get("Schema_SystemPresetHelp") });
-                else expander.Items.Add(_owner.Action(Localization.Get("Schema_Edit"), _id + "_" + index + "_Edit", async () => { var value = await EditAsync(entry.Value); if (value is not null) { entry.Value = value; Render(); } }));
+                else expander.Items.Add(_owner.Action(Localization.Get("Schema_Edit"), _id + "_" + index + "_Edit", async () => { var value = await EditAsync(entry.Value); if (value is not null) { entry.Value = value; Render(); NotifyChanged(); } }));
                 if (_rules)
                 {
                     expander.Items.Add(_owner.Action(Localization.Get("Schema_MoveUp"), _id + "_" + index + "_Up", () => Move(entry, -1)));
                     expander.Items.Add(_owner.Action(Localization.Get("Schema_MoveDown"), _id + "_" + index + "_Down", () => Move(entry, 1)));
                 }
-                if (Key is not ("inbounds" or "outbounds")) expander.Items.Add(_owner.Action(Localization.Get("Schema_Delete"), _id + "_" + index + "_Delete", () => { _entries.Remove(entry); Render(); return Task.CompletedTask; }));
+                if (Key is not ("inbounds" or "outbounds")) expander.Items.Add(_owner.Action(Localization.Get("Schema_Delete"), _id + "_" + index + "_Delete", () => { _entries.Remove(entry); Render(); NotifyChanged(); return Task.CompletedTask; }));
                 if (Key == "inbounds" && !managedSystem) expander.Items.Add(_owner.Action(Localization.Get("Schema_Delete"), _id + "_" + index + "_Delete", () => { _entries.Remove(entry); Render(); return Task.CompletedTask; }));
                 _rows.Children.Add(expander);
             }
         }
-        private Task Move(Entry entry, int offset) { var index = _entries.IndexOf(entry); var target = Math.Clamp(index + offset, 0, _entries.Count - 1); _entries.RemoveAt(index); _entries.Insert(target, entry); Render(); return Task.CompletedTask; }
+        private Task Move(Entry entry, int offset) { var index = _entries.IndexOf(entry); var target = Math.Clamp(index + offset, 0, _entries.Count - 1); _entries.RemoveAt(index); _entries.Insert(target, entry); Render(); NotifyChanged(); return Task.CompletedTask; }
         private async Task<JsonObject?> EditAsync(JsonObject value)
         {
             var schema = _owner._schema.Definition(_definition);
@@ -182,15 +253,15 @@ internal sealed class ConfigurationSectionForm
                 foreach (var pair in _owner._schema.Properties(schema, value)) fields[pair.Key] = pair.Value.DeepClone();
                 schema = new JsonObject { ["properties"] = fields };
             }
-            var form = new SchemaObjectForm(_owner._schema, schema, value, _owner._document, _id + "_Editor", sparse: _id == "Routing_Rules");
+            var entryEditor = _rules || _id == "DNS_Servers";
+            var form = new SchemaObjectForm(_owner._schema, schema, value, _owner._document, _id + "_Editor", sparse: entryEditor);
             var error = new InfoBar { Severity = InfoBarSeverity.Error, IsClosable = true };
             var panel = new StackPanel { Spacing = 8 }; panel.Children.Add(error); panel.Children.Add(form.View);
             var dialog = new ContentDialog { Title = Localization.Get("Schema_Edit"), Content = new ScrollViewer { Content = panel, MaxHeight = 550, VerticalScrollBarVisibility = ScrollBarVisibility.Auto }, PrimaryButtonText = Localization.Get("ProxyPage_Save"), CloseButtonText = Localization.Get("ProxyPage_Cancel"), XamlRoot = _owner._page.XamlRoot };
-            if (_id == "Routing_Rules")
+            if (entryEditor)
             {
-                var width = Math.Clamp(_owner._page.XamlRoot.Size.Width - 64, 320, 920);
-                dialog.Resources["ContentDialogMaxWidth"] = width;
-                panel.Width = width - 48;
+                dialog.Resources["ContentDialogMaxWidth"] = 680d;
+                panel.Width = Math.Min(600, Math.Max(240, _owner._page.XamlRoot.Size.Width - 100));
             }
             JsonObject? result = null;
             dialog.PrimaryButtonClick += (_, args) =>
@@ -200,6 +271,13 @@ internal sealed class ConfigurationSectionForm
                     result = form.Read();
                     if (Key == "rule_set")
                     {
+                        var type = result["type"]?.ToString() ?? "inline";
+                        if (type is "local" or "remote")
+                        {
+                            var location = type == "local" ? "path" : "url";
+                            if (string.IsNullOrWhiteSpace(result[location]?.ToString())) throw new InvalidOperationException(location + ": required");
+                        }
+                        else if (result["rules"] is not JsonArray) throw new InvalidOperationException("rules: expected an array of headless rules");
                         var tags = result["tag"] is JsonArray array ? array.Select(item => item?.ToString() ?? "").ToArray() : new[] { result["tag"]?.ToString() ?? "" };
                         if (tags.Any(string.IsNullOrWhiteSpace) || tags.Distinct().Count() != tags.Length || _entries.Any(item => !ReferenceEquals(item.Value, value) && tags.Intersect(item.Value["tag"] is JsonArray existing ? existing.Select(node => node!.ToString()) : new[] { item.Value["tag"]?.ToString() ?? "" }).Any()))
                             throw new InvalidOperationException("rule_set: tag must be non-empty and unique");

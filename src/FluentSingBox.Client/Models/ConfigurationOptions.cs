@@ -14,6 +14,7 @@ public sealed class ConfigurationOptions
     public DnsResolverOptions DirectDns { get; set; } = new() { Type = "local" };
     public DnsResolverOptions ProxyDns { get; set; } = new();
     public string DnsStrategy { get; set; } = "prefer_ipv4";
+    public bool AutoIpv4OnlyWhenNoIpv6 { get; set; } = true;
     public bool DnsCacheEnabled { get; set; } = true;
     public bool DnsReverseMapping { get; set; } = true;
     public bool ChinaDnsDirect { get; set; } = true;

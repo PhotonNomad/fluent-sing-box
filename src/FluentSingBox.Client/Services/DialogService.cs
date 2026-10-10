@@ -8,7 +8,16 @@ public static class DialogService
     public static async Task<ContentDialogResult> ShowAsync(ContentDialog dialog)
     {
         await Gate.WaitAsync();
-        try { return await dialog.ShowAsync(); }
+        try
+        {
+            if (dialog.XamlRoot is null)
+            {
+                var window = App.MainWindow ?? throw new InvalidOperationException("A dialog requires an initialized owner window.");
+                try { dialog.XamlRoot = await window.WaitForXamlRootAsync(); }
+                catch (OperationCanceledException) { return ContentDialogResult.None; }
+            }
+            return await dialog.ShowAsync();
+        }
         finally { Gate.Release(); }
     }
 }

@@ -7,7 +7,9 @@ namespace FluentSingBox.Client.Services;
 
 public sealed class SingBoxConfigBuilder
 {
-    public string Build(AppSettingsData settings, string logPath, bool supportsHttpClient, bool validateApplicationPaths = true)
+    private readonly Func<Ipv6NetworkSnapshot> _networkSnapshot;
+    public SingBoxConfigBuilder(Func<Ipv6NetworkSnapshot>? networkSnapshot = null) => _networkSnapshot = networkSnapshot ?? Ipv6Availability.Capture;
+    public string Build(AppSettingsData settings, string logPath, bool supportsHttpClient, bool validateApplicationPaths = false)
     {
         var options = settings.Configuration ?? new ConfigurationOptions();
         if (options.UsesFileConfiguration) return ConfigurationComposer.BuildNative(settings, logPath);
@@ -41,14 +43,14 @@ public sealed class SingBoxConfigBuilder
             {
                 foreach (var name in profile.ProcessNames)
                 {
-                    if (string.IsNullOrWhiteSpace(name) || name != name.Trim() || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+                    if (!ApplicationMatching.IsValidName(name))
                         throw new InvalidOperationException(Localization.Format("ApplicationMatch_InvalidName", name));
                     if (!claimedNames.Add(name)) throw new InvalidOperationException(Localization.Format("ApplicationMatch_DuplicateName", name));
                 }
                 continue;
             }
 
-            var missingPath = profile.ExecutablePaths.FirstOrDefault(path => !File.Exists(path));
+            var missingPath = profile.ExecutablePaths.FirstOrDefault(path => !File.Exists(path) && ApplicationMatching.StorePathRegex(path) is null);
             if (validateApplicationPaths && missingPath is not null)
             {
                 throw new InvalidOperationException(Localization.Format("SingBoxConfigBuilder_ProgramNotFoundInApplicationGroup01", profile.Name, missingPath));
@@ -136,12 +138,14 @@ public sealed class SingBoxConfigBuilder
         foreach (var profile in enabledApps)
         {
             var server = settings.Servers.FirstOrDefault(item => item.Id == profile.ServerId) ?? defaultServer;
-            var processPaths = new JsonArray();
-            foreach (var path in profile.MatchEntries) processPaths.Add(path);
-            routeRules.Add(new JsonObject
+            // A profile can mix ordinary executable paths and versioned Store paths.
+            // Separate rules avoid AND-matching process_path with process_path_regex.
+            var groups = profile.MatchEntries.GroupBy(path => profile.MatchMode == "path" && ApplicationMatching.StorePathRegex(path) is not null
+                ? "process_path_regex" : profile.MatchField);
+            foreach (var group in groups) routeRules.Add(new JsonObject
             {
                 ["inbound"] = new JsonArray("app-tun"),
-                [profile.MatchField] = processPaths,
+                [group.Key] = new JsonArray(group.Select(path => (JsonNode?)JsonValue.Create(group.Key == "process_path_regex" ? ApplicationMatching.StorePathRegex(path)! : path)).ToArray()),
                 ["action"] = "route",
                 ["outbound"] = OutboundTag(server.Id)
             });
@@ -236,22 +240,9 @@ public sealed class SingBoxConfigBuilder
             }
         };
 
-        foreach (var profile in enabledApps)
-        {
-            var server = settings.Servers.FirstOrDefault(item => item.Id == profile.ServerId) ?? defaultServer;
-            var tag = "dns-" + profile.Id;
-            var resolver = (JsonObject)dnsServers[1]!.DeepClone();
-            resolver["tag"] = tag;
-            if (options.ProxyDns.Type != "local") resolver["detour"] = OutboundTag(server.Id);
-            dnsServers.Add(resolver);
-            dnsRules.Add(new JsonObject
-            {
-                ["inbound"] = new JsonArray("app-tun"),
-                [profile.MatchField] = new JsonArray(profile.MatchEntries.Select(path => JsonValue.Create(path)).ToArray<JsonNode?>()),
-                ["server"] = tag
-            });
-        }
-        // Explicit app DNS keeps precedence over China DNS, matching app routing.
+        // Windows DNS Client sends application queries as svchost.exe (incident
+        // china-dns-app-routing-rework.md, 1.1). Process rules cannot select their
+        // resolver: all foreign DNS uses the default node; app rules select connections.
         if (options.ChinaDnsDirect && settings.RoutingRules.Any(rule => rule.IsEnabled && rule.BuiltInKind == "china-domains"))
             dnsRules.Add(new JsonObject { ["rule_set"] = "geosite-geolocation-cn", ["server"] = "local" });
         dnsRules.Add(new JsonObject { ["inbound"] = new JsonArray("system-http"), ["server"] = "proxy-dns" });
@@ -268,8 +259,8 @@ public sealed class SingBoxConfigBuilder
             {
                 ["servers"] = dnsServers,
                 ["rules"] = dnsRules,
-            ["final"] = settings.GlobalTunEnabled ? "proxy-dns" : "local",
-                ["strategy"] = options.DnsStrategy,
+                ["final"] = "proxy-dns",
+                ["strategy"] = Ipv6Availability.EffectiveStrategy(options.DnsStrategy, options.AutoIpv4OnlyWhenNoIpv6, Ipv6Availability.IsAvailable(_networkSnapshot())),
                 ["disable_cache"] = !options.DnsCacheEnabled,
                 ["reverse_mapping"] = options.DnsReverseMapping
             },
@@ -278,7 +269,7 @@ public sealed class SingBoxConfigBuilder
             ["endpoints"] = endpoints,
             ["experimental"] = new JsonObject
             {
-                ["cache_file"] = new JsonObject { ["enabled"] = options.CacheFileEnabled, ["store_dns"] = options.StoreDns }
+                ["cache_file"] = new JsonObject { ["enabled"] = options.CacheFileEnabled, ["store_dns"] = false, ["store_fakeip"] = false }
             },
             ["route"] = route
         };

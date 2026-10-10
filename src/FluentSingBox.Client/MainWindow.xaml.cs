@@ -12,6 +12,7 @@ public sealed partial class MainWindow : Window
     private const double MinimumWindowSize = 480;
     private const double ExpandedNavigationThresholdWidth = 1007;
     private XamlRoot? _windowXamlRoot;
+    private readonly TaskCompletionSource<XamlRoot> _xamlRootReady = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly DispatcherTimer _healthTimer = new() { Interval = TimeSpan.FromSeconds(2) };
     private bool _recovering;
     private bool _closing;
@@ -64,28 +65,6 @@ public sealed partial class MainWindow : Window
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(CoreSwitch, CoreActionText.Text);
     }
 
-    public async Task CheckStartupAsync()
-    {
-        _coreSwitchBusy = true;
-        CoreSwitch.IsEnabled = false;
-        try
-        {
-            // An empty first-run profile is editable; no core or network resources are created.
-            if (!App.State.Settings.Configuration.UsesFileConfiguration && App.State.Settings.Servers.Count == 0)
-            {
-                await Task.Run(CoreProcessLease.Recover);
-                return;
-            }
-            await App.CoreService.CheckStartupAsync(App.State.Settings);
-        }
-        catch (Exception exception)
-        {
-            RecoveryMessage.Message = Localization.Get("MainWindow_StartupPreflightFailed") + LogReader.Redact(exception.Message, App.State.Settings);
-            RecoveryMessage.IsOpen = true;
-        }
-        finally { CoreSwitch.IsEnabled = true; _coreSwitchBusy = false; }
-    }
-
     private async void CoreSwitch_Click(object sender, RoutedEventArgs args)
     {
         if (_coreSwitchBusy || _closing) return;
@@ -121,8 +100,13 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    public Task<XamlRoot> WaitForXamlRootAsync() => _xamlRootReady.Task;
+
     private void RootGrid_Loaded(object sender, RoutedEventArgs args)
     {
+        // Activation does not guarantee that the window's visual tree is ready.
+        // Startup errors must await this before displaying a ContentDialog.
+        if (RootGrid.XamlRoot is { } root) _xamlRootReady.TrySetResult(root);
         if (RootNavigationView.SettingsItem is DependencyObject settingsItem)
         {
             Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(settingsItem, "Navigation_Settings");
@@ -238,18 +222,23 @@ public sealed partial class MainWindow : Window
         try
         {
             try { WindowsProxyService.Restore(App.State.Settings); }
-            finally
+            catch (Exception exception) { RecordExitFailure("proxy-restore", exception); }
+            try { await App.CoreService.ShutdownAsync(); }
+            catch (Exception exception) when (!App.CoreService.IsRunning)
             {
-                await App.CoreService.ShutdownAsync();
-                App.State.Settings.CoreOnlyEnabled = false;
-                App.State.Settings.SystemProxyEnabled = false;
+                RecordExitFailure("stopped-core-verification", exception);
+                App.CoreService.ReleaseStoppedResources();
             }
-            await App.State.SaveAsync();
+            App.State.Settings.CoreOnlyEnabled = false;
+            App.State.Settings.SystemProxyEnabled = false;
+            try { await App.State.SavePreferencesAsync(); }
+            catch (Exception exception) { RecordExitFailure("settings-save", exception); }
             _shutdownComplete = true;
             Close();
         }
         catch (Exception exception)
         {
+            RecordExitFailure("core-stop", exception);
             _closing = false;
             App.ProxyCoordinator.CancelShutdown();
             RecoveryMessage.Message = Localization.Get("MainWindow_ExitCleanupFailedPleaseRetry") + exception.Message;
@@ -257,10 +246,27 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private static void RecordExitFailure(string stage, Exception exception)
+    {
+        try
+        {
+            Directory.CreateDirectory(AppPaths.DataDirectory);
+            File.AppendAllText(Path.Combine(AppPaths.DataDirectory, "exit-cleanup.log"),
+                $"[{DateTimeOffset.Now:O}] {stage}: {LogReader.Redact(exception.ToString(), App.State.Settings)}\n");
+        }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
+    }
+
     private void MainWindow_Closed(object sender, WindowEventArgs args)
     {
+        _xamlRootReady.TrySetCanceled();
         _healthTimer.Stop();
-        App.CoreService.Stop();
+        if (!_shutdownComplete)
+        {
+            try { App.CoreService.Stop(); }
+            catch (Exception exception) { RecordExitFailure("window-closed", exception); }
+        }
         if (_windowXamlRoot is not null)
         {
             _windowXamlRoot.Changed -= WindowXamlRoot_Changed;

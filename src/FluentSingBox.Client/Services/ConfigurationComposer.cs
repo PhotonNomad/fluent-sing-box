@@ -34,6 +34,10 @@ public static class ConfigurationComposer
         if (config["log"] is null) config["log"] = new JsonObject { ["level"] = "info", ["timestamp"] = true };
         if (config["log"]!["disabled"]?.ToString() == "true") throw new InvalidOperationException(Localization.Get("ConfigurationComposer_CoreLoggingMustBeEnabledForTheClient"));
         config["log"]!["output"] = logPath;
+        // Apply network policy only to the runtime snapshot, keeping manual source intact.
+        if (config["dns"] is JsonObject dns && dns["strategy"] is JsonValue strategy)
+            dns["strategy"] = Ipv6Availability.EffectiveStrategy(strategy.ToString(), settings.Configuration.AutoIpv4OnlyWhenNoIpv6,
+                Ipv6Availability.IsAvailable(Ipv6Availability.Capture()));
         return config.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
     public static readonly string[] ObjectSections = ["log", "dns", "route", "experimental", "ntp", "certificate"];

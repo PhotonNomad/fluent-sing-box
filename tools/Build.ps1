@@ -36,6 +36,14 @@ try {
     & dotnet publish (Join-Path $taskProjectRoot 'src/FluentSingBox.Client/fluent sing-box.csproj') -c $Configuration -p:Platform=x64 --self-contained false -o $taskStaging --nologo
     if ($LASTEXITCODE -ne 0) { throw "$Configuration publish failed; the existing output was kept." }
     if (!(Test-Path -LiteralPath (Join-Path $taskStaging 'fluent sing-box.exe'))) { throw 'Publish did not produce the executable.' }
+    foreach ($taskRequired in @(
+        'Defaults/settings.json', 'Defaults/user-config.json', 'Defaults/README.md',
+        'ThirdParty/Schemas/sing-box-1.14.2.schema.json', 'ThirdParty/RuleSets/manifest.json',
+        'ThirdParty/RuleSets/geosite-geolocation-cn.srs',
+        'ThirdParty/RuleSets/geosite-geolocation-!cn.srs', 'ThirdParty/RuleSets/geoip-cn.srs'
+    )) {
+        if (!(Test-Path -LiteralPath (Join-Path $taskStaging $taskRequired))) { throw "Publish is missing a required configuration file: $taskRequired" }
+    }
     foreach ($taskPath in @($taskCurrent, $taskPrevious, $taskStaging)) { Assert-OutputPath $taskPath }
     if (Test-Path -LiteralPath $taskPrevious) { Remove-Item -LiteralPath $taskPrevious -Recurse -Force }
     if (Test-Path -LiteralPath $taskCurrent) { Move-Item -LiteralPath $taskCurrent -Destination $taskPrevious }

@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "fluent sing-box (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "fluent sing-box: build Debug",
+      "program": "${workspaceFolder}/artifacts/publish/Debug/fluent sing-box.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}/artifacts/publish/Debug",
+      "env": {
+        "FLUENTSINGBOX_DATA_DIR": "${workspaceFolder}/artifacts/vscode-data"
+      },
+      "console": "internalConsole",
+      "stopAtEntry": false,
+      "justMyCode": true
+    },
+    {
+      "name": "fluent sing-box (Attach)",
+      "type": "coreclr",
+      "request": "attach",
+      "processId": "${command:pickProcess}",
+      "justMyCode": true
+    }
+  ]
+}
