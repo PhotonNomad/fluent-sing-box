@@ -30,7 +30,13 @@ public static class ApplicationMatching
 
     public static string NormalizeName(string name, IEnumerable<string> resolvedNames)
     {
-        if (IsValidName(name)) return name;
+        // Windows filenames are case-insensitive, but sing-box matches process_name by exact
+        // lookup (processMap[filepath.Base(ProcessPath)]), so a casing mismatch never matches
+        // and the application silently falls through to the final outbound. Prefer the real
+        // on-disk casing whenever a candidate reveals it; keep the typed name when it does not.
+        if (IsValidName(name))
+            return resolvedNames.FirstOrDefault(candidate => IsValidName(candidate)
+                && candidate.Equals(name, StringComparison.OrdinalIgnoreCase)) ?? name;
         if (System.IO.Path.HasExtension(name)) throw new InvalidOperationException(Localization.Get("ApplicationMatch_NameHelp"));
         var actual = resolvedNames.FirstOrDefault(candidate => IsValidName(candidate)
             && System.IO.Path.GetFileNameWithoutExtension(candidate).Equals(name, StringComparison.OrdinalIgnoreCase));

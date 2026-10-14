@@ -3,6 +3,8 @@
 执行者：Codex。目标：`fluent sing-box` 客户端（随包核心 sing-box 1.14.2）。
 本单来自 2026-10-10 的一次真实故障排查，第 1 节所有结论都有日志证据，可自行复现核对。每条任务是独立的提交单元。
 
+2026-10-14 更新：T3 的 IPv6 自动检测与策略覆盖功能已移除，DNS 页仅保留原生 `strategy` 选择；当前行为以 `default-routing-china.md` 为准。
+
 ## 0. 执行须知
 
 - 先读仓库根 `AGENTS.md`：不得修改宿主机的代理/TUN 设置；UI 与配置测试使用隔离的 `FLUENTSINGBOX_DATA_DIR` 夹具；只关闭自己启动的测试进程。
@@ -38,6 +40,7 @@
 - 实测 `ChatGPT.exe` 命中（说明 Windows 上匹配的是**含扩展名的完整文件名**），`Codex` **不**命中 `codex.exe`。
 - 结果：没有任何规则命中 → `route.final = direct` → 直连污染 IP，整份日志 64 次 `199.59.149.203:443: i/o timeout` 全部来自 codex.exe。
 - 该 CLI 的路径含哈希目录（`bin\9691020b546a15b2\`），升级即变，**只能用名字模式**。
+- 2026-10-14 复核（含扩展名的名字同样会因大小写失配）：`process_name` 是**精确、区分大小写**的查表，不是不区分大小写的文件名比较。sing-box 1.14.2 `route/rule/rule_item_process_name.go`：`processMap` 按原字符串建表，`Match` 返回 `processMap[filepath.Base(ProcessInfo.ProcessPath)]`。配置写 `"Codex.exe"`、磁盘上是 `codex.exe` 时同样不命中，而同一条规则里的 `"ChatGPT.exe"` 命中 —— 按连接 ID 交叉统计日志：`ChatGPT.exe` 69 条连接全部 `outbound/vmess`，`codex.exe` 219 条连接全部 `outbound/direct`，唯一差别就是那个大写 `C`。**大小写写错不会报错，应用会静默落到 `route.final`。**
 
 ### 1.3 证据 C：WindowsApps 路径带版本号，升级即失效
 
@@ -157,9 +160,10 @@ dial tcp [240e:96c:6000:2503:3::17]:443: An invalid argument was supplied.
 - 位置：`Views/ProxyPage.xaml.cs:130-235`（应用编辑器）、`SingBoxConfigBuilder.cs:40-49`（名字校验）。
 - 改动：
   1. 名字模式保存时，若某项不含扩展名且系统能解析到 `.exe` 同名文件，自动补全为完整文件名；否则提示「Windows 进程名必须是含 `.exe` 的完整文件名」。
-  2. 校验文案说明大小写按真实文件名书写（实测必须含扩展名；大小写敏感与否未验证，按真实文件名最稳妥）。
+  2. 名称必须**含扩展名且大小写等于真实文件名**（见 1.2 复核：`process_name` 是区分大小写的精确查表，写错等于没有这条规则，且无任何报错）。保存时只要存在仅大小写不同的候选（运行中进程或 PATH 命中），一律改用真实大小写，而不是原样保留用户输入。
   3. 新增「从正在运行的进程选择」（枚举进程名 + 路径，供勾选），避免手写；对 `bin\<哈希>\codex.exe` 这类路径不稳定的应用，直接引导用名字模式。
 - 验收：新增回归用例覆盖裸名输入的处理；文案已本地化（`Strings.resx` / `Strings.zh-CN.resx` 及 `Strings/{en-US,zh-CN}`）。
+- 2026-10-14 已实现（问题 2）：`ApplicationMatching.NormalizeName` 原先对合法全名直接原样返回，改为在候选里找同名文件并采用其真实大小写，找不到才保留输入；`Views/ProxyPage.xaml.cs` 的 PATH 扫描去掉「仅限不带扩展名」的限制，进程未运行时也能从磁盘取回真实大小写。回归用例 `defaults/china-store-path-and-name-normalization` 覆盖 `Codex.exe`→`codex.exe`、`CODEX.EXE`→`codex.exe`、未知名保持不变三种情况。遗留：纠正只发生在保存时，已存进 `settings.json` 的错误大小写不会自愈，需重新保存一次。
 
 ### T6 路径失效可见化
 

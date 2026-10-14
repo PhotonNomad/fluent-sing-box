@@ -68,6 +68,15 @@ function Wait-Document([scriptblock]$Condition) {
 }
 function Case([string]$Name,[scriptblock]$Work) { & $Work; $taskResults.Add([pscustomobject]@{name=$Name;status='passed'}); Write-Output "PASS $Name" }
 
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public static class FooterTrayWindow {
+ [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr h);
+ [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr h,uint message,UIntPtr w,IntPtr l);
+}
+"@
+
 
 try {
     $directory=Join-Path $taskRoot 'data';New-Item -ItemType Directory -Path $directory|Out-Null
@@ -89,6 +98,13 @@ try {
         $record=Get-Content $recordPath -Raw|ConvertFrom-Json
         $core=Get-Process -Id $record.Pid
         Assert (!$core.HasExited) 'Fixture core did not run'
+        Ui @('invoke','App_Background') | Out-Null
+        Start-Sleep -Milliseconds 250
+        $core.Refresh()
+        Assert (!$core.HasExited -and ![FooterTrayWindow]::IsWindowVisible([IntPtr][long]$taskWindow)) 'Background stopped the local fixture core'
+        [FooterTrayWindow]::PostMessage([IntPtr][long]$taskWindow,0x802A,[UIntPtr]1,[IntPtr]0x202) | Out-Null
+        Start-Sleep -Milliseconds 250
+        Assert ([FooterTrayWindow]::IsWindowVisible([IntPtr][long]$taskWindow)) 'Could not restore running core window'
         Ui @('screenshot','-o',(Join-Path $taskRoot 'Footer-Running.png'))|Out-Null
         Ui @('invoke','Core_Toggle')|Out-Null
         Ui @('wait-for','Core_Toggle','--property','Name','--value','Start sing-box','--timeout','15000')|Out-Null
@@ -97,6 +113,23 @@ try {
         Assert ($core.HasExited) 'One stop click did not terminate fixture core'
         Assert (!(Test-Path $recordPath)) 'Stopped fixture retained process record'
         Assert (@(Tree|Where-Object {$_.name -match 'Cannot switch sing-box|TUN_PRESENT_AFTER_STOP'}).Count -eq 0) 'Stop showed unexpected cleanup failure'
+        $core.Dispose()
+    }
+    Case 'tray/exit-command-stops-local-core' {
+        Ui @('invoke','Core_Toggle') | Out-Null
+        Ui @('wait-for','Core_Toggle','--property','Name','--value','Stop sing-box','--timeout','15000') | Out-Null
+        Ui @('wait-for','Core_Toggle','--property','IsEnabled','--value','true') | Out-Null
+        $recordPath = Join-Path $directory 'sing-box/process.json'
+        $record = Get-Content $recordPath -Raw | ConvertFrom-Json
+        $core = Get-Process -Id $record.Pid
+        Ui @('invoke','App_Background') | Out-Null
+        Start-Sleep -Milliseconds 250
+        [FooterTrayWindow]::PostMessage([IntPtr][long]$taskWindow,0x111,[UIntPtr]0xA002,[IntPtr]0) | Out-Null
+        Assert ($taskProcess.WaitForExit(15000)) 'Tray Exit did not close fixture client'
+        $core.Refresh()
+        Assert ($core.HasExited -and !(Test-Path $recordPath)) 'Tray Exit retained fixture core'
+        $saved = Get-Content (Join-Path $directory 'settings.json') -Raw | ConvertFrom-Json
+        Assert (!$saved.CoreOnlyEnabled -and !$saved.SystemProxyEnabled) 'Tray Exit retained enabled settings'
         $core.Dispose()
     }
 }

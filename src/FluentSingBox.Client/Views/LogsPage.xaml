@@ -12,11 +12,18 @@
         </Grid.RowDefinitions>
                 <TextBlock Grid.Row="0" Margin="0,0,0,12" Style="{StaticResource TitleTextBlockStyle}" AutomationProperties.HeadingLevel="Level1" x:Uid="LogsPage_TextBlock4" />
                 <TextBlock Grid.Row="1" x:Name="StatusText" TextWrapping="Wrap" AutomationProperties.AutomationId="Logs_Status" x:Uid="LogsPage_StatusText" />
-                <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
+                <Grid Grid.Row="2" ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                     <ToggleButton x:Name="PauseButton" AutomationProperties.AutomationId="Logs_Pause" x:Uid="LogsPage_PauseButton" />
                     <Button Click="Clear_Click" AutomationProperties.AutomationId="Logs_Clear" x:Uid="LogsPage_Button10" />
                     <Button Click="Export_Click" AutomationProperties.AutomationId="Logs_Export" x:Uid="LogsPage_Button11" />
                 </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <TextBlock VerticalAlignment="Center" x:Uid="Logs_LevelLabel" />
+                        <ComboBox x:Name="LogLevelComboBox" Width="120" SelectedValuePath="Tag" SelectionChanged="LogLevel_SelectionChanged" AutomationProperties.AutomationId="Logs_Level" x:Uid="Logs_Level" />
+                    </StackPanel>
+                </Grid>
                 <TextBox Grid.Row="3" x:Name="FilterBox" TextChanged="Filter_Changed" AutomationProperties.AutomationId="Logs_Filter" x:Uid="LogsPage_FilterBox" />
                 <TextBlock Grid.Row="4" x:Name="EmptyHint" TextWrapping="Wrap" x:Uid="LogsPage_EmptyHint" />
                 <TextBox Grid.Row="5" x:Name="LogText" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.AutomationId="Logs_Content" />

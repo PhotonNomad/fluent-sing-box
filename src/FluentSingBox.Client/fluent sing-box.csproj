@@ -37,6 +37,7 @@
     <EmbeddedResource Include="Defaults\user-config.json" LogicalName="FluentSingBox.Client.Resources.default-user-config.json" />
     <None Update="ThirdParty\Schemas\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Update="Assets\fluent-sing-box.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Assets\fluent-sing-box.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Update="ThirdParty\RuleSets\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Remove="ThirdParty\SingBox\sing-box-1.14.2-windows-amd64.zip" />
     <EmbeddedResource Include="ThirdParty\SingBox\sing-box-1.14.2-windows-amd64.zip">

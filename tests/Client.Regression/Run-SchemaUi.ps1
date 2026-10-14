@@ -1,6 +1,7 @@
 param(
     [string]$ProjectRoot = (Resolve-Path "$PSScriptRoot/../..").Path,
-    [string]$ExecutablePath = (Join-Path $ProjectRoot 'artifacts/publish/Debug/fluent sing-box.exe')
+    [string]$ExecutablePath = (Join-Path $ProjectRoot 'artifacts/publish/Debug/fluent sing-box.exe'),
+    [switch]$DnsOnly
 )
 $ErrorActionPreference = 'Stop'
 $taskWinapp = (Get-Command winapp -ErrorAction Stop).Source
@@ -77,24 +78,24 @@ try {
         Assert (@(Tree | Where-Object automationId -eq 'DNS_Save').Count -eq 0) 'Manual DNS save button remains'
         Assert-English
         $nodes=Tree
-        foreach($id in @('DNS_final','DNS_strategy','DNS_disable_cache','DNS_disable_expire','DNS_cache_capacity','DNS_optimistic_Options','DNS_timeout','DNS_reverse_mapping','DNS_client_subnet')) { Assert (@($nodes | Where-Object automationId -eq $id).Count -eq 1) ('Missing DNS field '+$id) }
+        foreach($id in @('DNS_final','DNS_strategy')) { Assert (@($nodes | Where-Object automationId -eq $id).Count -eq 1) ('Missing DNS field '+$id) }
+        foreach($key in @('disable_cache','disable_expire','cache_capacity','optimistic','timeout','reverse_mapping','client_subnet')) { Assert (@($nodes | Where-Object automationId -eq ('DNS_'+$key)).Count -eq 0) ('Advanced DNS field visible: '+$key) }
+        Assert (@($nodes | Where-Object { $_.automationId -in @('DNS_optimistic_Options','DNS_optimistic_Enabled','DNS_optimistic_timeout') }).Count -eq 0) 'Optimistic cache has child settings'
         Assert (@($nodes | Where-Object { $_.name -in @('independent_cache','fakeip') }).Count -eq 0) 'Deprecated DNS fields exposed'
         $source=Get-Content $script:sourcePath -Raw | ConvertFrom-Json
         Assert ($source.'$schema' -eq './schema.json' -and (Test-Path (Join-Path $directory 'sing-box/schema.json'))) 'Offline schema not attached'
     }
-    Case 'dns/field-edit-save-and-invalid-preservation' {
-        Ui @('set-value','DNS_timeout','3s') | Out-Null; Ui @('set-value','DNS_cache_capacity','2048') | Out-Null
-        Wait-Document {param($d) $d.dns.timeout -eq '3s' -and $d.dns.cache_capacity -eq 2048} | Out-Null
+    Case 'dns/strategy-edit-and-omitted-options-preservation' {
+        Choice 'DNS_strategy' 'prefer_ipv6'
+        Wait-Document {param($d) $d.dns.strategy -eq 'prefer_ipv6'} | Out-Null
         Ui @('wait-for','DNS_final','--property','IsEnabled','--value','true') | Out-Null
-        $hash=(Get-FileHash $script:sourcePath).Hash
-        Ui @('set-value','DNS_timeout','invalid-duration') | Out-Null
-        Ui @('wait-for','invalid-duration','--type','Text') | Out-Null
-        Start-Sleep -Milliseconds 900
-        Assert ((Get-FileHash $script:sourcePath).Hash -eq $hash) 'Invalid DNS config replaced the source'
-        Ui @('set-value','DNS_timeout','4s') | Out-Null
-        Wait-Document {param($d) $d.dns.timeout -eq '4s'} | Out-Null
+        $document = Get-Content $script:sourcePath -Raw | ConvertFrom-Json
+        foreach ($key in @('disable_expire','cache_capacity','optimistic','timeout','client_subnet')) {
+            Assert ($null -eq $document.dns.PSObject.Properties[$key]) ('Saving invented hidden field '+$key)
+        }
+        Assert ($document.dns.reverse_mapping -eq $true -and $document.dns.disable_cache -eq $false) 'Hidden default values changed'
     }
-    Case 'dns/add-modern-fakeip-server' {
+    if (!$DnsOnly) { Case 'dns/add-modern-fakeip-server' {
         Ui @('invoke','DNS_Servers_Add') | Out-Null; Ui @('wait-for','DNS_Servers_Editor_type') | Out-Null
         Choice 'DNS_Servers_Editor_type' 'fakeip'
         Ui @('wait-for','DNS_Servers_Editor_inet4_range') | Out-Null
@@ -104,22 +105,32 @@ try {
         Ui @('set-value','DNS_Servers_Editor_inet6_range','fc00::/18') | Out-Null
         Save-Dialog; Ui @('wait-for','DNS_Servers_3') | Out-Null
         Wait-Document {param($d) @($d.dns.servers | Where-Object {$_.type -eq 'fakeip' -and $_.tag -eq 'fake-dns'}).Count -eq 1} | Out-Null
+    } }
+    Case 'dns/imported-hidden-options-preservation' {
+        Stop-Fixture
+        $document = Get-Content $script:sourcePath -Raw | ConvertFrom-Json -AsHashtable
+        $document['dns']['disable_cache'] = $false
+        $document['dns']['disable_expire'] = $false
+        $document['dns']['cache_capacity'] = 2048
+        $document['dns']['optimistic'] = @{ enabled = $true; timeout = '1h' }
+        $document['dns']['timeout'] = '5s'
+        $document['dns']['reverse_mapping'] = $true
+        $document['dns']['client_subnet'] = '203.0.113.0/24'
+        $document | ConvertTo-Json -Depth 50 | Set-Content -LiteralPath $script:sourcePath
+        Start-Fixture $directory
+        Ui @('invoke','Navigation_DNS') | Out-Null; Ui @('wait-for','DNS_strategy') | Out-Null
+        Choice 'DNS_strategy' 'ipv4_only'
+        Wait-Document {param($d) $d.dns.strategy -eq 'ipv4_only'} | Out-Null
+        $saved = Get-Content $script:sourcePath -Raw | ConvertFrom-Json -AsHashtable
+        foreach ($key in @('disable_cache','disable_expire','cache_capacity','optimistic','timeout','reverse_mapping','client_subnet')) {
+            Assert (($saved['dns'][$key] | ConvertTo-Json -Compress) -ceq ($document['dns'][$key] | ConvertTo-Json -Compress)) ('Hidden value changed: '+$key)
+        }
+        $nodes = Tree
+        foreach ($key in @('disable_cache','disable_expire','cache_capacity','optimistic','timeout','reverse_mapping','client_subnet')) {
+            Assert (@($nodes | Where-Object automationId -eq ('DNS_'+$key)).Count -eq 0) ('Hidden control exposed: '+$key)
+        }
     }
-    Case 'dns/optimistic-cache-and-conflict-protection' {
-        Ui @('scroll','PageScrollViewer','--to','bottom') | Out-Null
-        Expand-Group 'DNS_optimistic_Options'; Ui @('wait-for','DNS_optimistic_Enabled') | Out-Null
-        Ui @('invoke','DNS_optimistic_Enabled','--action','toggle') | Out-Null
-        Ui @('wait-for','DNS_optimistic_timeout') | Out-Null
-        Ui @('set-value','DNS_optimistic_timeout','1h') | Out-Null
-        Wait-Document {param($d) $d.dns.optimistic.enabled -eq $true -and $d.dns.optimistic.timeout -eq '1h'} | Out-Null
-        $hash=(Get-FileHash $script:sourcePath).Hash
-        Choice 'DNS_disable_cache' 'true'
-        Start-Sleep -Milliseconds 1500
-        Ui @('wait-for','DNS_final','--property','IsEnabled','--value','true') | Out-Null
-        Assert ((Get-FileHash $script:sourcePath).Hash -eq $hash) 'Conflicting cache settings were saved'
-        Choice 'DNS_disable_cache' 'false'
-        Start-Sleep -Milliseconds 1000
-    }
+    if ($DnsOnly) { return }
     Case 'dns/rule-fields-and-reject-action' {
         Ui @('invoke','DNS_Rules_Add') | Out-Null; Ui @('wait-for','DNS_Rules_Editor_action') | Out-Null
         Assert (@(Tree | Where-Object automationId -eq 'DNS_Rules_Editor_process_name').Count -eq 0) 'Optional DNS field visible before adding'

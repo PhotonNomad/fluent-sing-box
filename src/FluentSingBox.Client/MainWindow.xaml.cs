@@ -18,12 +18,17 @@ public sealed partial class MainWindow : Window
     private bool _closing;
     private bool _shutdownComplete;
     private bool _coreSwitchBusy;
+    private TrayIcon? _trayIcon;
+    private bool _exitRequested;
 
     public MainWindow()
     {
         InitializeComponent();
+        SettingsNavigationItem.Content = Localization.Get("SettingsPage_TextBlock4.Text");
         UpdateCoreSwitch();
         ToolTipService.SetToolTip(CoreSwitch, Localization.Get("MainWindow_TextBlock49.Text"));
+        ToolTipService.SetToolTip(BackgroundButton, Localization.Get("Tray_Background"));
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(BackgroundButton, Localization.Get("Tray_Background"));
         var logoPath = Path.Combine(AppContext.BaseDirectory, "Assets", "fluent-sing-box.png");
         if (File.Exists(logoPath)) BrandIconImage.Source = new BitmapImage(new Uri(logoPath));
         ExtendsContentIntoTitleBar = true;
@@ -102,17 +107,42 @@ public sealed partial class MainWindow : Window
 
     public Task<XamlRoot> WaitForXamlRootAsync() => _xamlRootReady.Task;
 
+    private void BackgroundButton_Click(object sender, RoutedEventArgs args) => RunInBackground();
+
+    private void RunInBackground()
+    {
+        if (_closing || _coreSwitchBusy) return;
+        try
+        {
+            _trayIcon ??= new TrayIcon(WinRT.Interop.WindowNative.GetWindowHandle(this), RestoreFromTray, ExitFromTray);
+            AppWindow.Hide();
+        }
+        catch (Exception exception)
+        {
+            RecoveryMessage.Message = Localization.Get("Tray_Unavailable") + " " + exception.Message;
+            RecoveryMessage.IsOpen = true;
+        }
+    }
+
+    private void RestoreFromTray()
+    {
+        AppWindow.Show();
+        if (AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Minimized } presenter) presenter.Restore();
+        Activate();
+    }
+
+    private void ExitFromTray()
+    {
+        if (_closing || _coreSwitchBusy) return;
+        _exitRequested = true;
+        Close();
+    }
+
     private void RootGrid_Loaded(object sender, RoutedEventArgs args)
     {
         // Activation does not guarantee that the window's visual tree is ready.
         // Startup errors must await this before displaying a ContentDialog.
         if (RootGrid.XamlRoot is { } root) _xamlRootReady.TrySetResult(root);
-        if (RootNavigationView.SettingsItem is DependencyObject settingsItem)
-        {
-            Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(settingsItem, "Navigation_Settings");
-            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(settingsItem, Localization.Get("SettingsPage_TextBlock4.Text"));
-            if (settingsItem is NavigationViewItem item) item.Content = Localization.Get("SettingsPage_TextBlock4.Text");
-        }
         _windowXamlRoot = RootGrid.XamlRoot;
         if (_windowXamlRoot is not null)
         {
@@ -191,12 +221,6 @@ public sealed partial class MainWindow : Window
 
     private void RootNavigationView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-        if (args.IsSettingsSelected)
-        {
-            ContentFrame.Navigate(typeof(SettingsPage));
-            return;
-        }
-
         if (args.SelectedItemContainer?.Tag is not string tag) return;
         var pageType = tag switch
         {
@@ -204,7 +228,7 @@ public sealed partial class MainWindow : Window
             "routing" => typeof(RoutingPage),
             "proxy" => typeof(ProxyPage),
             "logs" => typeof(LogsPage),
-            "configuration" => typeof(ConfigurationPage),
+            "settings" => typeof(SettingsPage),
             "dns" => typeof(DnsPage),
             _ => typeof(ServersPage)
         };
@@ -216,6 +240,8 @@ public sealed partial class MainWindow : Window
         if (_shutdownComplete) return;
         args.Cancel = true;
         if (_closing) return;
+        if (_trayIcon is not null && !_exitRequested) { RunInBackground(); return; }
+        if (_coreSwitchBusy) return;
         _closing = true;
         App.ProxyCoordinator.BeginShutdown();
         _healthTimer.Stop();
@@ -240,7 +266,9 @@ public sealed partial class MainWindow : Window
         {
             RecordExitFailure("core-stop", exception);
             _closing = false;
+            _exitRequested = false;
             App.ProxyCoordinator.CancelShutdown();
+            RestoreFromTray();
             RecoveryMessage.Message = Localization.Get("MainWindow_ExitCleanupFailedPleaseRetry") + exception.Message;
             RecoveryMessage.IsOpen = true;
         }
@@ -260,6 +288,8 @@ public sealed partial class MainWindow : Window
 
     private void MainWindow_Closed(object sender, WindowEventArgs args)
     {
+        _trayIcon?.Dispose();
+        _trayIcon = null;
         _xamlRootReady.TrySetCanceled();
         _healthTimer.Stop();
         if (!_shutdownComplete)

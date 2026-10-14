@@ -79,6 +79,8 @@ Set-Location fluent-sing-box
 
 设置进程环境变量 `FLUENTSINGBOX_DATA_DIR` 可以使用独立数据目录，适合测试。节点配置、导出文件和诊断记录可能含凭据，提交 Issue 前请脱敏。
 
+日常使用的独立副本可在 EXE 同目录放置 `portable.txt`：直接双击 EXE 后，程序使用同目录的 `data` 保存配置、节点和运行数据。`FLUENTSINGBOX_DATA_DIR` 优先于此便携模式。升级时保留 `portable.txt` 和 `data`，只替换程序文件；配置中的绝对路径需要在移动整个目录后重新调整。
+
 内置国内分流使用随包的本地 SRS 规则集，来源与校验值记录在[规则集清单](src/FluentSingBox.Client/ThirdParty/RuleSets/manifest.json)。文件缺失或损坏会报错。
 
 ## 开发与测试

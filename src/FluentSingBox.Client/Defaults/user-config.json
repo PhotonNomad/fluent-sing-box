@@ -2,7 +2,14 @@
   "$schema": "../ThirdParty/Schemas/sing-box-1.14.2.schema.json",
   "log": { "level": "info", "timestamp": true },
   "dns": {
-    "servers": [{ "type": "local", "tag": "local" }],
+    "servers": [
+      { "type": "udp", "tag": "local", "server": "114.114.114.114", "server_port": 53 },
+      { "type": "local", "tag": "system-dns" }
+    ],
+    "rules": [
+      { "domain_suffix": [".local", ".lan"], "action": "route", "server": "system-dns" },
+      { "rule_set": "geosite-geolocation-cn", "action": "route", "server": "local" }
+    ],
     "final": "local",
     "strategy": "prefer_ipv4",
     "reverse_mapping": true

@@ -7,12 +7,12 @@ using Microsoft.UI.Xaml.Automation;
 
 namespace FluentSingBox.Client.Views;
 
-public sealed partial class ConfigurationPage : Page
+public sealed partial class ConfigurationSettingsControl : UserControl
 {
     private readonly InfoBar _status = new() { IsClosable = true };
     private readonly TextBlock _location = new() { TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
 
-    public ConfigurationPage()
+    public ConfigurationSettingsControl()
     {
         InitializeComponent();
         Form.Children.Add(new TextBlock { Text = Localization.Get("ConfigurationPage_UseTheApplicationSConfigurationFileForAll"), TextWrapping = TextWrapping.Wrap });
@@ -46,12 +46,6 @@ public sealed partial class ConfigurationPage : Page
             if (!string.Equals(Path.GetFullPath(path), Path.GetFullPath(file.Path), StringComparison.OrdinalIgnoreCase))
                 await File.WriteAllTextAsync(file.Path, await File.ReadAllTextAsync(path));
             ShowStatus(Localization.Get("ConfigurationPage_ApplicationConfigurationExported"), false);
-        });
-        AddAction(Localization.Get("ConfigurationPage_CheckConfiguration"), Localization.Get("ConfigurationPage_RunTheSelectedSingBoxCoreSCheck"), Localization.Get("ConfigurationPage_Check"), "Configuration_Check", async () =>
-        {
-            await EnsureFileAsync();
-            await App.CoreService.ValidateAsync(ConfigurationFileService.Snapshot(App.State.Settings));
-            ShowStatus(Localization.Get("ConfigurationPage_ConfigurationCheckPassed"), false);
         });
         UpdateLocation();
     }

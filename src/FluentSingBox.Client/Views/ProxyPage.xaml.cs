@@ -237,15 +237,15 @@ public sealed partial class ProxyPage : Page
                 try
                 {
                     var resolved = ApplicationMatching.RunningProcesses().Select(item => item.Name).ToList();
+                    // Covers entries that already carry an extension too: the Windows filesystem is
+                    // case-insensitive, so searching PATH by the typed name returns the on-disk casing
+                    // even when the process is not currently running, which NormalizeName then adopts.
                     foreach (var directory in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries))
-                        foreach (var entry in entries.Where(item => !Path.HasExtension(item) && item.IndexOfAny(Path.GetInvalidFileNameChars()) < 0))
+                        foreach (var entry in entries.Where(item => item.IndexOfAny(Path.GetInvalidFileNameChars()) < 0))
                         {
-                            var file = Path.Combine(directory, entry + ".exe");
-                            if (File.Exists(file))
-                            {
-                                try { resolved.AddRange(Directory.EnumerateFiles(directory, entry + ".exe").Select(Path.GetFileName).OfType<string>()); }
-                                catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
-                            }
+                            var fileName = Path.HasExtension(entry) ? entry : entry + ".exe";
+                            try { resolved.AddRange(Directory.EnumerateFiles(directory, fileName).Select(Path.GetFileName).OfType<string>()); }
+                            catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
                         }
                     entries = entries.Select(entry => ApplicationMatching.NormalizeName(entry, resolved)).ToArray();
                     names.Text = string.Join(Environment.NewLine, entries.Distinct(StringComparer.OrdinalIgnoreCase));

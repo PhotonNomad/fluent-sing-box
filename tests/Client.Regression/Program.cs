@@ -220,8 +220,13 @@ await Case("defaults/china-routing-" + mode, async () =>
     Assert(rules.Any(item => item?["action"]?.ToString() == "hijack-dns") == (mode != "system"), "DNS interception does not follow TUN availability");
     var dns = config["dns"]!;
     Assert(dns["reverse_mapping"]!.GetValue<bool>() && !dns["disable_cache"]!.GetValue<bool>(), "DNS domain mapping or caching disabled");
-    Assert(dns["strategy"]!.ToString() == Ipv6Availability.EffectiveStrategy("prefer_ipv4", true, Ipv6Availability.IsAvailable(Ipv6Availability.Capture())), "Automatic DNS strategy incorrect");
+    Assert(dns["strategy"]!.ToString() == "prefer_ipv4", "Default DNS strategy was overridden");
     Assert(dns["servers"]!.AsArray().Count == 3 && !dns["rules"]!.ToJsonString().Contains("process_"), "Process DNS must not be generated");
+    var domestic = dns["servers"]![0]!;
+    Assert(domestic["type"]!.ToString() == "udp" && domestic["server"]!.ToString() == "114.114.114.114" && domestic["detour"] is null, "Domestic DNS must use 114 directly");
+    Assert(dns["servers"]![1]!["server"]!.ToString() == "1.1.1.1" && dns["servers"]![1]!["type"]!.ToString() == "https", "Foreign DNS must use Cloudflare DoH");
+    Assert(!dns["servers"]!.AsArray().Any(server => server?["tag"]?.ToString() == "bootstrap") && route["default_domain_resolver"]!.ToString() == "local", "Node resolution must reuse domestic DNS");
+    Assert(dns["rules"]![0]!["server"]!.ToString() == "system-dns", "LAN names must use system DNS");
     Assert(!config["experimental"]!["cache_file"]!["store_dns"]!.GetValue<bool>() && !config["experimental"]!["cache_file"]!["store_fakeip"]!.GetValue<bool>(), "Persistent DNS cache enabled");
     Assert(dns["servers"]![1]!["detour"]!.ToString() == "proxy-syntax-node", "Foreign DNS bypasses proxy");
     Assert(dns["rules"]!.AsArray().Single(item => item?["rule_set"]?.ToString() == "geosite-geolocation-cn")!["server"]!.ToString() == "local", "China DNS uses overseas resolver");
@@ -252,24 +257,22 @@ await Case("defaults/china-saved-preferences-preserved", () =>
     return Task.CompletedTask;
 });
 
-await Case("defaults/china-ipv6-network-policy", async () =>
+await Case("defaults/china-explicit-dns-strategy", async () =>
 {
-    var none = new Ipv6NetworkSnapshot([], new HashSet<int>());
-    var available = new Ipv6NetworkSnapshot([new("Ethernet", true, false, 7, [IPAddress.Parse("2001:db8::1")])], new HashSet<int> { 7 });
-    Assert(Ipv6Availability.IsAvailable(available), "Global IPv6 with default route not detected");
-    foreach (var address in new[] { "fe80::1", "fec0::1", "fd01::1", "::1", "::", "ff02::1" })
-        Assert(!Ipv6Availability.IsAvailable(new([new("Ethernet", true, false, 7, [IPAddress.Parse(address)])], new HashSet<int> { 7 })), "Non-global address counted: " + address);
-    Assert(!Ipv6Availability.IsAvailable(new(available.Adapters, new HashSet<int> { 8 })), "Different interface default route counted");
-    Assert(!Ipv6Availability.IsAvailable(new([new("fluent-sing-box", true, false, 7, [IPAddress.Parse("2001:db8::1")])], new HashSet<int> { 7 })), "TUN IPv6 counted");
-    Assert(!Ipv6Availability.IsAvailable(new([new("Ethernet", false, false, 7, [IPAddress.Parse("2001:db8::1")])], new HashSet<int> { 7 })), "Disconnected adapter counted");
-    foreach (var scenario in new[] { (none, "prefer_ipv4", true, "ipv4_only"), (none, "prefer_ipv6", true, "ipv4_only"), (available, "prefer_ipv4", true, "prefer_ipv4"), (none, "ipv6_only", true, "ipv6_only"), (none, "prefer_ipv4", false, "prefer_ipv4") })
+    foreach (var strategy in new[] { "prefer_ipv4", "prefer_ipv6", "ipv4_only", "ipv6_only" })
     {
-        var fixture = SyntaxFixture(); fixture.Configuration.DnsStrategy = scenario.Item2; fixture.Configuration.AutoIpv4OnlyWhenNoIpv6 = scenario.Item3;
-        var config = new SingBoxConfigBuilder(() => scenario.Item1).Build(fixture, "ipv6.log", true);
-        Assert(JsonNode.Parse(config)!["dns"]!["strategy"]!.ToString() == scenario.Item4, "Incorrect strategy for " + scenario.Item2);
+        var fixture = SyntaxFixture(); fixture.Configuration.DnsStrategy = strategy;
+        var config = new SingBoxConfigBuilder().Build(fixture, "ipv6.log", true);
+        Assert(JsonNode.Parse(config)!["dns"]!["strategy"]!.ToString() == strategy, "Generated DNS strategy changed: " + strategy);
         var path = Path.Combine(artifacts, "ipv6-" + Guid.NewGuid().ToString("N") + ".json");
         await File.WriteAllTextAsync(path, config); await CoreCommand.CheckAsync(syntaxCore, path);
+        fixture.Configuration.NativeEnabled = true;
+        fixture.Configuration.NativeJson = $$"""{"dns":{"servers":[{"type":"local","tag":"local"}],"strategy":"{{strategy}}"},"outbounds":[{"type":"direct","tag":"direct"}]}""";
+        var native = new SingBoxConfigBuilder().Build(fixture, "native.log", true);
+        Assert(JsonNode.Parse(native)!["dns"]!["strategy"]!.ToString() == strategy, "Imported DNS strategy changed: " + strategy);
     }
+    var legacy = JsonSerializer.Deserialize<AppSettingsData>("""{"Configuration":{"AutoIpv4OnlyWhenNoIpv6":true,"DnsStrategy":"prefer_ipv6"}}""")!;
+    Assert(legacy.Configuration.DnsStrategy == "prefer_ipv6" && !JsonSerializer.Serialize(legacy).Contains("AutoIpv4OnlyWhenNoIpv6"), "Removed preference survived settings migration");
 });
 await Case("defaults/china-store-path-and-name-normalization", async () =>
 {
@@ -291,6 +294,10 @@ await Case("defaults/china-store-path-and-name-normalization", async () =>
     Assert(ApplicationMatching.StorePathRegex(drive + @"Programs\app.exe") is null, "Ordinary path converted");
     Assert(ApplicationMatching.NormalizeName("Codex", ["codex.exe"]) == "codex.exe", "Bare name was not resolved to actual filename");
     Assert(ApplicationMatching.NormalizeName("ChatGPT.exe", []) == "ChatGPT.exe", "Full name changed");
+    // sing-box matches process_name by exact lookup, so the on-disk casing must win whenever it is known.
+    Assert(ApplicationMatching.NormalizeName("Codex.exe", ["codex.exe"]) == "codex.exe", "Full name casing was not corrected");
+    Assert(ApplicationMatching.NormalizeName("CODEX.EXE", ["codex.exe"]) == "codex.exe", "Upper-case full name casing was not corrected");
+    Assert(ApplicationMatching.NormalizeName("Codex.exe", ["chrome.exe"]) == "Codex.exe", "Unknown full name changed");
     foreach (var name in new[] { "unknown", "Codex.com", @"C:\app.exe" })
     {
         var rejected = false; try { ApplicationMatching.NormalizeName(name, ["codex.exe"]); } catch (InvalidOperationException) { rejected = true; }
@@ -602,7 +609,7 @@ await Case($"configuration/dns-{type}/direct-{direct}", async () =>
     var json = JsonNode.Parse(new SingBoxConfigBuilder().Build(settings, "fixture.log", true))!;
     var node = json["dns"]!["servers"]![direct ? 0 : 1]!;
     Assert(node["type"]!.ToString() == type, "DNS type lost");
-    if (type != "local") Assert(node["domain_resolver"]!.ToString() == "bootstrap", "Hostname bootstrap loops");
+    if (type != "local") Assert(node["domain_resolver"]!.ToString() == "system-dns", "Hostname bootstrap loops");
 });
 foreach (var stack in new[] { "mixed", "system", "gvisor" })
 await Case("configuration/tun-" + stack, async () =>

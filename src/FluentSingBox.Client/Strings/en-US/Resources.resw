@@ -679,11 +679,6 @@
   <data name="SystemProxySettingsControl_AuthenticationSwitch.OffContent" xml:space="preserve">
     <value>Off</value>
   </data>
-  <data name="Dns_AutoIpv4Only" xml:space="preserve"><value>Use IPv4 only automatically when IPv6 is unavailable</value></data>
-  <data name="Dns_Ipv6Available" xml:space="preserve"><value>Global IPv6 and a default route detected; the selected DNS strategy is preserved.</value></data>
-  <data name="Dns_AutoIpv4Active" xml:space="preserve"><value>No usable IPv6 detected. Runtime DNS uses IPv4 only.</value></data>
-  <data name="Dns_Ipv6Unavailable" xml:space="preserve"><value>No usable IPv6 detected. Automatic adjustment is off; the selected strategy is preserved.</value></data>
-  <data name="Dns_ExplicitIpv6Only" xml:space="preserve"><value>No usable IPv6 detected. Your explicit IPv6-only choice is preserved and may fail.</value></data>
   <data name="Dns_DefaultNodeHelp" xml:space="preserve"><value>LAN and China domains use local DNS; other domains use the default node’s DoH. Application nodes select connections only. DNS changes clear the app cache before the next core start.</value></data>
   <data name="ApplicationMatch_ChooseRunning" xml:space="preserve"><value>Choose from running processes</value></data>
   <data name="ApplicationMatch_AddSelected" xml:space="preserve"><value>Add selected process names</value></data>
@@ -693,4 +688,10 @@
   <data name="ApplicationMatch_InvalidName" xml:space="preserve"><value>Invalid Windows process name: {0}. Use the complete .exe filename with its actual casing.</value></data>
   <data name="ApplicationMatch_Help" xml:space="preserve"><value>Name matching survives application updates. Use complete .exe filenames with their actual casing, or choose running processes. Store paths match across versions. CLI bin/&lt;hash&gt; paths should use names.</value></data>
   <data name="ApplicationMatch_SearchProcesses" xml:space="preserve"><value>Search process name or path</value></data>
+  <data name="Logs_LevelLabel.Text" xml:space="preserve">
+    <value>Log level</value>
+  </data>
+  <data name="Logs_Level.AutomationProperties.Name" xml:space="preserve">
+    <value>Log level</value>
+  </data>
 </root>

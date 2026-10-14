@@ -59,45 +59,15 @@ internal sealed class ConfigurationSectionForm
         {
             _document["dns"] ??= new JsonObject();
             var dns = _document["dns"]!.AsObject();
-            var automatic = new ToggleSwitch { Header = Localization.Get("Dns_AutoIpv4Only"), IsOn = App.State.Settings.Configuration.AutoIpv4OnlyWhenNoIpv6, OnContent = Localization.Get("Common_On"), OffContent = Localization.Get("Common_Off") };
-            AutomationProperties.SetAutomationId(automatic, "DNS_AutoIpv4Only");
-            var networkStatus = new TextBlock { TextWrapping = TextWrapping.Wrap };
-            AutomationProperties.SetAutomationId(networkStatus, "DNS_NetworkStatus");
-            void RefreshNetworkStatus()
-            {
-                var available = Ipv6Availability.IsAvailable(Ipv6Availability.Capture());
-                var requested = dns["strategy"]?.ToString() ?? App.State.Settings.Configuration.DnsStrategy;
-                try { requested = _options?.Read()["strategy"]?.ToString() ?? requested; }
-                catch (Exception error) when (error is InvalidOperationException or FormatException) { }
-                var effective = Ipv6Availability.EffectiveStrategy(requested, automatic.IsOn, available);
-                networkStatus.Text = Localization.Get(available ? "Dns_Ipv6Available"
-                    : automatic.IsOn && requested == "ipv6_only" ? "Dns_ExplicitIpv6Only"
-                    : automatic.IsOn && effective == "ipv4_only" ? "Dns_AutoIpv4Active" : "Dns_Ipv6Unavailable");
-            }
-            automatic.Toggled += async (_, _) =>
-            {
-                var previous = App.State.Settings.Configuration.AutoIpv4OnlyWhenNoIpv6;
-                try
-                {
-                    if (_pendingSave) await SaveAsync();
-                    App.State.Settings.Configuration.AutoIpv4OnlyWhenNoIpv6 = automatic.IsOn;
-                    await App.State.SaveAsync();
-                    await LoadAsync();
-                }
-                catch (Exception error) { App.State.Settings.Configuration.AutoIpv4OnlyWhenNoIpv6 = previous; ShowError(error); }
-            };
-            RefreshNetworkStatus();
-            _view.Children.Add(automatic);
-            _view.Children.Add(networkStatus);
             _view.Children.Add(new TextBlock { Text = Localization.Get("Dns_DefaultNodeHelp"), TextWrapping = TextWrapping.Wrap });
             AddCollection(Localization.Get("Schema_DnsServers"), dns, "servers", "DNSServer", "DNS_Servers", false);
             AddCollection(Localization.Get("Schema_DnsRules"), dns, "rules", "DNSRule", "DNS_Rules", true);
             var properties = _schema.Properties(_schema.Definition("DNS"), dns);
             var ordered = new JsonObject();
-            foreach (var key in new[] { "final", "strategy", "disable_cache", "disable_expire", "cache_capacity", "optimistic", "timeout", "reverse_mapping", "client_subnet" })
+            foreach (var key in new[] { "final", "strategy" })
                 if (properties.TryGetValue(key, out var property)) ordered[key] = property.DeepClone();
             _options = new SchemaObjectForm(_schema, new JsonObject { ["properties"] = ordered }, dns, _document, "DNS");
-            _options.Changed += () => { ScheduleSave(); RefreshNetworkStatus(); };
+            _options.Changed += ScheduleSave;
             _view.Children.Add(_options.View);
         }
         else
@@ -115,6 +85,7 @@ internal sealed class ConfigurationSectionForm
             var properties = _schema.Properties(_schema.Definition("RouteOptions"), route);
             var objectProperties = new JsonObject();
             objectProperties["final"] = properties["final"].DeepClone();
+            objectProperties["default_domain_resolver"] = properties["default_domain_resolver"].DeepClone();
             _options = new SchemaObjectForm(_schema, new JsonObject { ["properties"] = objectProperties }, route, _document, "Routing");
             _options.Changed += ScheduleSave;
             _view.Children.Add(_options.View);
@@ -149,8 +120,8 @@ internal sealed class ConfigurationSectionForm
             _page.IsEnabled = false;
             var options = _options!.Read();
             var section = _dns ? "dns" : "route";
-            foreach (var pair in options.Where(pair => _dns ? pair.Key is not ("servers" or "rules") : pair.Key == "final")) _document[section]![pair.Key] = pair.Value?.DeepClone();
-            foreach (var field in _schema.Properties(_schema.Definition(_dns ? "DNS" : "RouteOptions"), _document[section]!.AsObject()).Keys.Where(key => _dns ? key is not ("servers" or "rules") : key == "final"))
+            foreach (var pair in options.Where(pair => _dns ? pair.Key is not ("servers" or "rules") : pair.Key is "final" or "default_domain_resolver")) _document[section]![pair.Key] = pair.Value?.DeepClone();
+            foreach (var field in _schema.Properties(_schema.Definition(_dns ? "DNS" : "RouteOptions"), _document[section]!.AsObject()).Keys.Where(key => _dns ? key is not ("servers" or "rules") : key is "final" or "default_domain_resolver"))
                 if (!options.ContainsKey(field)) _document[section]!.AsObject().Remove(field);
             var disabled = new Dictionary<string, List<DisabledConfigurationRule>>(App.State.Settings.Configuration.DisabledRules);
             foreach (var collection in _collections) collection.Write(disabled);

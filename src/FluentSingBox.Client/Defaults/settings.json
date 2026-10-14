@@ -13,7 +13,7 @@
   "Configuration": {
     "ExternalFilePath": "",
     "NativeEnabled": false,
-    "DirectDns": { "Type": "local" },
+    "DirectDns": { "Type": "udp", "Server": "114.114.114.114", "Port": 53 },
     "ProxyDns": {
       "Type": "https",
       "Server": "1.1.1.1",
@@ -22,7 +22,6 @@
       "Path": "/dns-query"
     },
     "DnsStrategy": "prefer_ipv4",
-    "AutoIpv4OnlyWhenNoIpv6": true,
     "DnsCacheEnabled": true,
     "DnsReverseMapping": true,
     "ChinaDnsDirect": true,

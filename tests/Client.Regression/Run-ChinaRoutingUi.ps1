@@ -62,15 +62,11 @@ try {
     Assert ($LASTEXITCODE -eq 0 -and !$ready.error -and !$ready.timedOut) "Fixture did not start: $raw"
     $windows = @(& $taskWinapp ui list-windows -a "$($taskProcess.Id)" --json | Out-String | ConvertFrom-Json)
     Assert ($windows.Count -eq 1) 'Expected one isolated window'; $taskWindow = $windows[0].hwnd
-    Case 'china-ui/dns-network-policy' {
-        Ui @('invoke','Navigation_DNS') | Out-Null; Ui @('wait-for','DNS_AutoIpv4Only') | Out-Null
-        Assert (@(Tree | Where-Object automationId -eq 'DNS_NetworkStatus').Count -gt 0) 'IPv6 status missing'
-        Ui @('invoke','DNS_AutoIpv4Only','--action','toggle-off') | Out-Null
-        Start-Sleep -Milliseconds 800
-        Assert ((Get-Content $taskSettings -Raw | ConvertFrom-Json).Configuration.AutoIpv4OnlyWhenNoIpv6 -eq $false) 'Auto IPv4 setting did not save'
-        Ui @('invoke','DNS_AutoIpv4Only','--action','toggle-on') | Out-Null
-        Ui @('wait-for','DNS_final') | Out-Null
-        Ui @('screenshot','-o',(Join-Path $taskRoot 'dns-network-policy.png')) | Out-Null
+    Case 'china-ui/dns-explicit-strategy' {
+        Ui @('invoke','Navigation_DNS') | Out-Null; Ui @('wait-for','DNS_strategy') | Out-Null
+        Assert (@(Tree | Where-Object { $_.automationId -in @('DNS_AutoIpv4Only','DNS_NetworkStatus') }).Count -eq 0) 'Automatic IPv4 controls remain'
+        Assert (@(Tree | Where-Object automationId -eq 'DNS_strategy').Count -eq 1) 'DNS strategy missing'
+        Ui @('screenshot','-o',(Join-Path $taskRoot 'dns-strategy.png')) | Out-Null
     }
     Case 'china-ui/missing-and-store-path-warnings' {
         Ui @('invoke','Navigation_Proxy') | Out-Null; Ui @('wait-for','Application_PathWarnings') | Out-Null

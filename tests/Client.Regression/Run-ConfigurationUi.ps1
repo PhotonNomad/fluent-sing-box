@@ -1,7 +1,8 @@
 param(
     [string]$ProjectRoot = (Resolve-Path "$PSScriptRoot/../..").Path,
     [string]$ExecutablePath = (Join-Path $ProjectRoot 'artifacts/publish/Debug/fluent sing-box.exe'),
-    [switch]$RoutingOnly
+    [switch]$RoutingOnly,
+    [switch]$ConfigurationOnly
 )
 $ErrorActionPreference = 'Stop'
 $taskWinapp = (Get-Command winapp -ErrorAction Stop).Source
@@ -10,7 +11,9 @@ New-Item -ItemType Directory -Path $taskRoot -Force | Out-Null
 $taskSettings = Join-Path $taskRoot 'settings.json'
 $taskCore = Join-Path $ProjectRoot 'artifacts/server-editor/core/sing-box.exe'
 if (!(Test-Path -LiteralPath $taskCore)) { throw 'Prepare the core fixture with tests/ServerEditor.Regression before UI tests' }
-@{LanguageChoice='zh-CN';SingBoxExecutablePath=$taskCore;Servers=@(@{Id='ui-node';Name='UI fixture';OutboundJson='{"type":"socks","server":"127.0.0.1","server_port":1}'});DefaultServerId='ui-node';SystemProxyEnabled=$false;Applications=@(@{Id='ui-app';Name='UI application';ServerId='ui-node';IsEnabled=$false;ExecutablePaths=@('C:\fixtures\ui-app.exe')})} |
+$taskFixtureListener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 0)
+$taskFixtureListener.Start(); $taskFixturePort = $taskFixtureListener.LocalEndpoint.Port; $taskFixtureListener.Stop()
+@{LanguageChoice='zh-CN';SingBoxExecutablePath=$taskCore;SystemProxyPort=$taskFixturePort;Servers=@(@{Id='ui-node';Name='UI fixture';OutboundJson='{"type":"socks","server":"127.0.0.1","server_port":1}'});DefaultServerId='ui-node';SystemProxyEnabled=$false;Applications=@(@{Id='ui-app';Name='UI application';ServerId='ui-node';IsEnabled=$false;ExecutablePaths=@('C:\fixtures\ui-app.exe')})} |
     ConvertTo-Json -Depth 30 | Set-Content -LiteralPath $taskSettings
 $taskResults = [Collections.Generic.List[object]]::new()
 $taskOldData = $env:FLUENTSINGBOX_DATA_DIR
@@ -40,6 +43,7 @@ function Expand-Dns([string]$Id) {
 }
 function Case([string]$Name, [scriptblock]$Work) {
     if ($RoutingOnly -and !$Name.StartsWith('routing/')) { return }
+    if ($ConfigurationOnly -and !$Name.StartsWith('configuration/')) { return }
     try { & $Work; $taskResults.Add([pscustomobject]@{name=$Name;status='passed'}); Write-Output "PASS $Name" }
     catch { $taskResults.Add([pscustomobject]@{name=$Name;status='failed';message=$_.Exception.Message}); throw }
 }
@@ -206,22 +210,26 @@ try {
         Ui @('wait-for','Core_Toggle','--property','IsEnabled','--value','true') | Out-Null
         Assert (!(Read-Settings).SystemProxyEnabled) 'Core switch enabled Windows proxy'
     }
-    Case 'configuration/four-flat-actions-without-advanced-mode' {
-        Ui @('invoke','Navigation_Configuration') | Out-Null
-        Ui @('wait-for','Configuration_Check') | Out-Null
+    Case 'configuration/three-actions-in-settings-without-check-buttons' {
+        Ui @('invoke','Navigation_Settings') | Out-Null
+        Ui @('wait-for','Configuration_EditJson') | Out-Null
+        Start-Sleep -Milliseconds 400 # Navigation content transition must settle before reading bounds.
         $nodes = Tree
-        foreach ($id in @('Configuration_EditJson','Configuration_Import','Configuration_Export','Configuration_Check')) {
+        $settingsNav = @($nodes | Where-Object automationId -eq 'Navigation_Settings')
+        $dnsNav = @($nodes | Where-Object automationId -eq 'Navigation_DNS')[0]
+        Assert ($settingsNav.Count -eq 1 -and $settingsNav[0].y -gt $dnsNav.y) 'Settings did not replace configuration below DNS'
+        foreach ($id in @('Configuration_EditJson','Configuration_Import','Configuration_Export')) {
             Assert (@($nodes | Where-Object automationId -eq $id).Count -eq 1) "Missing configuration action: $id"
         }
-        foreach ($id in @('Configuration_TUN','Configuration_Core','Configuration_Advanced','Configuration_Actions','Configuration_Native','Configuration_Mode','Configuration_JsonEditor')) {
+        foreach ($id in @('Navigation_Configuration','Configuration_Check','Settings_CheckConfiguration','Configuration_TUN','Configuration_Core','Configuration_Advanced','Configuration_Actions','Configuration_Native','Configuration_Mode','Configuration_JsonEditor')) {
             Assert (@($nodes | Where-Object automationId -eq $id).Count -eq 0) "Old configuration UI remains: $id"
         }
         Assert (!(Test-Path (Join-Path $taskRoot 'client-errors.log'))) 'Client recorded an exception'
         Start-Sleep -Milliseconds 400 # Allow the expand animation to settle before capturing layout.
         Ui @('screenshot','-o',(Join-Path $taskRoot 'configuration-expanded.png')) | Out-Null
     }
-    Case 'configuration/external-file-edit-check-and-roundtrip' {
-        Ui @('invoke','Navigation_Configuration') | Out-Null
+    Case 'configuration/external-file-edit-and-start-roundtrip' {
+        Ui @('invoke','Navigation_Settings') | Out-Null
         Ui @('invoke','Configuration_EditJson') | Out-Null
         $deadline = [DateTime]::UtcNow.AddSeconds(10)
         while (!(Test-Path (Join-Path $taskRoot 'editor-request.json')) -and [DateTime]::UtcNow -lt $deadline) { Start-Sleep -Milliseconds 100 }
@@ -233,25 +241,20 @@ try {
         $saved = Wait-Saved { param($s) $s.Configuration.ExternalFilePath -eq $path -and !$s.Configuration.NativeEnabled }
         $hash = (Get-FileHash -LiteralPath $taskSettings).Hash
         '{"unknown_ui_test_field":true}' | Set-Content -LiteralPath $path
-        Ui @('invoke','Configuration_Check') | Out-Null
+        Ui @('invoke','Core_Toggle') | Out-Null
         Ui @('wait-for','unknown field','--type','Text') | Out-Null
         Assert ((Get-FileHash -LiteralPath $taskSettings).Hash -eq $hash) 'Invalid external config changed saved settings'
-        $json.log.level = 'warn'
-        $json | ConvertTo-Json -Depth 60 | Set-Content -LiteralPath $path
-        Ui @('invoke','Configuration_Check') | Out-Null
-        Ui @('wait-for','配置校验通过。','--type','Text') | Out-Null
-        $actual = Get-Content (Join-Path $taskRoot 'sing-box/config.validation.json') -Raw | ConvertFrom-Json
-        Assert ($actual.log.level -eq 'warn') 'Core check did not read edited file'
         $json.log.level = 'error'
         $json | ConvertTo-Json -Depth 60 | Set-Content -LiteralPath $path
         Ui @('invoke','Core_Toggle') | Out-Null
+        Ui @('wait-for','Core_Toggle','--property','Name','--value','停止 sing-box','--timeout','15000') | Out-Null
         Ui @('wait-for','Core_Toggle','--property','IsEnabled','--value','true') | Out-Null
         $actual = Get-Content (Join-Path $taskRoot 'sing-box/config.json') -Raw | ConvertFrom-Json
         Assert ($actual.log.level -eq 'error') 'Core start used stale JSON instead of external file'
         Ui @('invoke','Core_Toggle') | Out-Null
         Ui @('wait-for','Core_Toggle','--property','IsEnabled','--value','true') | Out-Null
         Ui @('invoke','Navigation_Servers') | Out-Null
-        Ui @('invoke','Navigation_Configuration') | Out-Null
+        Ui @('invoke','Navigation_Settings') | Out-Null
         Ui @('invoke','Configuration_EditJson') | Out-Null
         Assert ((Get-Content -LiteralPath $path -Raw | ConvertFrom-Json).log.level -eq 'error') 'Edit button overwrote user file'
         Assert (!(Test-Path (Join-Path $taskRoot 'client-errors.log'))) 'External editor flow recorded exception'
@@ -280,9 +283,12 @@ try {
         Ui @('invoke','Navigation_Routing') | Out-Null
         Ui @('wait-for','Routing_final') | Out-Null
         Choice 'Routing_final' 'Routing_final_direct'
-        Ui @('wait-for','配置已校验并保存，重启核心后生效。','--type','Text') | Out-Null
-
-        $actual = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
+        $deadline = [DateTime]::UtcNow.AddSeconds(10)
+        do {
+            try { $actual = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json } catch [IO.IOException] {}
+            if ($actual.route.final -eq 'direct') { break }
+            Start-Sleep -Milliseconds 100
+        } while ([DateTime]::UtcNow -lt $deadline)
         Assert ($actual.route.final -eq 'direct' -and $actual.log.level -eq 'warn') 'Form change failed to update file or lost manual field'
         Ui @('invoke','Navigation_DNS') | Out-Null
         Ui @('wait-for','DNS_final','--property','IsEnabled','--value','true') | Out-Null

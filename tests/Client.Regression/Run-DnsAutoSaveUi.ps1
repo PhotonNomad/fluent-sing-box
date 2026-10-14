@@ -139,19 +139,14 @@ try {
         $item = @(Tree | Where-Object { $_.automationId -eq 'DNS_final_proxy-dns' -and $_.type -eq 'ListItem' })[0]
         Ui @('invoke',$item.selector,'--action','select') | Out-Null
     }
-    Case 'dns/options-autosave-and-invalid-preservation' {
-        Ui @('set-value','DNS_timeout','3s') | Out-Null
-        Wait-Document {param($d) $d.dns.timeout -eq '3s'} | Out-Null
-        Ui @('wait-for','DNS_timeout','--property','IsEnabled','--value','true') | Out-Null
-        $hash = (Get-FileHash $taskSource).Hash
-        Ui @('set-value','DNS_timeout','invalid-duration') | Out-Null
-        Ui @('wait-for','invalid-duration','--type','Text') | Out-Null
-        Start-Sleep -Milliseconds 900
-        Assert ((Get-FileHash $taskSource).Hash -eq $hash) 'Invalid DNS edit replaced saved configuration'
-        Ui @('set-value','DNS_timeout','4s') | Out-Null
-        Wait-Document {param($d) $d.dns.timeout -eq '4s'} | Out-Null
-        Choice 'DNS_reverse_mapping' 'false'
-        Wait-Document {param($d) $d.dns.reverse_mapping -eq $false} | Out-Null
+    Case 'dns/strategy-autosave-and-hidden-defaults' {
+        Choice 'DNS_strategy' 'prefer_ipv6'
+        Wait-Document {param($d) $d.dns.strategy -eq 'prefer_ipv6'} | Out-Null
+        $document = Get-Content $taskSource -Raw | ConvertFrom-Json
+        Assert ($document.dns.reverse_mapping -eq $true) 'Hidden reverse mapping default changed'
+        foreach ($key in @('disable_cache','disable_expire','cache_capacity','optimistic','timeout','reverse_mapping','client_subnet')) {
+            Assert (@(Tree | Where-Object automationId -eq ('DNS_'+$key)).Count -eq 0) ('Advanced field visible: '+$key)
+        }
     }
     Case 'dns/sparse-wide-rule-editor-and-autosave' {
         Ui @('invoke','DNS_Rules_Add') | Out-Null; Ui @('wait-for','DNS_Rules_Editor_action') | Out-Null

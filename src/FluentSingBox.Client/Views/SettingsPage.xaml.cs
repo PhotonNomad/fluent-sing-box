@@ -13,6 +13,7 @@ public sealed partial class SettingsPage : Page
     public SettingsPage()
     {
         InitializeComponent();
+        ConfigurationSection.Header = Localization.Get("ConfigurationPage_TextBlock4.Text");
         Loaded += SettingsPage_Loaded;
     }
 
@@ -100,19 +101,6 @@ public sealed partial class SettingsPage : Page
                 ? Localization.Format("SettingsPage_CustomCore0", path)
                 : Localization.Format("SettingsPage_TheCustomPathIsUnavailableFallingBackTo", SingBoxCoreBundle.Version);
         SingBoxCorePathButton.Content = hasCustomPath ? Localization.Get("SettingsPage_UseBundledCore") : Localization.Get("SettingsPage_SelectAnotherCore");
-    }
-
-    private async void CheckConfiguration_Click(object sender, RoutedEventArgs e)
-    {
-        CheckConfigurationButton.IsEnabled = false;
-        ConfigurationCheckResult.Text = Localization.Get("SettingsPage_GeneratingConfigurationAndRunningSingBoxCheck");
-        try
-        {
-            await App.CoreService.ValidateAsync(App.State.Settings);
-            ConfigurationCheckResult.Text = Localization.Get("SettingsPage_ConfigurationCheckPassedTheCoreCanReadThis");
-        }
-        catch (Exception exception) { ConfigurationCheckResult.Text = LogReader.Redact(exception.Message, App.State.Settings); }
-        finally { CheckConfigurationButton.IsEnabled = true; }
     }
 
     private async void OpenSingBoxDocs_Click(object sender, RoutedEventArgs e)

@@ -1110,7 +1110,7 @@
     <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
   </data>
   <data name="ConfigurationPage_ConfigurationFileOpenedSaveItExternallyThenCheck" xml:space="preserve">
-    <value>Configuration file opened. Save it externally, then check it here. The next core start reads its latest contents.</value>
+    <value>Configuration file opened. Save it externally. The next core start reads its latest contents.</value>
     <comment>Source: Views\ConfigurationPage.xaml.cs</comment>
   </data>
   <data name="ConfigurationPage_ImportConfiguration" xml:space="preserve">
@@ -2701,7 +2701,7 @@ Windows: {0}
     <value>MTU</value>
   </data>
   <data name="SchemaField_default_domain_resolver" xml:space="preserve">
-    <value>Default domain resolver</value>
+    <value>Node hostname resolver</value>
   </data>
   <data name="SchemaField_default_interface" xml:space="preserve">
     <value>Default interface</value>
@@ -2780,15 +2780,18 @@ Windows: {0}
   <data name="Schema_RouteAutoSaveDescription" xml:space="preserve"><value>Changes are automatically checked and saved. Restart the core to apply them. Invalid changes leave the saved configuration intact.</value></data>
   <data name="Schema_SelectOutbound" xml:space="preserve"><value>Select an existing outbound. The default outbound cannot be empty.</value></data>
   <data name="Schema_SelectDnsServer" xml:space="preserve"><value>Select an existing DNS server. The default DNS server cannot be empty.</value></data>
-  <data name="Dns_AutoIpv4Only" xml:space="preserve"><value>Use IPv4 only automatically when IPv6 is unavailable</value></data>
-  <data name="Dns_Ipv6Available" xml:space="preserve"><value>Global IPv6 and a default route detected; the selected DNS strategy is preserved.</value></data>
-  <data name="Dns_AutoIpv4Active" xml:space="preserve"><value>No usable IPv6 detected. Runtime DNS uses IPv4 only.</value></data>
-  <data name="Dns_Ipv6Unavailable" xml:space="preserve"><value>No usable IPv6 detected. Automatic adjustment is off; the selected strategy is preserved.</value></data>
-  <data name="Dns_ExplicitIpv6Only" xml:space="preserve"><value>No usable IPv6 detected. Your explicit IPv6-only choice is preserved and may fail.</value></data>
   <data name="Dns_DefaultNodeHelp" xml:space="preserve"><value>LAN and China domains use local DNS; other domains use the default node’s DoH. Application nodes select connections only. DNS changes clear the app cache before the next core start.</value></data>
   <data name="ApplicationMatch_ChooseRunning" xml:space="preserve"><value>Choose from running processes</value></data>
   <data name="ApplicationMatch_AddSelected" xml:space="preserve"><value>Add selected process names</value></data>
   <data name="ApplicationMatch_StorePath" xml:space="preserve"><value>Store applications use version-independent path matching.</value></data>
   <data name="ApplicationMatch_MissingPath" xml:space="preserve"><value>Application {0}: executable path does not exist (a Store app may have updated): {1}. Use name matching or select the program again.</value></data>
   <data name="ApplicationMatch_SearchProcesses" xml:space="preserve"><value>Search process name or path</value></data>
+  <data name="Logs_LevelLabel.Text" xml:space="preserve"><value>Log level</value></data>
+  <data name="Logs_Level.AutomationProperties.Name" xml:space="preserve"><value>Log level</value></data>
+  <data name="Logs_LevelSaved" xml:space="preserve"><value>Log level saved. It takes effect the next time the core starts.</value></data>
+  <data name="Schema_SelectDirectDnsServer" xml:space="preserve"><value>Select a direct DNS server. Resolving the node hostname must not depend on its proxy connection.</value></data>
+  <data name="Tray_Background" xml:space="preserve"><value>Run in background (close to tray after activation)</value></data>
+  <data name="Tray_Restore" xml:space="preserve"><value>Open fluent sing-box</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>Exit</value></data>
+  <data name="Tray_Unavailable" xml:space="preserve"><value>Cannot create the notification icon; the window will stay open.</value></data>
 </root>

@@ -17,15 +17,11 @@ public static class DnsCachePolicy
     public static async Task TrackAsync(AppSettingsData settings, string json)
     {
         var config = JsonNode.Parse(json)!;
-        if (config["dns"] is JsonObject dns && dns["strategy"] is JsonValue strategy)
-            dns["strategy"] = Ipv6Availability.EffectiveStrategy(strategy.ToString(), settings.Configuration.AutoIpv4OnlyWhenNoIpv6,
-                Ipv6Availability.IsAvailable(Ipv6Availability.Capture()));
         var identity = JsonSerializer.Serialize(new
         {
             settings.DefaultServerId, settings.GlobalTunEnabled,
             settings.Configuration.DirectDns, settings.Configuration.ProxyDns,
             settings.Configuration.DnsStrategy, settings.Configuration.ChinaDnsDirect,
-            settings.Configuration.AutoIpv4OnlyWhenNoIpv6,
             applications = settings.Applications.Select(app => new { app.Id, app.MatchMode, app.IsEnabled, app.ServerId, entries = app.MatchEntries.ToArray() }),
             dns = config["dns"],
             tun = (config["inbounds"] as JsonArray)?.Where(item => item?["type"]?.ToString() == "tun").ToArray()
@@ -52,9 +48,7 @@ public static class DnsCachePolicy
     {
         var effective = JsonNode.Parse(json)?["dns"]?["strategy"]?.ToString();
         if (effective is null) return;
-        var available = Ipv6Availability.IsAvailable(Ipv6Availability.Capture());
         File.AppendAllText(Path.Combine(DirectoryPath, "dns-policy.log"),
-            $"{DateTimeOffset.Now:O} IPv6 available={available}; DNS strategy={effective}; automatic={settings.Configuration.AutoIpv4OnlyWhenNoIpv6}."
-            + (!available && effective == "ipv6_only" ? " Explicit ipv6_only retained; IPv6-only answers may be unreachable." : "") + "\n");
+            $"{DateTimeOffset.Now:O} DNS strategy={effective}.\n");
     }
 }

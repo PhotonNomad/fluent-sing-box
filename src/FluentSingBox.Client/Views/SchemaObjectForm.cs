@@ -134,6 +134,42 @@ internal sealed class SchemaObjectForm
     private FrameworkElement Field(string key, JsonObject schema)
     {
         var current = _value[key];
+        if (_id == "Routing" && key == "default_domain_resolver")
+        {
+            var directTags = (_document["dns"]?["servers"] as JsonArray)?.OfType<JsonObject>()
+                .Where(server => server["detour"] is null || server["detour"]?.ToString() == "direct")
+                .Select(server => server["tag"]?.ToString() ?? "").Where(tag => tag.Length > 0).Distinct().ToArray() ?? [];
+            var selected = current is JsonObject resolver ? resolver["server"]?.ToString() : current?.ToString();
+            var choices = directTags.Concat(string.IsNullOrWhiteSpace(selected) ? [] : new[] { selected }).Distinct().ToArray();
+            var combo = Combo(key, choices, selected ?? directTags.FirstOrDefault() ?? "");
+            var edited = false;
+            combo.SelectionChanged += (_, _) => { edited = true; Changed?.Invoke(); };
+            _readers.Add(result =>
+            {
+                if (!edited && current is not null) { result[key] = current.DeepClone(); return; }
+                var tag = combo.SelectedValue?.ToString();
+                if (string.IsNullOrWhiteSpace(tag) || !directTags.Contains(tag))
+                    throw new InvalidOperationException(Localization.Get("Schema_SelectDirectDnsServer"));
+                if (current is JsonObject options) { var updated = (JsonObject)options.DeepClone(); updated["server"] = tag; result[key] = updated; }
+                else result[key] = tag;
+            });
+            return Card(key, combo);
+        }
+        if (_id == "DNS" && key == "optimistic")
+        {
+            var enabled = (current is JsonObject optimistic ? optimistic["enabled"] : current)?.ToString().Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+            var toggle = new ToggleSwitch { IsOn = enabled, OnContent = Localization.Get("Common_On"), OffContent = Localization.Get("Common_Off") };
+            AutomationProperties.SetAutomationId(toggle, "DNS_optimistic");
+            var edited = false;
+            toggle.Toggled += (_, _) => { edited = true; Changed?.Invoke(); };
+            _readers.Add(result =>
+            {
+                // Preserve imported custom timeouts until the user changes this switch.
+                if (!edited) { if (current is null) result.Remove(key); else result[key] = current.DeepClone(); }
+                else result[key] = toggle.IsOn;
+            });
+            return Card(key, toggle);
+        }
         var options = schema["anyOf"] as JsonArray;
         var variants = options?.OfType<JsonObject>().Select(_catalog.Resolve).ToArray() ?? [schema];
         var objectSchema = variants.FirstOrDefault(item => item["type"]?.ToString() == "object");

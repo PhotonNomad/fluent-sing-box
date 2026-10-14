@@ -365,7 +365,7 @@ try {
         Assert-Ui (!(Get-SavedSettings).Applications[0].IsEnabled) 'Editing enabled TUN'
         Use-Ui @('screenshot', '-o', (Join-Path $taskRunRoot 'application-child-controls.png')) | Out-Null
     }
-    Run-UiCase 'configuration/core-check-with-bundled-routing-files' {
+    Run-UiCase 'configuration/bundled-routing-files-and-settings-actions' {
         Use-Ui @('invoke', 'Navigation_Routing') | Out-Null
         Use-Ui @('wait-for', 'Routing_rule_set') | Out-Null
         $taskRuleSets = @('geosite-geolocation-cn', 'geoip-cn', 'geosite-geolocation-!cn') | ForEach-Object {
@@ -381,19 +381,12 @@ try {
         } while ([DateTime]::UtcNow -lt $taskSaveDeadline)
         Assert-Ui (@($taskSaved.route.rule_set).Count -eq 3) 'Route page did not save bundled rule sets'
         Use-Ui @('invoke', 'Navigation_Settings') | Out-Null
-        Use-Ui @('invoke', 'Settings_CheckConfiguration') | Out-Null
-        $deadline = [DateTime]::UtcNow.AddSeconds(20)
-        do {
-            $result = Use-Ui @('inspect', 'Settings_ConfigurationResult', '--depth', '1')
-            if (($result | ConvertTo-Json -Depth 20).Contains('配置校验通过')) { break }
-            Start-Sleep -Milliseconds 200
-        } while ([DateTime]::UtcNow -lt $deadline)
-        Assert-Ui (($result | ConvertTo-Json -Depth 20).Contains('配置校验通过')) 'Core rejected generated configuration'
-        $config = Get-Content (Join-Path $taskRunRoot 'sing-box\config.validation.json') -Raw | ConvertFrom-Json
-        Assert-Ui (@($config.route.rule_set).Count -eq 3) 'Validation did not read all bundled rule files'
-        Assert-Ui (@($config.route.rule_set | Where-Object type -ne local).Count -eq 0) 'Validation used remote rule sets'
-        Assert-Ui (!(Get-SavedSettings).SystemProxyEnabled -and !((Get-SavedSettings).Applications | Where-Object IsEnabled)) 'Validation enabled host proxy or TUN'
-        Use-Ui @('screenshot', '-o', (Join-Path $taskRunRoot 'configuration-check.png')) | Out-Null
+        foreach ($id in @('Configuration_EditJson','Configuration_Import','Configuration_Export')) {
+            Use-Ui @('wait-for', $id) | Out-Null
+        }
+        Assert-Ui (@($taskSaved.route.rule_set | Where-Object type -ne local).Count -eq 0) 'Saved configuration used remote rule sets'
+        Assert-Ui (!(Get-SavedSettings).SystemProxyEnabled -and !((Get-SavedSettings).Applications | Where-Object IsEnabled)) 'Settings navigation enabled host proxy or TUN'
+        Use-Ui @('screenshot', '-o', (Join-Path $taskRunRoot 'configuration-settings.png')) | Out-Null
     }
     Write-Output "UI regression passed; evidence: $taskRunRoot"
 }

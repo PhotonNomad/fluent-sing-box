@@ -55,9 +55,9 @@ try {
         @{LanguageChoice=$language;SingBoxExecutablePath=(Join-Path $ProjectRoot 'artifacts/server-editor/core/sing-box.exe');Servers=@(@{Id='lang-node';Name='Language fixture';OutboundJson='{"type":"socks","server":"127.0.0.1","server_port":1}'});DefaultServerId='lang-node';SystemProxyEnabled=$false;Applications=@(@{Id='match-app';Name='Match fixture';ServerId='lang-node';IsEnabled=$false;ExecutablePaths=@($ExecutablePath)})} | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $settingsPath
         Start-Fixture $directory
         try {
-            foreach ($page in @('Servers','Routing','Proxy','DNS','Configuration','Logs','Settings')) {
+            foreach ($page in @('Servers','Routing','Proxy','DNS','Logs','Settings')) {
                 Ui @('invoke',('Navigation_' + $page)) | Out-Null
-                $ready = switch ($page) { 'Servers'{'Servers_Add'} 'Routing'{'Routing_final'} 'Proxy'{'Proxy_PortTextBox'} 'DNS'{'DNS_final'} 'Configuration'{'Configuration_Check'} 'Logs'{'Logs_Filter'} 'Settings'{'Settings_Language'} }
+                $ready = switch ($page) { 'Servers'{'Servers_Add'} 'Routing'{'Routing_final'} 'Proxy'{'Proxy_PortTextBox'} 'DNS'{'DNS_final'} 'Logs'{'Logs_Filter'} 'Settings'{'Settings_Language'} }
                 if ($page -ne 'Logs') { Ui @('wait-for',$ready) | Out-Null }
                 $nodes = Tree
                 if ($language -eq 'en-US') { Assert-English }

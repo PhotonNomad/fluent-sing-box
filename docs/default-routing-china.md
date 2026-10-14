@@ -6,9 +6,9 @@
 
 | 模式 | 国内域名 / 国内 IP | 未命中规则的流量 | DNS |
 | --- | --- | --- | --- |
-| 系统代理 | 直连 | 进入本地代理的流量走默认节点 | 国内域名 → 系统 DNS；其余 → 默认节点 DoH |
-| 全局 TUN | 直连 | 默认节点 | 国内域名 → 系统 DNS；其余 → 默认节点 DoH |
-| 按应用代理 | 已选应用的节点规则优先于国内规则；局域网仍直连 | 未选择的应用直连 | 国内域名 → 系统 DNS；其余 → 默认节点 DoH |
+| 系统代理 | 直连 | 进入本地代理的流量走默认节点 | 国内域名 → 114；其余 → 默认节点访问 1.1.1.1 DoH |
+| 全局 TUN | 直连 | 默认节点 | 国内域名 → 114；其余 → 默认节点访问 1.1.1.1 DoH |
+| 按应用代理 | 已选应用的节点规则优先于国内规则；局域网仍直连 | 未选择的应用直连 | 国内域名 → 114；其余 → 默认节点访问 1.1.1.1 DoH |
 
 这里只描述客户端生成的默认配置。手动设置的 `route.final`、自定义规则、导入文件可以改变上述行为。启用按应用代理会创建 TUN 捕获流量，但未选择的应用仍默认直连。
 
@@ -20,7 +20,7 @@
 
 ## DNS 的选择
 
-`local` 使用 Windows 系统配置的 DNS，保留家庭路由器、公司内网和本地 CDN 的解析行为。`proxy-dns` 使用 `https://1.1.1.1/dns-query`，TLS 名称为 `cloudflare-dns.com`，通过默认节点访问；三种模式共用这一解析器，应用节点仅用于连接。Windows 应用调用系统解析器时，DNS Client 服务以 `svchost.exe` 代发查询；故障日志中的 177 个 TUN DNS 包全部属于该服务，应用进程规则无法命中（见[整改证据 1.1](china-dns-app-routing-rework.md#11-证据-atun-模式下-dns-请求不属于应用进程)）。不能依靠 DNS 的进程名或路径选择应用节点。节点主机名使用直连解析器解析，避免“先解析节点才能连接节点、先连接节点才能解析”的循环。
+`local` 是国内解析器的标签，默认使用 114.114.114.114 UDP 直连；`system-dns` 才使用 Windows 系统 DNS，供局域网名称解析。`proxy-dns` 使用 `https://1.1.1.1/dns-query`，TLS 名称为 `cloudflare-dns.com`，通过默认节点访问；三种模式共用这一解析器，应用节点仅用于连接。Windows 应用调用系统解析器时，DNS Client 服务以 `svchost.exe` 代发查询，不能依靠 DNS 的进程名或路径选择应用节点（见[整改证据 1.1](china-dns-app-routing-rework.md#11-证据-atun-模式下-dns-请求不属于应用进程)）。节点主机名和 DNS 上游域名使用 `bootstrap`（114 UDP 直连）解析，避免“先解析节点才能连接节点、先连接节点才能解析”的循环。
 
 有节点的新配置使用 `proxy-dns` 作为默认 DNS 服务器，局域网和国内域名规则优先匹配。无节点的直连模板使用 `local`。DNS 页面完成修改后自动校验并保存，无需另点校验保存按钮。
 
@@ -28,9 +28,9 @@
 
 ## IPv6、应用路径与缓存
 
-默认开启“无可用 IPv6 时自动使用仅 IPv4”。检测要求同一张已连接的非 TUN、非回环网卡有全局单播 IPv6 地址和 `::/0` 默认路由；链路本地、站点本地和 ULA 地址不算全局 IPv6。没有可用 IPv6 时，`prefer_ipv4` / `prefer_ipv6` 在运行配置中生效为 `ipv4_only`；明确选择 `ipv6_only` 不覆盖，可关闭自动调整。DNS 页面显示判定，`sing-box/dns-policy.log` 记录运行策略。
+DNS 解析策略直接使用 DNS 页的 `strategy`，默认 `prefer_ipv4`（优先 IPv4，同时允许 IPv6）。客户端不再检测 IPv6 可用性或自动覆盖策略；`prefer_ipv6`、`ipv4_only`、`ipv6_only` 均按用户明确选择生效。`sing-box/dns-policy.log` 记录实际运行策略。
 
-Store 应用保留设置中的具体路径，在生成路由时转成 `process_path_regex`，仅版本号通配，包名、架构、发布者和包内程序路径仍严格匹配。不存在的路径在应用页和路由页提示，生成配置时不阻断；名称模式必须使用完整 `.exe` 文件名，未带扩展名且能从正在运行的进程或 PATH 解析的输入会补全。可从运行进程列表选择名称，适合升级后变化的 CLI `bin/<哈希>/codex.exe`。
+Store 应用保留设置中的具体路径，在生成路由时转成 `process_path_regex`，仅版本号通配，包名、架构、发布者和包内程序路径仍严格匹配。不存在的路径在应用页和路由页提示，生成配置时不阻断；名称模式必须使用完整 `.exe` 文件名，且**大小写要与磁盘上的真实文件名一致**：sing-box 的 `process_name` 是按 `processMap[filepath.Base(ProcessInfo.ProcessPath)]` 精确查表的，写错大小写等于这条规则不存在，不会报错，应用会静默落到默认出口（见[整改证据 1.2](china-dns-app-routing-rework.md#12-证据-bcodexexe-未命中名字规则)）。未带扩展名且能从正在运行的进程或 PATH 解析的输入会补全；带扩展名但大小写不符的输入也会改写成真实大小写；解析不到时按原样保存，需自行核对。可从运行进程列表选择名称，适合升级后变化的 CLI `bin/<哈希>/codex.exe`。
 
 生成配置禁用 `store_dns` 和 `store_fakeip`。DNS、应用列表、默认节点或 TUN 设置变更会标记应用缓存失效；在下次核心启动前删除应用数据目录中的 `sing-box/cache.db`，避免删除正在使用的数据库。手工指定到其他位置的缓存文件不自动删除。运行中的核心需要重启才能应用新配置及清空内存 DNS 缓存。
 
@@ -42,7 +42,7 @@ Store 应用保留设置中的具体路径，在生成路由时转成 `process_p
 
 本项目只在存在 TUN 时生成这条规则，匹配已识别的 DNS 协议或目的端口 53。仅打开 Windows 系统代理不等于接管整个系统 DNS。DoH 通常是 HTTPS 443，DoT 通常是加密连接 853，不能靠这条规则统一接管。
 
-例如访问国内网站：DNS 请求 → hijack-dns → 国内 DNS 规则 → 系统 DNS 返回 IP → 后续连接通过 DNS 映射或 sniff 取得域名 → 国内域名规则 → 直连。访问境外网站时，全局 TUN 与系统代理默认使用经节点转发的 DoH，并把连接交给默认节点。
+例如访问国内网站：DNS 请求 → hijack-dns → 国内 DNS 规则 → 114 DNS 返回 IP → 后续连接通过 DNS 映射或 sniff 取得域名 → 国内域名规则 → 直连。访问境外网站时，全局 TUN 与系统代理默认使用经节点转发的 DoH，并把连接交给默认节点。
 
 官方参考：[规则动作](https://sing-box.sagernet.org/configuration/route/rule_action/)、[协议嗅探](https://sing-box.sagernet.org/configuration/route/sniff/)、[DNS 反向映射](https://sing-box.sagernet.org/configuration/dns/#reverse_mapping)。
 

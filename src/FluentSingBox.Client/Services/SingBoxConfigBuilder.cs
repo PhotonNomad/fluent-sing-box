@@ -7,8 +7,6 @@ namespace FluentSingBox.Client.Services;
 
 public sealed class SingBoxConfigBuilder
 {
-    private readonly Func<Ipv6NetworkSnapshot> _networkSnapshot;
-    public SingBoxConfigBuilder(Func<Ipv6NetworkSnapshot>? networkSnapshot = null) => _networkSnapshot = networkSnapshot ?? Ipv6Availability.Capture;
     public string Build(AppSettingsData settings, string logPath, bool supportsHttpClient, bool validateApplicationPaths = false)
     {
         var options = settings.Configuration ?? new ConfigurationOptions();
@@ -228,7 +226,7 @@ public sealed class SingBoxConfigBuilder
         {
             ConfigurationComposer.Resolver(options.DirectDns, "local"),
             ConfigurationComposer.Resolver(options.ProxyDns, "proxy-dns", OutboundTag(defaultServer.Id)),
-            new JsonObject { ["type"] = "local", ["tag"] = "bootstrap" }
+            new JsonObject { ["type"] = "local", ["tag"] = "system-dns" }
         };
 
         var dnsRules = new JsonArray
@@ -236,7 +234,7 @@ public sealed class SingBoxConfigBuilder
             new JsonObject
             {
                 ["domain_suffix"] = new JsonArray(".local", ".lan"),
-                ["server"] = "local"
+                ["server"] = "system-dns"
             }
         };
 
@@ -260,7 +258,7 @@ public sealed class SingBoxConfigBuilder
                 ["servers"] = dnsServers,
                 ["rules"] = dnsRules,
                 ["final"] = "proxy-dns",
-                ["strategy"] = Ipv6Availability.EffectiveStrategy(options.DnsStrategy, options.AutoIpv4OnlyWhenNoIpv6, Ipv6Availability.IsAvailable(_networkSnapshot())),
+                ["strategy"] = options.DnsStrategy,
                 ["disable_cache"] = !options.DnsCacheEnabled,
                 ["reverse_mapping"] = options.DnsReverseMapping
             },
@@ -378,7 +376,6 @@ public sealed class SingBoxConfigBuilder
             ["server_port"] = server.Port,
             ["uuid"] = server.UserId
         };
-        ApplyDomainResolverFallback(outbound);
         if (!string.IsNullOrWhiteSpace(server.Flow)) outbound["flow"] = server.Flow;
         if (server.Security == "tls")
         {
@@ -414,7 +411,6 @@ public sealed class SingBoxConfigBuilder
         var outbound = ParseOutbound(server);
         RemapTags(outbound, importedTags);
         ApplyWebSocketServerNameFallback(outbound);
-        ApplyDomainResolverFallback(outbound);
         var type = outbound["type"]?.GetValue<string>();
         if (string.IsNullOrWhiteSpace(type))
         {
@@ -445,20 +441,6 @@ public sealed class SingBoxConfigBuilder
         {
             tls["server_name"] = host;
         }
-    }
-
-    private static void ApplyDomainResolverFallback(JsonObject outbound)
-    {
-        if (outbound["server"] is not JsonValue serverValue
-            || !serverValue.TryGetValue<string>(out var server)
-            || string.IsNullOrWhiteSpace(server)
-            || IPAddress.TryParse(server, out _)
-            || !string.IsNullOrWhiteSpace(outbound["domain_resolver"]?.GetValue<string>()))
-        {
-            return;
-        }
-
-        outbound["domain_resolver"] = "local";
     }
 
     private static JsonObject ParseOutbound(ServerProfile server)
