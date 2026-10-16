@@ -1,4 +1,5 @@
 using FluentSingBox.Client.Services;
+using FluentSingBox.Client.Models;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -18,6 +19,8 @@ public sealed partial class SystemProxySettingsControl : UserControl
     {
         _loading = true;
         var settings = App.State.Settings;
+        DefaultServerComboBox.ItemsSource = settings.Servers;
+        DefaultServerComboBox.SelectedValue = settings.DefaultServerId;
         SystemProxySwitch.IsOn = settings.SystemProxyEnabled;
         PortTextBox.Text = settings.SystemProxyPort.ToString();
         AuthenticationSwitch.IsOn = settings.SystemProxyAuthEnabled;
@@ -27,6 +30,18 @@ public sealed partial class SystemProxySettingsControl : UserControl
         StatusMessage.IsOpen = false;
 
         _loading = false;
+    }
+
+    private async void DefaultServer_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || DefaultServerComboBox.SelectedItem is not ServerProfile server
+            || App.State.Settings.DefaultServerId == server.Id) return;
+        App.State.SetDefaultServer(server);
+        try { await App.ProxyCoordinator.ApplyConfigurationChangesAsync(); }
+        catch (Exception exception)
+        {
+            await ShowMessageAsync(Localization.Get("ProxyPage_CannotApplyServer"), exception.Message);
+        }
     }
 
     private void AuthenticationSwitch_Toggled(object sender, RoutedEventArgs e)

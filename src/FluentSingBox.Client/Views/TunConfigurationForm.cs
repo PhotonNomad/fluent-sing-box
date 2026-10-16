@@ -20,6 +20,7 @@ internal sealed class TunConfigurationForm
     private readonly SemaphoreSlim _saveGate = new(1, 1);
     private int _revision;
     private int _savedRevision;
+    private Task _loadTask = Task.CompletedTask;
     public TunConfigurationForm(Page page, StackPanel view)
     {
         _page = page; _view = view;
@@ -28,8 +29,8 @@ internal sealed class TunConfigurationForm
         _saveTimer.IsRepeating = false;
         _saveTimer.Tick += async (_, _) => await SaveAsync();
         AutomationProperties.SetAutomationId(_status, "Proxy_Tun_Status");
-        page.Loaded += async (_, _) => await LoadAsync();
-        page.Unloaded += async (_, _) => { _saveTimer.Stop(); if (_revision != _savedRevision) await SaveAsync(); };
+        page.Loaded += async (_, _) => await (_loadTask = LoadAsync());
+        page.Unloaded += (_, _) => _saveTimer.Stop();
     }
     public async Task LoadAsync()
     {
@@ -121,11 +122,19 @@ internal sealed class TunConfigurationForm
         _revision++;
         _saveTimer.Stop(); _saveTimer.Start();
     }
-    private async Task SaveAsync()
+    public async Task<bool> FlushPendingChangesAsync()
+    {
+        _saveTimer.Stop();
+        await _loadTask;
+        _saveTimer.Stop();
+        return await SaveAsync();
+    }
+
+    private async Task<bool> SaveAsync()
     {
         await _saveGate.WaitAsync();
         var revision = _revision;
-        if (revision == _savedRevision) { _saveGate.Release(); return; }
+        if (revision == _savedRevision) { _saveGate.Release(); return true; }
         try
         {
             var candidate = (JsonObject)_document.DeepClone();
@@ -171,14 +180,15 @@ internal sealed class TunConfigurationForm
                 App.State.Settings.Configuration.TunPreferredRouteBackups = previousBackups;
                 throw;
             }
-            await App.State.SaveAsync();
             _document = candidate;
             for (var index = 0; index < edits.Length; index++) _forms[index].Form.UpdatePreservedFields(edits[index]);
             _source = await File.ReadAllTextAsync(ConfigurationFileService.FilePath);
+            await App.State.SavePreferencesAsync();
             _savedRevision = revision;
             _status.Message = Localization.Get("Schema_Saved"); _status.Severity = InfoBarSeverity.Success; _status.IsOpen = true;
+            return true;
         }
-        catch (Exception exception) { Error(exception); }
+        catch (Exception exception) { Error(exception); return false; }
         finally { _saveGate.Release(); }
     }
     private void Error(Exception exception) { _status.Message = LogReader.Redact(exception.Message, App.State.Settings); _status.Severity = InfoBarSeverity.Error; _status.IsOpen = true; }

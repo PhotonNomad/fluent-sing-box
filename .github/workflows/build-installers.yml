@@ -1,0 +1,37 @@
+name: Build Windows installers
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Stable version, e.g. 0.1.0 (blank uses release.json)'
+        required: false
+        type: string
+permissions:
+  contents: read
+jobs:
+  installers:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install WiX tools
+        shell: pwsh
+        run: ./tools/Setup-InstallerTools.ps1
+      - name: Update regressions
+        shell: pwsh
+        run: dotnet run --project tests/Updates.Regression -c Release
+      - name: Build unsigned test installers
+        shell: pwsh
+        env:
+          INSTALLER_VERSION: ${{ inputs.version }}
+        run: ./tools/Build-Installer.ps1 -Version $env:INSTALLER_VERSION
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fluent-sing-box-unsigned-test-installers
+          path: |
+            artifacts/installers/*/*.msi
+            artifacts/installers/*/*.exe
+            artifacts/installers/*/SHA256SUMS.txt
+          if-no-files-found: error

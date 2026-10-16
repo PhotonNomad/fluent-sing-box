@@ -173,16 +173,15 @@ try {
         Assert ((Get-Content (Join-Path $logDirectory 'sing-box.log') -Raw).Contains('LONG_LINE_END')) 'Clear deleted source log'
         Assert (!(Test-Path (Join-Path $directory 'sing-box/process.json'))) 'Test started core'
     }
-    Case 'navigation/proxy-before-routing-and-background-entry' {
+    Case 'navigation/proxy-before-routing-without-background-button' {
         $nodes = Tree
         $proxy = @($nodes | Where-Object automationId -eq 'Navigation_Proxy')[0]
         $routing = @($nodes | Where-Object automationId -eq 'Navigation_Routing')[0]
         Assert ($proxy.y -lt $routing.y) 'Routing was not placed below proxy'
-        $background = @($nodes | Where-Object automationId -eq 'App_Background')[0]
-        Assert ($background.width -gt 0 -and $background.height -gt 0) 'Background entry missing'
+        Assert (@($nodes | Where-Object automationId -eq 'App_Background').Count -eq 0) 'Background button still present'
     }
     Case 'tray/hide-restore-close-to-tray' {
-        Ui @('invoke','App_Background') | Out-Null
+        [LogTestWindow]::PostMessage([IntPtr][long]$taskWindow,0x112,[UIntPtr]0xF060,[IntPtr]0) | Out-Null
         Start-Sleep -Milliseconds 250
         Assert (!$taskProcess.HasExited -and ![LogTestWindow]::IsWindowVisible([IntPtr][long]$taskWindow)) 'Background did not hide the window'
         [LogTestWindow]::PostMessage([IntPtr][long]$taskWindow,0x802A,[UIntPtr]1,[IntPtr]0x202) | Out-Null

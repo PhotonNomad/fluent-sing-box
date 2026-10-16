@@ -88,6 +88,7 @@ try {
         $button=@(Tree | Where-Object automationId -eq 'Core_Toggle')[0]
         Assert ($button.type -eq 'Button') 'Footer is not a compact button'
         Assert ($button.height -lt 110) 'Footer button too tall'
+        Assert (@(Tree | Where-Object automationId -eq 'App_Background').Count -eq 0) 'Background button still present'
         Ui @('screenshot','-o',(Join-Path $taskRoot 'Footer-Stopped.png'))|Out-Null
     }
     Case 'footer/single-click-local-core-stop' {
@@ -98,7 +99,7 @@ try {
         $record=Get-Content $recordPath -Raw|ConvertFrom-Json
         $core=Get-Process -Id $record.Pid
         Assert (!$core.HasExited) 'Fixture core did not run'
-        Ui @('invoke','App_Background') | Out-Null
+        [FooterTrayWindow]::PostMessage([IntPtr][long]$taskWindow,0x112,[UIntPtr]0xF060,[IntPtr]0) | Out-Null
         Start-Sleep -Milliseconds 250
         $core.Refresh()
         Assert (!$core.HasExited -and ![FooterTrayWindow]::IsWindowVisible([IntPtr][long]$taskWindow)) 'Background stopped the local fixture core'
@@ -122,7 +123,7 @@ try {
         $recordPath = Join-Path $directory 'sing-box/process.json'
         $record = Get-Content $recordPath -Raw | ConvertFrom-Json
         $core = Get-Process -Id $record.Pid
-        Ui @('invoke','App_Background') | Out-Null
+        [FooterTrayWindow]::PostMessage([IntPtr][long]$taskWindow,0x112,[UIntPtr]0xF060,[IntPtr]0) | Out-Null
         Start-Sleep -Milliseconds 250
         [FooterTrayWindow]::PostMessage([IntPtr][long]$taskWindow,0x111,[UIntPtr]0xA002,[IntPtr]0) | Out-Null
         Assert ($taskProcess.WaitForExit(15000)) 'Tray Exit did not close fixture client'

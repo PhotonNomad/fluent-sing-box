@@ -7,10 +7,10 @@ namespace FluentSingBox.Client.Services;
 
 public sealed class SingBoxConfigBuilder
 {
-    public string Build(AppSettingsData settings, string logPath, bool supportsHttpClient, bool validateApplicationPaths = false)
+    public string Build(AppSettingsData settings, string logPath, bool supportsHttpClient, bool validateApplicationPaths = false, bool useUpdatedRuleSets = true)
     {
         var options = settings.Configuration ?? new ConfigurationOptions();
-        if (options.UsesFileConfiguration) return ConfigurationComposer.BuildNative(settings, logPath);
+        if (options.UsesFileConfiguration) return ConfigurationComposer.BuildNative(settings, logPath, useUpdatedRuleSets);
         ConfigurationComposer.ValidateOptions(options);
         if (settings.SystemProxyPort is < 1 or > 65535) throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_TheLocalProxyPortMustBeBetween1"));
         var defaultServer = settings.Servers.FirstOrDefault(server => server.Id == settings.DefaultServerId)
@@ -282,6 +282,7 @@ public sealed class SingBoxConfigBuilder
         }
         ConfigurationComposer.ApplySections(config, options);
         config["log"]!["output"] = logPath;
+        if (useUpdatedRuleSets) BundledRuleSets.ApplyUpdates(config);
         return config.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
 

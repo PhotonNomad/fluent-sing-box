@@ -106,16 +106,49 @@ try {
         $a=Wait-App 'Named group'
         Assert ($a.MatchMode -eq 'name' -and $a.ProcessNames -contains 'chrome.exe' -and @($a.ExecutablePaths).Count -eq 0) 'Name-only group did not save correctly'
     }
+    Case 'application/multiple-process-names-survive-edit-and-save' {
+        Ui @('invoke','Navigation_Routing')|Out-Null;Ui @('wait-for','Proxy_Tun_Enabled','--gone')|Out-Null;Ui @('invoke','Navigation_Proxy')|Out-Null
+        $a=Wait-App 'Named group'
+        $groupId='Application_Expander_' + $a.Id
+        Ui @('wait-for',$groupId)|Out-Null
+        Ui @('scroll','PageScrollViewer','--to','bottom')|Out-Null
+        Expand-Group $groupId
+        Ui @('invoke',('Application_Edit_' + $a.Id))|Out-Null
+        $expected=@('chrome.exe','msedge.exe','firefox.exe')
+        Ui @('set-value','ApplicationEditor_Names',($expected -join "`r`n"))|Out-Null;Save-Dialog
+        Ui @('wait-for','ApplicationEditor_Names','--gone')|Out-Null
+        $deadline=[DateTime]::UtcNow.AddSeconds(8)
+        do {$a=Wait-App 'Named group';if(@($a.ProcessNames).Count -eq 3){break};Start-Sleep -Milliseconds 100}while([DateTime]::UtcNow -lt $deadline)
+        Assert (($a.ProcessNames -join '|') -eq ($expected -join '|')) 'Multiple process names did not save'
+        Expand-Group $groupId
+        Ui @('invoke',('Application_Edit_' + $a.Id))|Out-Null
+        Ui @('wait-for','ApplicationEditor_Names')|Out-Null
+        $actual=@(((Ui @('get-value','ApplicationEditor_Names')).text) -split '\r?\n|\r' | Where-Object {$_})
+        Assert (($actual -join '|') -eq ($expected -join '|')) ('Reopening lost process names: ' + ($actual -join ', '))
+        Ui @('screenshot','-o',(Join-Path $taskRoot 'Application-Multiple-Names.png'))|Out-Null
+        Save-Dialog;Ui @('wait-for','ApplicationEditor_Names','--gone')|Out-Null
+        $a=Wait-App 'Named group'
+        Assert (($a.ProcessNames -join '|') -eq ($expected -join '|')) 'Unchanged edit lost process names'
+    }
     Case 'application/legacy-path-mode-preserved' {
-        Ui @('invoke','Navigation_Routing')|Out-Null;Ui @('wait-for','Routing_Save')|Out-Null;Ui @('invoke','Navigation_Proxy')|Out-Null;Ui @('wait-for','Application_Expander_legacy')|Out-Null
+        Ui @('invoke','Navigation_Routing')|Out-Null;Ui @('wait-for','Proxy_Tun_Enabled','--gone')|Out-Null;Ui @('invoke','Navigation_Proxy')|Out-Null;Ui @('wait-for','Application_Expander_legacy')|Out-Null
         Ui @('scroll','PageScrollViewer','--to','bottom')|Out-Null
         Expand-Group 'Application_Expander_legacy';Ui @('wait-for','Application_Edit_legacy')|Out-Null;Ui @('invoke','Application_Edit_legacy')|Out-Null
         Ui @('wait-for','ApplicationEditor_Paths')|Out-Null
         Assert (@(Tree|Where-Object automationId -eq 'ApplicationEditor_Names').Count -eq 0) 'Legacy path group changed to name mode'
         Assert ((Ui @('get-value','ApplicationEditor_Paths')).text -eq 'C:\Windows\notepad.exe') 'Legacy paths lost'
+        $expectedPaths=@('C:\Windows\notepad.exe','C:\Windows\System32\cmd.exe')
+        Ui @('set-value','ApplicationEditor_Paths',($expectedPaths -join "`r`n"))|Out-Null
         Ui @('set-value','ApplicationEditor_Name','Legacy edited')|Out-Null;Save-Dialog
         Ui @('wait-for','ApplicationEditor_Paths','--gone')|Out-Null
         $a=Wait-App 'Legacy edited';Assert ($a.MatchMode -eq 'path' -and $a.ExecutablePaths -contains 'C:\Windows\notepad.exe') 'Legacy mode not retained'
+        Expand-Group 'Application_Expander_legacy';Ui @('invoke','Application_Edit_legacy')|Out-Null
+        Ui @('wait-for','ApplicationEditor_Paths')|Out-Null
+        $actualPaths=@(((Ui @('get-value','ApplicationEditor_Paths')).text) -split '\r?\n|\r' | Where-Object {$_})
+        Assert (($actualPaths -join '|') -eq ($expectedPaths -join '|')) 'Reopening lost program paths'
+        Save-Dialog;Ui @('wait-for','ApplicationEditor_Paths','--gone')|Out-Null
+        $a=Wait-App 'Legacy edited'
+        Assert (($a.ExecutablePaths -join '|') -eq ($expectedPaths -join '|')) 'Unchanged edit lost program paths'
         Assert (!(Test-Path (Join-Path $directory 'sing-box/process.json'))) 'Application edit started core'
         Assert (!(Test-Path (Join-Path $directory 'client-errors.log'))) 'Unhandled client exception'
     }

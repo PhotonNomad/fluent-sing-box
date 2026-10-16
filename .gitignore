@@ -5,6 +5,7 @@
 work/
 artifacts/
 output/
+.wix/
 *.user
 *.suo
 *.cache

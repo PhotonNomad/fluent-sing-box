@@ -13,7 +13,7 @@
                 <Style BasedOn="{StaticResource CaptionTextBlockStyle}" TargetType="TextBlock">
                     <Setter Property="TextWrapping" Value="WrapWholeWords" />
                 </Style>
-                <Style BasedOn="{StaticResource TextButtonStyle}" TargetType="HyperlinkButton">
+                <Style TargetType="HyperlinkButton">
                     <Setter Property="Padding" Value="0" />
                 </Style>
             </ContentPresenter.Resources>

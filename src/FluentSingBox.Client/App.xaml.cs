@@ -29,6 +29,12 @@ public sealed partial class App : Application
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
+        if (Environment.GetCommandLineArgs().Skip(1).SequenceEqual(new[] { "--remove-startup-entry" }))
+        {
+            try { StartupService.RemoveIfOwned(); }
+            finally { Exit(); }
+            return;
+        }
         if (SingBoxCoreHost.TryGetArguments(out var executablePath, out var configPath, out var pipeName, out var proxyPort))
         {
             try { await SingBoxCoreHost.RunAsync(executablePath, configPath, pipeName, proxyPort); }
@@ -55,6 +61,11 @@ public sealed partial class App : Application
             MainWindow = new MainWindow();
             if (AppPaths.HasDataOverride && Environment.GetEnvironmentVariable("FLUENTSINGBOX_TEST_BACKGROUND") == "1") MainWindow.AppWindow.Show(activateWindow: false);
             else MainWindow.Activate();
+            try { await AppUpdateService.Current.InitializeAsync(); }
+            catch (Exception error)
+            {
+                File.AppendAllText(Path.Combine(AppPaths.DataDirectory, "update-startup.log"), LogReader.Redact(error.Message, State.Settings) + "\n");
+            }
         }
         catch (Exception exception)
         {

@@ -20,11 +20,16 @@
             <Button x:Name="NavigationPaneToggleButton" Grid.Column="1" Width="40" Height="40" Margin="0" Padding="0" Background="Transparent" BorderThickness="0" Click="NavigationPaneToggleButton_Click" Visibility="Collapsed" x:Uid="MainWindow_NavigationPaneToggleButton">
                 <FontIcon FontFamily="Segoe Fluent Icons" Glyph="" FontSize="16" />
             </Button>
-            <Image x:Name="BrandIconImage" Grid.Column="2" Width="16" Height="16" Margin="12,0,0,0" Stretch="Uniform" VerticalAlignment="Center" x:Uid="MainWindow_BrandIconImage" />
+            <Image x:Name="BrandIconImage" Grid.Column="2" Width="20" Height="20" Margin="12,0,0,0" Stretch="Uniform" VerticalAlignment="Center" AutomationProperties.AutomationId="App_BrandIcon" x:Uid="MainWindow_BrandIconImage" />
             <TextBlock Grid.Column="3" Margin="16,0,0,0" Text="fluent sing-box" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center" />
             <Grid x:Name="TitleBarDragRegion" Grid.Column="4" Background="Transparent" />
         </Grid>
-        <InfoBar x:Name="RecoveryMessage" Grid.Row="1" IsOpen="False" Severity="Error" IsClosable="True" AutomationProperties.AutomationId="App_RecoveryStatus" />
+        <StackPanel Grid.Row="1">
+            <InfoBar x:Name="RecoveryMessage" IsOpen="False" Severity="Error" IsClosable="True" AutomationProperties.AutomationId="App_RecoveryStatus" />
+            <InfoBar x:Name="AvailableUpdate" IsOpen="False" Severity="Informational" IsClosable="True" AutomationProperties.AutomationId="Updates_Notification">
+                <InfoBar.ActionButton><Button x:Uid="Updates_OpenSettings" Click="OpenUpdateSettings_Click" /></InfoBar.ActionButton>
+            </InfoBar>
+        </StackPanel>
         <NavigationView x:Name="RootNavigationView" Grid.Row="2" IsBackButtonVisible="Collapsed" IsPaneToggleButtonVisible="False" IsSettingsVisible="False" PaneDisplayMode="LeftMinimal" IsTitleBarAutoPaddingEnabled="False" DisplayModeChanged="RootNavigationView_DisplayModeChanged" SelectionChanged="RootNavigationView_SelectionChanged">
             <NavigationView.Resources>
                 <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent" />
@@ -51,18 +56,12 @@
                 </NavigationViewItem>
             </NavigationView.MenuItems>
             <NavigationView.PaneFooter>
-                <Grid Margin="12,8" ColumnSpacing="8">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                <Button x:Name="CoreSwitch" Padding="12,8" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" AutomationProperties.AutomationId="Core_Toggle" Click="CoreSwitch_Click">
+                <Button x:Name="CoreSwitch" Margin="12,8" Padding="12,8" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" AutomationProperties.AutomationId="Core_Toggle" Click="CoreSwitch_Click">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon x:Name="CoreActionIcon" FontSize="14" />
                         <TextBlock x:Name="CoreActionText" />
                     </StackPanel>
                 </Button>
-                    <Button x:Name="BackgroundButton" Grid.Column="1" Width="36" Padding="0" Click="BackgroundButton_Click" AutomationProperties.AutomationId="App_Background">
-                        <FontIcon Glyph="&#xE73F;" FontSize="16" />
-                    </Button>
-                </Grid>
             </NavigationView.PaneFooter>
             <NavigationView.Content>
                 <Frame x:Name="ContentFrame" />

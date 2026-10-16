@@ -23,6 +23,7 @@ internal sealed class ConfigurationSectionForm
     private readonly Microsoft.UI.Dispatching.DispatcherQueueTimer _saveTimer;
     private readonly SemaphoreSlim _saveGate = new(1, 1);
     private bool _pendingSave;
+    private Task _loadTask = Task.CompletedTask;
     private string Prefix => _dns ? "DNS" : "Routing";
     public ConfigurationSectionForm(Page page, StackPanel view, bool dns)
     {
@@ -31,9 +32,9 @@ internal sealed class ConfigurationSectionForm
         _saveTimer.Interval = TimeSpan.FromMilliseconds(500);
         _saveTimer.IsRepeating = false;
         _saveTimer.Tick += async (_, _) => await SaveAsync();
-        page.Unloaded += async (_, _) => { _saveTimer.Stop(); if (_pendingSave) await SaveAsync(); };
+        page.Unloaded += (_, _) => _saveTimer.Stop();
         AutomationProperties.SetAutomationId(_status, Prefix + "_Status");
-        page.Loaded += async (_, _) => await LoadAsync();
+        page.Loaded += async (_, _) => await (_loadTask = LoadAsync());
     }
     private async Task LoadAsync()
     {
@@ -110,10 +111,18 @@ internal sealed class ConfigurationSectionForm
         foreach (var collection in _collections) collection.Write(new());
         _options?.RefreshReferences();
     }
-    private async Task SaveAsync()
+    public async Task<bool> FlushPendingChangesAsync()
+    {
+        _saveTimer.Stop();
+        await _loadTask;
+        _saveTimer.Stop();
+        return await SaveAsync();
+    }
+
+    private async Task<bool> SaveAsync()
     {
         await _saveGate.WaitAsync();
-        if (!_pendingSave) { _saveGate.Release(); return; }
+        if (!_pendingSave) { _saveGate.Release(); return true; }
         _pendingSave = false;
         try
         {
@@ -134,12 +143,13 @@ internal sealed class ConfigurationSectionForm
             }
             await ConfigurationFileService.ImportAsync(App.State.Settings, _document.ToJsonString(), _source);
             App.State.Settings.Configuration.DisabledRules = disabled;
-            await App.State.SaveAsync();
             _source = await File.ReadAllTextAsync(ConfigurationFileService.FilePath);
+            await App.State.SavePreferencesAsync();
             if (_dns) _options.RefreshReferences();
             _status.Message = Localization.Get("Schema_Saved"); _status.Severity = InfoBarSeverity.Success; _status.IsOpen = true;
+            return true;
         }
-        catch (Exception exception) { ShowError(exception); }
+        catch (Exception exception) { _pendingSave = true; ShowError(exception); return false; }
         finally { _page.IsEnabled = true; _saveGate.Release(); }
     }
     private void ShowError(Exception exception) { _status.Message = LogReader.Redact(exception.Message, App.State.Settings); _status.Severity = InfoBarSeverity.Error; _status.IsOpen = true; }

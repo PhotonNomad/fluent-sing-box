@@ -47,6 +47,16 @@ internal sealed class TrayIcon : IDisposable
 
     private bool AddIcon() { var data = Data(); return ShellNotifyIcon(0, ref data); }
 
+    public void NotifyUpdate(string message)
+    {
+        var data = Data();
+        data.Flags = 0x10;
+        data.InfoTitle = "fluent sing-box";
+        data.Info = message.Length > 255 ? message[..255] : message;
+        data.InfoFlags = 1;
+        ShellNotifyIcon(1, ref data);
+    }
+
     private nint WindowProc(nint window, uint message, nuint wParam, nint lParam, nuint id, nuint reference)
     {
         if (message == _taskbarCreated) AddIcon();
@@ -60,6 +70,7 @@ internal sealed class TrayIcon : IDisposable
         {
             if ((uint)lParam == 0x202) _restore(); // WM_LBUTTONUP
             else if ((uint)lParam == 0x205) ShowMenu(); // WM_RBUTTONUP
+            else if ((uint)lParam == 0x405) _restore(); // NIN_BALLOONUSERCLICK
             return 0;
         }
         return DefSubclassProc(window, message, wParam, lParam);

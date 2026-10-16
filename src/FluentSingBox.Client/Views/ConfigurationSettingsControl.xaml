@@ -1,3 +1,31 @@
-<UserControl x:Class="FluentSingBox.Client.Views.ConfigurationSettingsControl" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <StackPanel x:Name="Form" Spacing="12" />
+<UserControl x:Class="FluentSingBox.Client.Views.ConfigurationSettingsControl" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="using:CommunityToolkit.WinUI.Controls">
+    <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
+        <controls:SettingsExpander x:Name="ConfigurationExpander" x:Uid="ConfigurationCard" IsExpanded="False" AutomationProperties.AutomationId="Configuration_Details">
+            <controls:SettingsExpander.HeaderIcon>
+                <FontIcon Glyph="&#xE713;" />
+            </controls:SettingsExpander.HeaderIcon>
+            <controls:SettingsExpander.Content>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button x:Uid="ConfigurationCard_Edit" AutomationProperties.AutomationId="Configuration_EditJson" Click="Edit_Click" />
+                    <Button x:Uid="ConfigurationCard_Import" AutomationProperties.AutomationId="Configuration_Import" Click="Import_Click" />
+                    <Button x:Uid="ConfigurationCard_Export" AutomationProperties.AutomationId="Configuration_Export" Click="Export_Click" />
+                </StackPanel>
+            </controls:SettingsExpander.Content>
+            <controls:SettingsExpander.Items>
+                <controls:SettingsCard x:Uid="ConfigurationCard_Location" SizeChanged="LocationCard_SizeChanged">
+                    <Grid x:Name="LocationContent" ColumnSpacing="12" HorizontalAlignment="Stretch">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="LocationText" AutomationProperties.AutomationId="Configuration_FilePath" IsTextSelectionEnabled="True" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                        <Button Grid.Column="1" x:Uid="ConfigurationCard_OpenLocation" AutomationProperties.AutomationId="Configuration_OpenLocation" Click="OpenLocation_Click">
+                            <SymbolIcon Symbol="OpenFile" />
+                        </Button>
+                    </Grid>
+                </controls:SettingsCard>
+            </controls:SettingsExpander.Items>
+        </controls:SettingsExpander>
+        <InfoBar x:Name="StatusMessage" IsClosable="True" AutomationProperties.AutomationId="Configuration_Status" />
+    </StackPanel>
 </UserControl>

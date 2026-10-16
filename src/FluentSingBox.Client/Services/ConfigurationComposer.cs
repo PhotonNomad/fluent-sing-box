@@ -7,7 +7,7 @@ namespace FluentSingBox.Client.Services;
 
 public static class ConfigurationComposer
 {
-    public static string BuildNative(AppSettingsData settings, string logPath)
+    public static string BuildNative(AppSettingsData settings, string logPath, bool useUpdatedRuleSets = true)
     {
         if (string.IsNullOrWhiteSpace(settings.Configuration.ExternalFilePath))
         {
@@ -34,6 +34,7 @@ public static class ConfigurationComposer
         if (config["log"] is null) config["log"] = new JsonObject { ["level"] = "info", ["timestamp"] = true };
         if (config["log"]!["disabled"]?.ToString() == "true") throw new InvalidOperationException(Localization.Get("ConfigurationComposer_CoreLoggingMustBeEnabledForTheClient"));
         config["log"]!["output"] = logPath;
+        if (useUpdatedRuleSets) BundledRuleSets.ApplyUpdates(config);
         return config.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
     public static readonly string[] ObjectSections = ["log", "dns", "route", "experimental", "ntp", "certificate"];

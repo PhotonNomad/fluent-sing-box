@@ -26,4 +26,13 @@ public static class StartupService
             ?? throw new InvalidOperationException(Localization.Get("StartupService_CannotDetermineTheApplicationExecutablePath"));
         key.SetValue(ValueName, $"\"{executable}\"", RegistryValueKind.String);
     }
+
+    public static void RemoveIfOwned()
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(RunKey, writable: true);
+        var executable = Environment.ProcessPath;
+        if (executable is not null && key?.GetValue(ValueName) is string value
+            && string.Equals(value, $"\"{executable}\"", StringComparison.OrdinalIgnoreCase))
+            key.DeleteValue(ValueName, throwOnMissingValue: false);
+    }
 }

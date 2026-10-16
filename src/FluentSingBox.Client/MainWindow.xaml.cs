@@ -20,6 +20,10 @@ public sealed partial class MainWindow : Window
     private bool _coreSwitchBusy;
     private TrayIcon? _trayIcon;
     private bool _exitRequested;
+    private bool _navigating;
+    private bool _installUpdate;
+    private string? _notifiedUpdate;
+    private object? _selectedNavigationItem;
 
     public MainWindow()
     {
@@ -27,10 +31,8 @@ public sealed partial class MainWindow : Window
         SettingsNavigationItem.Content = Localization.Get("SettingsPage_TextBlock4.Text");
         UpdateCoreSwitch();
         ToolTipService.SetToolTip(CoreSwitch, Localization.Get("MainWindow_TextBlock49.Text"));
-        ToolTipService.SetToolTip(BackgroundButton, Localization.Get("Tray_Background"));
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(BackgroundButton, Localization.Get("Tray_Background"));
-        var logoPath = Path.Combine(AppContext.BaseDirectory, "Assets", "fluent-sing-box.png");
-        if (File.Exists(logoPath)) BrandIconImage.Source = new BitmapImage(new Uri(logoPath));
+        var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "fluent-sing-box.ico");
+        if (File.Exists(iconPath)) AppWindow.SetIcon(iconPath);
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(TitleBarDragRegion);
         UpdateTitleBarInsets();
@@ -40,6 +42,9 @@ public sealed partial class MainWindow : Window
         RootNavigationView.SizeChanged += RootNavigationView_SizeChanged;
         RootGrid.Loaded += RootGrid_Loaded;
         Closed += MainWindow_Closed;
+        App.State.BackgroundSaveFailed += BackgroundSaveFailed;
+        AppUpdateService.Current.Changed += ApplicationUpdateChanged;
+        AppUpdateService.Current.AutomaticInstallRequested += AutomaticInstallRequested;
         AppWindow.Closing += MainWindow_Closing;
         _healthTimer.Tick += async (_, _) =>
         {
@@ -107,8 +112,6 @@ public sealed partial class MainWindow : Window
 
     public Task<XamlRoot> WaitForXamlRootAsync() => _xamlRootReady.Task;
 
-    private void BackgroundButton_Click(object sender, RoutedEventArgs args) => RunInBackground();
-
     private void RunInBackground()
     {
         if (_closing || _coreSwitchBusy) return;
@@ -131,14 +134,14 @@ public sealed partial class MainWindow : Window
         Activate();
     }
 
-    private void ExitFromTray()
+    private async void ExitFromTray()
     {
         if (_closing || _coreSwitchBusy) return;
         _exitRequested = true;
-        Close();
+        await ShutdownAndCloseAsync();
     }
 
-    private void RootGrid_Loaded(object sender, RoutedEventArgs args)
+    private async void RootGrid_Loaded(object sender, RoutedEventArgs args)
     {
         // Activation does not guarantee that the window's visual tree is ready.
         // Startup errors must await this before displaying a ContentDialog.
@@ -152,6 +155,20 @@ public sealed partial class MainWindow : Window
 
         ApplyResponsiveNavigationMode(RootNavigationView.ActualWidth);
         UpdateTitleBarInsets();
+        await LoadBrandIconAsync();
+    }
+
+    private async Task LoadBrandIconAsync()
+    {
+        var logoPath = Path.Combine(AppContext.BaseDirectory, "Assets", "fluent-sing-box.png");
+        if (!File.Exists(logoPath)) return;
+
+        // Unpackaged WinUI apps load local images through a stream rather than a file URI.
+        using var file = File.OpenRead(logoPath);
+        using var stream = file.AsRandomAccessStream();
+        var bitmap = new BitmapImage();
+        await bitmap.SetSourceAsync(stream);
+        BrandIconImage.Source = bitmap;
     }
 
     private void RootNavigationView_SizeChanged(object sender, SizeChangedEventArgs args)
@@ -219,8 +236,10 @@ public sealed partial class MainWindow : Window
         RootNavigationView.IsPaneOpen = !RootNavigationView.IsPaneOpen;
     }
 
-    private void RootNavigationView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+    private async void RootNavigationView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
+        if (_navigating) return;
+        if (_closing) { sender.SelectedItem = _selectedNavigationItem; return; }
         if (args.SelectedItemContainer?.Tag is not string tag) return;
         var pageType = tag switch
         {
@@ -232,7 +251,37 @@ public sealed partial class MainWindow : Window
             "dns" => typeof(DnsPage),
             _ => typeof(ServersPage)
         };
-        ContentFrame.Navigate(pageType);
+        if (ContentFrame.Content?.GetType() == pageType) { _selectedNavigationItem = sender.SelectedItem; return; }
+        var requestedItem = sender.SelectedItem;
+        _navigating = true;
+        sender.IsEnabled = false;
+        try
+        {
+            if (ContentFrame.Content is IPendingConfigurationPage pending && !await pending.FlushPendingChangesAsync())
+            {
+                sender.SelectedItem = _selectedNavigationItem;
+                return;
+            }
+            if (ContentFrame.Navigate(pageType)) _selectedNavigationItem = requestedItem;
+            else sender.SelectedItem = _selectedNavigationItem;
+        }
+        catch (Exception exception)
+        {
+            sender.SelectedItem = _selectedNavigationItem;
+            RecoveryMessage.Message = Localization.Get("Settings_SaveFailed") + " " + LogReader.Redact(exception.Message, App.State.Settings);
+            RecoveryMessage.IsOpen = true;
+        }
+        finally { sender.IsEnabled = true; _navigating = false; }
+    }
+
+    private void BackgroundSaveFailed(string message)
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_shutdownComplete) return;
+            RecoveryMessage.Message = Localization.Get("Settings_BackgroundSaveFailed") + " " + message;
+            RecoveryMessage.IsOpen = true;
+        });
     }
 
     private async void MainWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
@@ -240,13 +289,41 @@ public sealed partial class MainWindow : Window
         if (_shutdownComplete) return;
         args.Cancel = true;
         if (_closing) return;
-        if (_trayIcon is not null && !_exitRequested) { RunInBackground(); return; }
-        if (_coreSwitchBusy) return;
+        if (!_exitRequested) { RunInBackground(); return; }
+        if (_coreSwitchBusy || _navigating) return;
+        await ShutdownAndCloseAsync();
+    }
+
+    // Window.Close destroys the XAML window directly; it is not a request to raise
+    // AppWindow.Closing. Explicit exits must await cleanup before calling Close.
+    private async Task ShutdownAndCloseAsync()
+    {
+        if (_closing || _shutdownComplete) return;
         _closing = true;
         App.ProxyCoordinator.BeginShutdown();
         _healthTimer.Stop();
         try
         {
+            if (_installUpdate)
+            {
+                RootNavigationView.IsEnabled = false;
+                RootGrid.IsHitTestVisible = false;
+                if (ContentFrame.Content is IPendingConfigurationPage pending && !await pending.FlushPendingChangesAsync())
+                    throw new InvalidOperationException(Localization.Get("Updates_SaveBeforeInstall"));
+                await App.State.SavePreferencesAsync();
+                WindowsProxyService.Restore(App.State.Settings);
+                await App.CoreService.ShutdownAsync();
+                App.State.Settings.CoreOnlyEnabled = false;
+                App.State.Settings.SystemProxyEnabled = false;
+                await App.State.SavePreferencesAsync();
+                await AppUpdateService.Current.ValidateInstallAsync();
+                RecordUpdateTransition("validated-before-launch");
+                AppUpdateService.Current.LaunchUpdater();
+                RecordUpdateTransition("updater-launched");
+                _shutdownComplete = true;
+                Close();
+                return;
+            }
             try { WindowsProxyService.Restore(App.State.Settings); }
             catch (Exception exception) { RecordExitFailure("proxy-restore", exception); }
             try { await App.CoreService.ShutdownAsync(); }
@@ -267,11 +344,74 @@ public sealed partial class MainWindow : Window
             RecordExitFailure("core-stop", exception);
             _closing = false;
             _exitRequested = false;
+            _installUpdate = false;
+            RootNavigationView.IsEnabled = true;
+            RootGrid.IsHitTestVisible = true;
             App.ProxyCoordinator.CancelShutdown();
+            _healthTimer.Start();
             RestoreFromTray();
             RecoveryMessage.Message = Localization.Get("MainWindow_ExitCleanupFailedPleaseRetry") + exception.Message;
             RecoveryMessage.IsOpen = true;
         }
+    }
+
+    public async Task InstallUpdateAsync()
+    {
+        if (_closing || _coreSwitchBusy || _navigating || App.CoreService.IsTransitioning || App.ProxyCoordinator.IsApplyingApplication)
+            throw new InvalidOperationException(Localization.Get("Updates_Busy"));
+        await AppUpdateService.Current.ValidateInstallAsync();
+        _installUpdate = true;
+        _exitRequested = true;
+        await ShutdownAndCloseAsync();
+    }
+
+    private static void RecordUpdateTransition(string stage)
+    {
+        Directory.CreateDirectory(Path.Combine(AppPaths.DataDirectory, "updates"));
+        File.AppendAllText(Path.Combine(AppPaths.DataDirectory, "updates", "handoff.log"), $"{DateTimeOffset.UtcNow:O} {stage}\n");
+    }
+
+    private void ApplicationUpdateChanged() => DispatcherQueue.TryEnqueue(() =>
+    {
+        var service = AppUpdateService.Current;
+        if (_shutdownComplete) return;
+        if (!service.NotificationsAllowed)
+        {
+            AvailableUpdate.IsOpen = false;
+            _notifiedUpdate = null;
+            return;
+        }
+        if (service.State.Release is not { } release
+            || service.State.Status is not ("readyToDownload" or "readyToInstall") || _notifiedUpdate == release.Version) return;
+        _notifiedUpdate = release.Version;
+        AvailableUpdate.Message = Localization.Get("Updates_State_readyToDownload") + " " + release.Version;
+        AvailableUpdate.IsOpen = true;
+        _trayIcon?.NotifyUpdate(AvailableUpdate.Message);
+    });
+
+    private Task AutomaticInstallRequested()
+    {
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (!DispatcherQueue.TryEnqueue(async () =>
+        {
+            try
+            {
+                var updates = AppUpdateService.Current;
+                if (!_closing && updates.State.AutoInstall && updates.DownloadAllowed) await InstallUpdateAsync();
+                completion.TrySetResult();
+            }
+            catch (Exception error)
+            {
+                RecordExitFailure("automatic-update", error);
+                completion.TrySetResult();
+            }
+        })) completion.TrySetResult();
+        return completion.Task;
+    }
+
+    private void OpenUpdateSettings_Click(object sender, RoutedEventArgs args)
+    {
+        RootNavigationView.SelectedItem = SettingsNavigationItem;
     }
 
     private static void RecordExitFailure(string stage, Exception exception)
@@ -288,6 +428,10 @@ public sealed partial class MainWindow : Window
 
     private void MainWindow_Closed(object sender, WindowEventArgs args)
     {
+        AppUpdateService.Current.Stop();
+        AppUpdateService.Current.Changed -= ApplicationUpdateChanged;
+        AppUpdateService.Current.AutomaticInstallRequested -= AutomaticInstallRequested;
+        App.State.BackgroundSaveFailed -= BackgroundSaveFailed;
         _trayIcon?.Dispose();
         _trayIcon = null;
         _xamlRootReady.TrySetCanceled();

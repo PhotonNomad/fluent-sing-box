@@ -46,7 +46,10 @@
                     </local:SettingsSection.SectionContent>
                 </local:SettingsSection>
 
-                <local:SettingsSection x:Uid="SettingsPage_SettingsSection25">
+                <local:SettingsSection Header="sing-box">
+                    <local:SettingsSection.Description>
+                        <HyperlinkButton x:Uid="Settings_SingBoxDocs" Click="OpenSingBoxDocs_Click" />
+                    </local:SettingsSection.Description>
                     <local:SettingsSection.SectionContent>
                         <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
                             <controls:SettingsCard x:Uid="SettingsPage_SettingsCard28">
@@ -58,45 +61,70 @@
                                 </controls:SettingsCard.Description>
                                 <Button x:Name="SingBoxCorePathButton" Click="SingBoxCorePath_Click" x:Uid="SettingsPage_SingBoxCorePathButton" />
                             </controls:SettingsCard>
-                            <controls:SettingsCard x:Uid="SettingsPage_SettingsCard37" />
+                            <local:ConfigurationSettingsControl />
+                            <controls:SettingsCard x:Uid="Settings_RuleSets">
+                                <controls:SettingsCard.HeaderIcon>
+                                    <FontIcon Glyph="&#xE8A5;" />
+                                </controls:SettingsCard.HeaderIcon>
+                                <controls:SettingsCard.Description>
+                                    <TextBlock x:Name="RuleSetsDescription" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AutomationId="Settings_RuleSetsDescription" />
+                                </controls:SettingsCard.Description>
+                                <Button x:Name="UpdateRuleSetsButton" x:Uid="Settings_UpdateRuleSets" Click="UpdateRuleSets_Click" AutomationProperties.AutomationId="Settings_UpdateRuleSets" />
+                            </controls:SettingsCard>
+                            <InfoBar x:Name="RuleSetsStatus" IsClosable="True" AutomationProperties.AutomationId="Settings_RuleSetsStatus" />
                         </StackPanel>
-                    </local:SettingsSection.SectionContent>
-                </local:SettingsSection>
-
-                <local:SettingsSection x:Name="ConfigurationSection">
-                    <local:SettingsSection.SectionContent>
-                        <local:ConfigurationSettingsControl />
                     </local:SettingsSection.SectionContent>
                 </local:SettingsSection>
 
                 <local:SettingsSection x:Uid="SettingsPage_SettingsSection38">
                     <local:SettingsSection.SectionContent>
                         <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
-                            <controls:SettingsCard x:Uid="SettingsPage_SettingsCard41">
-                                <controls:SettingsCard.HeaderIcon>
+                            <controls:SettingsExpander x:Name="UpdatesExpander" IsExpanded="False" AutomationProperties.AutomationId="Updates_Options">
+                                <controls:SettingsExpander.HeaderIcon>
                                     <FontIcon Glyph="" />
-                                </controls:SettingsCard.HeaderIcon>
-                                <Button Click="CheckForUpdates_Click" x:Uid="SettingsPage_Button44" />
-                            </controls:SettingsCard>
+                                </controls:SettingsExpander.HeaderIcon>
+                                <controls:SettingsExpander.Header>
+                                    <TextBlock x:Name="UpdateVersion" FontSize="18" AutomationProperties.AutomationId="Updates_Version" />
+                                </controls:SettingsExpander.Header>
+                                <controls:SettingsExpander.Description>
+                                    <TextBlock x:Name="LastUpdateCheck" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AutomationId="Updates_LastCheck" />
+                                </controls:SettingsExpander.Description>
+                                <controls:SettingsExpander.Content>
+                                    <Button x:Name="CheckUpdatesButton" Click="CheckForUpdates_Click" x:Uid="SettingsPage_Button44" AutomationProperties.AutomationId="Updates_Check" />
+                                </controls:SettingsExpander.Content>
+                                <controls:SettingsExpander.Items>
+                                    <controls:SettingsCard ContentAlignment="Left" Padding="52,16,16,16">
+                                        <CheckBox x:Name="AutoInstallUpdates" Checked="UpdatePreferences_Changed" Unchecked="UpdatePreferences_Changed" AutomationProperties.AutomationId="Updates_AutoInstall">
+                                            <StackPanel>
+                                                <TextBlock x:Uid="Updates_AutoInstall" TextWrapping="Wrap" />
+                                                <TextBlock x:Uid="Updates_MeteredExcluded" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </CheckBox>
+                                    </controls:SettingsCard>
+                                    <controls:SettingsCard ContentAlignment="Left" Padding="52,16,16,16">
+                                        <CheckBox x:Name="ShowUpdateNotifications" x:Uid="Updates_ShowNotifications" Checked="UpdatePreferences_Changed" Unchecked="UpdatePreferences_Changed" AutomationProperties.AutomationId="Updates_ShowNotifications" />
+                                    </controls:SettingsCard>
+                                </controls:SettingsExpander.Items>
+                            </controls:SettingsExpander>
+                            <InfoBar x:Name="UpdateStatus" IsClosable="False" AutomationProperties.AutomationId="Updates_Status" />
+                            <ProgressBar x:Name="UpdateProgress" Minimum="0" Maximum="100" Visibility="Collapsed" />
+                        </StackPanel>
+                    </local:SettingsSection.SectionContent>
+                </local:SettingsSection>
+                <local:SettingsSection x:Uid="Updates_FeedbackSection">
+                    <local:SettingsSection.SectionContent>
+                        <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
                             <controls:SettingsCard x:Uid="SettingsPage_SettingsCard45">
                                 <controls:SettingsCard.HeaderIcon>
                                     <FontIcon Glyph="" />
                                 </controls:SettingsCard.HeaderIcon>
                                 <Button Click="Feedback_Click" x:Uid="SettingsPage_Button48" />
                             </controls:SettingsCard>
-                            <controls:SettingsCard IsClickEnabled="True" Click="OpenSingBoxDocs_Click" x:Uid="SettingsPage_SettingsCard49">
-                                <controls:SettingsCard.HeaderIcon>
-                                    <FontIcon Glyph="" />
-                                </controls:SettingsCard.HeaderIcon>
-                                <controls:SettingsCard.ActionIcon>
-                                    <FontIcon Glyph="" />
-                                </controls:SettingsCard.ActionIcon>
-                            </controls:SettingsCard>
                         </StackPanel>
                     </local:SettingsSection.SectionContent>
                 </local:SettingsSection>
 
-                <TextBlock Margin="1,32,0,0" FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}" x:Uid="SettingsPage_TextBlock54" />
+                <TextBlock x:Name="AppVersionFooter" Margin="1,32,0,0" FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
             </StackPanel>
         </local:PageLayout.PageContent>
     </local:PageLayout>

@@ -116,10 +116,6 @@
     <value>Default server</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
-  <data name="ProxyPage_SettingsCard13.Description" xml:space="preserve">
-    <value>Used by system proxy and global TUN when the selected final policy uses the default server.</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
   <data name="ProxyPage_DefaultServerComboBox.PlaceholderText" xml:space="preserve">
     <value>Select server</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
@@ -501,7 +497,7 @@
     <comment>Source: Views\SettingsPage.xaml</comment>
   </data>
   <data name="SettingsPage_SettingsSection38.Header" xml:space="preserve">
-    <value>Updates and feedback</value>
+    <value>Version and updates</value>
     <comment>Source: Views\SettingsPage.xaml</comment>
   </data>
   <data name="SettingsPage_SettingsCard41.Header" xml:space="preserve">
@@ -509,7 +505,7 @@
     <comment>Source: Views\SettingsPage.xaml</comment>
   </data>
   <data name="SettingsPage_SettingsCard41.Description" xml:space="preserve">
-    <value>This is a development preview. Updates can be checked and installed after a release source is configured.</value>
+    <value>Check, download and install updates in one step. The application restarts when finished.</value>
     <comment>Source: Views\SettingsPage.xaml</comment>
   </data>
   <data name="SettingsPage_Button44.Content" xml:space="preserve">
@@ -548,44 +544,16 @@
     <value>Enable system proxy</value>
     <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
   </data>
-  <data name="SystemProxySettingsControl_SettingsCard3.Description" xml:space="preserve">
-    <value>Only update Windows proxy settings. Start sing-box separately using the bottom-left switch.</value>
-    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
-  </data>
   <data name="SystemProxySettingsControl_SystemProxySwitch.AutomationProperties.Name" xml:space="preserve">
     <value>Enable system proxy</value>
-    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
-  </data>
-  <data name="SystemProxySettingsControl_SettingsCard5.Header" xml:space="preserve">
-    <value>Protocol</value>
-    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
-  </data>
-  <data name="SystemProxySettingsControl_SettingsCard5.Description" xml:space="preserve">
-    <value>HTTP / SOCKS5 share a local port. The Windows system proxy uses HTTP.</value>
-    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
-  </data>
-  <data name="SystemProxySettingsControl_SettingsCard6.Header" xml:space="preserve">
-    <value>Listen address</value>
-    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
-  </data>
-  <data name="SystemProxySettingsControl_SettingsCard6.Description" xml:space="preserve">
-    <value>127.0.0.1 · Connections from this device only.</value>
     <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
   </data>
   <data name="SystemProxySettingsControl_SettingsCard7.Header" xml:space="preserve">
     <value>Listen port</value>
     <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
   </data>
-  <data name="SystemProxySettingsControl_SettingsCard7.Description" xml:space="preserve">
-    <value>Enter the local proxy port.</value>
-    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
-  </data>
   <data name="SystemProxySettingsControl_SettingsCard9.Header" xml:space="preserve">
     <value>Authentication</value>
-    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
-  </data>
-  <data name="SystemProxySettingsControl_SettingsCard9.Description" xml:space="preserve">
-    <value>Configure a username and password for the local proxy.</value>
     <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
   </data>
   <data name="SystemProxySettingsControl_AuthenticationSwitch.AutomationProperties.Name" xml:space="preserve">
@@ -618,14 +586,6 @@
   </data>
   <data name="SystemProxySettingsControl_Button16.Content" xml:space="preserve">
     <value>Apply settings</value>
-    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
-  </data>
-  <data name="SystemProxySettingsControl_SettingsCard17.Header" xml:space="preserve">
-    <value>Usage notes</value>
-    <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
-  </data>
-  <data name="SystemProxySettingsControl_SettingsCard17.Description" xml:space="preserve">
-    <value>Proxy authentication support depends on the application itself.</value>
     <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
   </data>
   <data name="Settings_Language.Header" xml:space="preserve">
@@ -679,19 +639,91 @@
   <data name="SystemProxySettingsControl_AuthenticationSwitch.OffContent" xml:space="preserve">
     <value>Off</value>
   </data>
-  <data name="Dns_DefaultNodeHelp" xml:space="preserve"><value>LAN and China domains use local DNS; other domains use the default node’s DoH. Application nodes select connections only. DNS changes clear the app cache before the next core start.</value></data>
-  <data name="ApplicationMatch_ChooseRunning" xml:space="preserve"><value>Choose from running processes</value></data>
-  <data name="ApplicationMatch_AddSelected" xml:space="preserve"><value>Add selected process names</value></data>
-  <data name="ApplicationMatch_StorePath" xml:space="preserve"><value>Store applications use version-independent path matching.</value></data>
-  <data name="ApplicationMatch_MissingPath" xml:space="preserve"><value>Application {0}: executable path does not exist (a Store app may have updated): {1}. Use name matching or select the program again.</value></data>
-  <data name="ApplicationMatch_NameHelp" xml:space="preserve"><value>Windows process names must be complete filenames ending in .exe. Use the actual filename casing. Choose name matching for CLI bin/&lt;hash&gt; paths that change after updates.</value></data>
-  <data name="ApplicationMatch_InvalidName" xml:space="preserve"><value>Invalid Windows process name: {0}. Use the complete .exe filename with its actual casing.</value></data>
-  <data name="ApplicationMatch_Help" xml:space="preserve"><value>Name matching survives application updates. Use complete .exe filenames with their actual casing, or choose running processes. Store paths match across versions. CLI bin/&lt;hash&gt; paths should use names.</value></data>
-  <data name="ApplicationMatch_SearchProcesses" xml:space="preserve"><value>Search process name or path</value></data>
   <data name="Logs_LevelLabel.Text" xml:space="preserve">
     <value>Log level</value>
   </data>
   <data name="Logs_Level.AutomationProperties.Name" xml:space="preserve">
     <value>Log level</value>
   </data>
+  <data name="ProxyPage_SystemProxyExpander.Header" xml:space="preserve">
+    <value>System proxy</value>
+  </data>
+  <data name="ConfigurationCard.Header" xml:space="preserve">
+    <value>Configuration</value>
+  </data>
+  <data name="ConfigurationCard.Description" xml:space="preserve">
+    <value>Changes take effect the next time the core starts.</value>
+  </data>
+  <data name="ConfigurationCard_Edit.Content" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="ConfigurationCard_Edit.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Open the configuration in the associated editor.</value>
+  </data>
+  <data name="ConfigurationCard_Import.Content" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="ConfigurationCard_Import.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Validate and replace the application configuration.</value>
+  </data>
+  <data name="ConfigurationCard_Export.Content" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="ConfigurationCard_Export.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Export the configuration, including node credentials.</value>
+  </data>
+  <data name="ConfigurationCard_Location.Header" xml:space="preserve">
+    <value>Location</value>
+  </data>
+  <data name="ConfigurationCard_OpenLocation.AutomationProperties.Name" xml:space="preserve">
+    <value>Open containing folder</value>
+  </data>
+  <data name="ConfigurationCard_OpenLocation.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Open containing folder</value>
+  </data>
+  <data name="Settings_RuleSets.Header" xml:space="preserve">
+    <value>Rule sets</value>
+  </data>
+  <data name="Settings_UpdateRuleSets.Content" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="Settings_SingBoxDocs.Content" xml:space="preserve">
+    <value>sing-box documentation</value>
+  </data>
+  <data name="Updates_AutoCheck.Header" xml:space="preserve"><value>Automatically check for updates</value></data>
+  <data name="Updates_AutoDownload.Header" xml:space="preserve"><value>Automatically download updates</value></data>
+  <data name="Updates_Busy" xml:space="preserve"><value>Wait for the current operation to finish.</value></data>
+  <data name="Updates_ConfirmInstall" xml:space="preserve"><value>Save settings, stop the proxy core and exit to install this update? Active proxy connections will be interrupted.</value></data>
+  <data name="Updates_CurrentVersion" xml:space="preserve"><value>Version {0} · {1}</value></data>
+  <data name="Updates_Development" xml:space="preserve"><value>development / portable copy</value></data>
+  <data name="Updates_Download.Content" xml:space="preserve"><value>Download update</value></data>
+  <data name="Updates_Install.Content" xml:space="preserve"><value>Install update</value></data>
+  <data name="Updates_Metered.Header" xml:space="preserve"><value>Allow automatic downloads on metered networks</value></data>
+  <data name="Updates_NotInstalled" xml:space="preserve"><value>Install a release package before using in-app installation.</value></data>
+  <data name="Updates_PolicyDisabled" xml:space="preserve"><value>Updates are disabled by policy.</value></data>
+  <data name="Updates_ReleaseNotes.Content" xml:space="preserve"><value>Release notes</value></data>
+  <data name="Updates_SaveBeforeInstall" xml:space="preserve"><value>Save pending changes before installing.</value></data>
+  <data name="Updates_State_checking" xml:space="preserve"><value>Checking for updates…</value></data>
+  <data name="Updates_State_downloadError" xml:space="preserve"><value>Update download failed.</value></data>
+  <data name="Updates_State_downloading" xml:space="preserve"><value>Downloading update…</value></data>
+  <data name="Updates_State_idle" xml:space="preserve"><value>Ready to check for updates.</value></data>
+  <data name="Updates_State_installed" xml:space="preserve"><value>Update installed. Restart the application.</value></data>
+  <data name="Updates_State_installError" xml:space="preserve"><value>Update installation failed.</value></data>
+  <data name="Updates_State_installing" xml:space="preserve"><value>Installing update…</value></data>
+  <data name="Updates_State_networkError" xml:space="preserve"><value>Could not check for updates.</value></data>
+  <data name="Updates_State_noRelease" xml:space="preserve"><value>No published stable release is available.</value></data>
+  <data name="Updates_State_readyToDownload" xml:space="preserve"><value>An update is available:</value></data>
+  <data name="Updates_State_readyToInstall" xml:space="preserve"><value>Update downloaded and SHA-256 verified:</value></data>
+  <data name="Updates_State_upToDate" xml:space="preserve"><value>You are up to date.</value></data>
+  <data name="Updates_Title" xml:space="preserve"><value>Application update</value></data>
+  <data name="Updates_Unsigned" xml:space="preserve"><value>Signing is not configured. Open the release page to install this test package manually.</value></data>
+<data name="Updates_OpenSettings.Content" xml:space="preserve"><value>View update</value></data>
+<data name="Updates_Scope_machine" xml:space="preserve"><value>all users installation</value></data>
+<data name="Updates_Scope_user" xml:space="preserve"><value>current user installation</value></data>
+  <data name="Updates_FeedbackSection.Header" xml:space="preserve"><value>Feedback</value></data>
+  <data name="Updates_ShowNotifications.Content" xml:space="preserve"><value>Show notifications for new updates</value></data>
+  <data name="Updates_NeverChecked" xml:space="preserve"><value>Not checked yet</value></data>
+  <data name="Updates_MeteredExcluded.Text" xml:space="preserve"><value>Except on metered connections</value></data>
+  <data name="Updates_AutoInstall.Text" xml:space="preserve"><value>Automatically download and install updates</value></data>
+  <data name="Updates_LastChecked" xml:space="preserve"><value>Last checked: {0}</value></data>
 </root>

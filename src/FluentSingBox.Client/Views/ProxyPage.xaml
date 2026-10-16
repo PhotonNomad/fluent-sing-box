@@ -7,19 +7,7 @@
             <local:PageLayout.PageContent>
                 <StackPanel Spacing="0">
 
-                    <local:SettingsSection x:Uid="ProxyPage_SettingsSection10">
-                        <local:SettingsSection.SectionContent>
-                            <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
-                                <controls:SettingsCard x:Uid="ProxyPage_SettingsCard13">
-                                    <controls:SettingsCard.HeaderIcon>
-                                        <FontIcon Glyph="" />
-                                    </controls:SettingsCard.HeaderIcon>
-                                    <ComboBox x:Name="DefaultServerComboBox" MinWidth="{StaticResource SettingActionControlMinWidth}" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="DefaultServer_SelectionChanged" x:Uid="ProxyPage_DefaultServerComboBox" />
-                                </controls:SettingsCard>
-                                <local:SystemProxySettingsControl />
-                            </StackPanel>
-                        </local:SettingsSection.SectionContent>
-                    </local:SettingsSection>
+                    <local:SystemProxySettingsControl Margin="0,32,0,0" />
 
                     <local:SettingsSection Header="TUN">
                         <local:SettingsSection.SectionContent>

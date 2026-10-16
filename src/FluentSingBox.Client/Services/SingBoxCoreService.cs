@@ -73,11 +73,15 @@ public sealed class SingBoxCoreService : IDisposable
         var executable = await SingBoxCoreBundle.ResolveExecutablePathAsync(settings.SingBoxExecutablePath);
         var directory = Path.Combine(AppPaths.DataDirectory, "sing-box");
         Directory.CreateDirectory(directory);
-        var candidate = Path.Combine(directory, "config.validation.json");
+        var candidate = Path.Combine(directory, "config.validation-" + Guid.NewGuid().ToString("N") + ".json");
         var supportsHttpClient = await DetectHttpClientSupportAsync(executable);
-        await File.WriteAllTextAsync(candidate, _configBuilder.Build(settings, Path.Combine(directory, "sing-box.log"), supportsHttpClient));
-        try { await CoreCommand.CheckAsync(executable, candidate); }
+        try
+        {
+            await File.WriteAllTextAsync(candidate, _configBuilder.Build(settings, Path.Combine(directory, "sing-box.log"), supportsHttpClient));
+            await CoreCommand.CheckAsync(executable, candidate);
+        }
         catch (InvalidOperationException exception) { throw new InvalidOperationException(LogReader.Redact(exception.Message, settings)); }
+        finally { if (File.Exists(candidate)) File.Delete(candidate); }
     }
 
     public async Task StartAsync(AppSettingsData settings)

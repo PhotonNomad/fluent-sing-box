@@ -1,0 +1,70 @@
+name: Prepare signed GitHub release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Stable MAJOR.MINOR.PATCH version'
+        required: true
+        type: string
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: windows-2025
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ inputs.version }}
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Validate release inputs and signing identity
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          SIGNING_PFX_BASE64: ${{ secrets.SIGNING_PFX_BASE64 }}
+          SIGNING_PFX_PASSWORD: ${{ secrets.SIGNING_PFX_PASSWORD }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($env:RELEASE_VERSION -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') { throw 'Invalid stable version.' }
+          if (!$env:SIGNING_PFX_BASE64) { throw 'Configure signing secrets before preparing a public release.' }
+          $pfx = Join-Path $env:RUNNER_TEMP 'release-signing.pfx'
+          try {
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:SIGNING_PFX_BASE64))
+            $password = ConvertTo-SecureString $env:SIGNING_PFX_PASSWORD -AsPlainText -Force
+            $certificate = Import-PfxCertificate -FilePath $pfx -Password $password -CertStoreLocation Cert:\CurrentUser\My | Where-Object HasPrivateKey | Select-Object -First 1
+            $settings = Get-Content release.json -Raw | ConvertFrom-Json
+            $sha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($certificate.RawData))
+            if ($sha -ne $settings.publisherCertificateSha256) { throw 'Certificate does not match the publisher pinned in release.json.' }
+            "SIGNING_THUMBPRINT=$($certificate.Thumbprint)" >> $env:GITHUB_ENV
+          } finally { Remove-Item -LiteralPath $pfx -Force -ErrorAction SilentlyContinue }
+      - name: Install WiX tools
+        shell: pwsh
+        run: ./tools/Setup-InstallerTools.ps1
+      - name: Regressions
+        shell: pwsh
+        run: |
+          dotnet run --project tests/Updates.Regression -c Release
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          dotnet run --project tests/ServerEditor.Regression -- "$PWD"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          dotnet run --project tests/Client.Regression -- "$PWD"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Build and sign
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          $signTool = Get-ChildItem 'C:/Program Files (x86)/Windows Kits/10/bin/*/x64/signtool.exe' | Sort-Object FullName -Descending | Select-Object -First 1
+          ./tools/Build-Installer.ps1 -Version $env:RELEASE_VERSION -CertificateThumbprint $env:SIGNING_THUMBPRINT -SignToolPath $signTool.FullName
+          ./tools/Inspect-Installers.ps1 -Version $env:RELEASE_VERSION
+      - name: Create draft release for final review
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          $files = @(Get-ChildItem "artifacts/installers/$env:RELEASE_VERSION" -File | Where-Object { $_.Extension -in '.exe','.msi' -or $_.Name -eq 'SHA256SUMS.txt' } | ForEach-Object FullName)
+          gh release create "v$env:RELEASE_VERSION" --draft --verify-tag --title "fluent sing-box $env:RELEASE_VERSION" --generate-notes @files
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }

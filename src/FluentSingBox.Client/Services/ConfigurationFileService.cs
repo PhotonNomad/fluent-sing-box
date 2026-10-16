@@ -35,7 +35,7 @@ public static class ConfigurationFileService
         settings.Configuration.ExternalFilePath = "";
         settings.Configuration.NativeEnabled = false;
         if (!settings.Servers.Any(server => server.Id == settings.DefaultServerId)) return null;
-        return new SingBoxConfigBuilder().Build(settings, Path.Combine(AppPaths.DataDirectory, "sing-box", "sing-box.log"), true, validateApplicationPaths: false);
+        return new SingBoxConfigBuilder().Build(settings, Path.Combine(AppPaths.DataDirectory, "sing-box", "sing-box.log"), true, validateApplicationPaths: false, useUpdatedRuleSets: false);
     }
 
     public static async Task<string> EnsureAsync(AppSettingsData settings, bool validateWithCore = true)
@@ -142,7 +142,7 @@ public static class ConfigurationFileService
         }
         finally
         {
-            try { if (File.Exists(staging)) File.Delete(staging); }
+            try { TryDeleteStagingFile(staging, settings); }
             finally { Gate.Release(); }
         }
     }
@@ -180,7 +180,26 @@ public static class ConfigurationFileService
             settings.Configuration.NativeJson = "{}";
         }
         catch (JsonException) { throw new InvalidOperationException(Localization.Get("ConfigurationFileService_TheConfigurationContainsInvalidJSON")); }
-        finally { if (File.Exists(staging)) File.Delete(staging); Gate.Release(); }
+        finally
+        {
+            try { TryDeleteStagingFile(staging, settings); }
+            finally { Gate.Release(); }
+        }
+    }
+
+    private static void TryDeleteStagingFile(string path, AppSettingsData settings)
+    {
+        try { if (File.Exists(path)) File.Delete(path); }
+        catch (Exception cleanupError) when (cleanupError is IOException or UnauthorizedAccessException)
+        {
+            // Cleanup must not mask the import outcome or keep the shared gate locked.
+            try
+            {
+                File.AppendAllText(Path.Combine(AppPaths.DataDirectory, "configuration-cleanup.log"),
+                    $"[{DateTimeOffset.Now:O}] {LogReader.Redact(cleanupError.Message, settings)}\n");
+            }
+            catch (Exception logError) when (logError is IOException or UnauthorizedAccessException) { }
+        }
     }
 
     public static async Task SynchronizeAsync(AppSettingsData settings)

@@ -1,11 +1,12 @@
 using FluentSingBox.Client.Models;
 using FluentSingBox.Client.Services;
+using System.Collections.Specialized;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
 namespace FluentSingBox.Client.Views;
 
-public sealed partial class ProxyPage : Page
+public sealed partial class ProxyPage : Page, IPendingConfigurationPage
 {
     private bool _loading;
     private bool _observingApplications;
@@ -17,15 +18,12 @@ public sealed partial class ProxyPage : Page
         InitializeComponent();
         _tun = new TunConfigurationForm(this, TunForm);
         Loaded += ProxyPage_Loaded;
+        Unloaded += ProxyPage_Unloaded;
     }
 
     private void ProxyPage_Loaded(object sender, RoutedEventArgs e)
     {
         _loading = true;
-        DefaultServerComboBox.ItemsSource = App.State.Settings.Servers;
-        DefaultServerComboBox.DisplayMemberPath = nameof(ServerProfile.Name);
-        DefaultServerComboBox.SelectedValuePath = nameof(ServerProfile.Id);
-        DefaultServerComboBox.SelectedValue = App.State.Settings.DefaultServerId;
         ApplicationList.ItemsSource = App.State.Settings.Applications;
         ApplicationDnsHelp.Text = Localization.Get("Dns_DefaultNodeHelp");
 
@@ -34,9 +32,20 @@ public sealed partial class ProxyPage : Page
 
         if (!_observingApplications)
         {
-            App.State.Settings.Applications.CollectionChanged += (_, _) => UpdateEmptyApplicationsMessage();
+            App.State.Settings.Applications.CollectionChanged += Applications_CollectionChanged;
             _observingApplications = true;
         }
+    }
+
+    public Task<bool> FlushPendingChangesAsync() => _tun.FlushPendingChangesAsync();
+
+    private void Applications_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs args) => UpdateEmptyApplicationsMessage();
+
+    private void ProxyPage_Unloaded(object sender, RoutedEventArgs args)
+    {
+        if (!_observingApplications) return;
+        App.State.Settings.Applications.CollectionChanged -= Applications_CollectionChanged;
+        _observingApplications = false;
     }
 
     private void UpdateEmptyApplicationsMessage()
@@ -47,25 +56,6 @@ public sealed partial class ProxyPage : Page
             warnings.Add(Localization.Get("ApplicationMatch_StorePath"));
         ApplicationWarnings.Message = string.Join(Environment.NewLine, warnings);
         ApplicationWarnings.IsOpen = warnings.Count > 0;
-    }
-
-    private async void DefaultServer_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_loading || DefaultServerComboBox.SelectedItem is not ServerProfile server
-            || App.State.Settings.DefaultServerId == server.Id)
-        {
-            return;
-        }
-
-        App.State.SetDefaultServer(server);
-        try
-        {
-            await App.ProxyCoordinator.ApplyConfigurationChangesAsync();
-        }
-        catch (Exception exception)
-        {
-            await ShowMessageAsync(Localization.Get("ProxyPage_CannotApplyServer"), exception.Message);
-        }
     }
 
     private async void AddApplication_Click(object sender, RoutedEventArgs e)
@@ -151,14 +141,15 @@ public sealed partial class ProxyPage : Page
         var programs = new TextBox
         {
             Header = Localization.Get("ProxyPage_ProgramPathsOnePerLine"),
-            Text = string.Join(Environment.NewLine, profile.ExecutablePaths),
             AcceptsReturn = true,
+            Text = string.Join(Environment.NewLine, profile.ExecutablePaths),
             TextWrapping = TextWrapping.Wrap,
             MinHeight = 110,
             MaxHeight = 180
         };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(programs, "ApplicationEditor_Paths");
-        var names = new TextBox { Header = Localization.Get("ApplicationMatch_Names"), Text = string.Join(Environment.NewLine, profile.ProcessNames), AcceptsReturn = true, MinHeight = 110, MaxHeight = 180 };
+        // Enable multiline before assigning Text; single-line TextBox truncates at the first newline.
+        var names = new TextBox { Header = Localization.Get("ApplicationMatch_Names"), AcceptsReturn = true, Text = string.Join(Environment.NewLine, profile.ProcessNames), MinHeight = 110, MaxHeight = 180 };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(names, "ApplicationEditor_Names");
         var choosePrograms = new Button { Content = Localization.Get("ProxyPage_AddPrograms"), HorizontalAlignment = HorizontalAlignment.Left };
         var chooseProcesses = new Button { Content = Localization.Get("ApplicationMatch_ChooseRunning"), HorizontalAlignment = HorizontalAlignment.Left };

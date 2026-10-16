@@ -1,5 +1,5 @@
 using System.Collections.Specialized;
-using System.Text.Json;
+using System.ComponentModel;
 using FluentSingBox.Client.Models;
 
 namespace FluentSingBox.Client.Services;
@@ -7,11 +7,13 @@ namespace FluentSingBox.Client.Services;
 public sealed class AppState
 {
     private readonly SemaphoreSlim _saveGate = new(1, 1);
-    private readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
+    private readonly HashSet<INotifyPropertyChanged> _observed = new(ReferenceEqualityComparer.Instance);
+    private readonly List<Action> _removeCollectionObservers = [];
     private string _settingsPath = string.Empty;
 
     public static AppState Current { get; } = new();
     public AppSettingsData Settings { get; private set; } = new();
+    public event Action<string>? BackgroundSaveFailed;
 
     public async Task LoadAsync()
     {
@@ -19,7 +21,12 @@ public sealed class AppState
         Directory.CreateDirectory(directory);
         _settingsPath = Path.Combine(directory, "settings.json");
 
-        Settings = await SettingsStore.LoadAsync(_settingsPath);
+        var settings = await SettingsStore.LoadAsync(_settingsPath);
+        foreach (var remove in _removeCollectionObservers) remove();
+        _removeCollectionObservers.Clear();
+        foreach (var item in _observed) item.PropertyChanged -= ObservedPropertyChanged;
+        _observed.Clear();
+        Settings = settings;
         Settings.CoreOnlyEnabled = false;
         Localization.Configure(Settings.LanguageChoice, Windows.Globalization.ApplicationLanguages.Languages.FirstOrDefault());
         Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = Localization.Language;
@@ -64,7 +71,6 @@ public sealed class AppState
     public void AddServer(ServerProfile server)
     {
         Settings.Servers.Add(server);
-        Observe(server);
         foreach (var app in Settings.Applications)
         {
             app.AvailableServers.Add(server);
@@ -72,7 +78,7 @@ public sealed class AppState
         }
         Settings.DefaultServerId ??= server.Id;
         server.IsDefault = server.Id == Settings.DefaultServerId;
-        _ = SaveAsync();
+        _ = SaveObservedAsync();
     }
 
     public void AddApplication(ApplicationProxyProfile profile)
@@ -83,15 +89,13 @@ public sealed class AppState
             profile.ServerId = Settings.DefaultServerId ?? Settings.Servers.FirstOrDefault()?.Id ?? string.Empty;
         }
         Settings.Applications.Add(profile);
-        Observe(profile);
-        _ = SaveAsync();
+        _ = SaveObservedAsync();
     }
 
     public void AddRule(RouteRuleProfile rule)
     {
         Settings.RoutingRules.Insert(0, rule);
-        Observe(rule);
-        _ = SaveAsync();
+        _ = SaveObservedAsync();
     }
 
     public void RemoveServer(ServerProfile server)
@@ -111,19 +115,19 @@ public sealed class AppState
         {
             if (rule.ServerId == server.Id) rule.ServerId = Settings.DefaultServerId;
         }
-        _ = SaveAsync();
+        _ = SaveObservedAsync();
     }
 
     public void RemoveRule(RouteRuleProfile rule)
     {
         if (!rule.IsBuiltIn) Settings.RoutingRules.Remove(rule);
-        _ = SaveAsync();
+        _ = SaveObservedAsync();
     }
 
     public void RemoveApplication(ApplicationProxyProfile profile)
     {
         Settings.Applications.Remove(profile);
-        _ = SaveAsync();
+        _ = SaveObservedAsync();
     }
 
     public ServerProfile? FindServer(string? id) => Settings.Servers.FirstOrDefault(server => server.Id == id);
@@ -136,7 +140,7 @@ public sealed class AppState
         {
             if (string.IsNullOrWhiteSpace(app.ServerId)) app.ServerId = server.Id;
         }
-        _ = SaveAsync();
+        _ = SaveObservedAsync();
     }
 
     public async Task SaveAsync()
@@ -166,18 +170,54 @@ public sealed class AppState
     private void ObserveCollection<T>(System.Collections.ObjectModel.ObservableCollection<T> collection)
         where T : System.ComponentModel.INotifyPropertyChanged
     {
-        collection.CollectionChanged += (_, args) =>
+        void Changed(object? sender, NotifyCollectionChangedEventArgs args)
         {
+            if (args.OldItems is not null)
+                foreach (INotifyPropertyChanged item in args.OldItems) Unobserve(item);
+            if (args.Action == NotifyCollectionChangedAction.Reset)
+            {
+                var retained = Settings.Servers.Cast<INotifyPropertyChanged>()
+                    .Concat(Settings.RoutingRules).Concat(Settings.Applications)
+                    .ToHashSet(ReferenceEqualityComparer.Instance);
+                foreach (var item in _observed.Where(item => !retained.Contains(item)).ToArray()) Unobserve(item);
+            }
             if (args.NewItems is not null)
             {
-                foreach (System.ComponentModel.INotifyPropertyChanged item in args.NewItems) Observe(item);
+                foreach (INotifyPropertyChanged item in args.NewItems) Observe(item);
             }
-            _ = SaveAsync();
-        };
+            _ = SaveObservedAsync();
+        }
+        collection.CollectionChanged += Changed;
+        _removeCollectionObservers.Add(() => collection.CollectionChanged -= Changed);
     }
 
-    private void Observe(System.ComponentModel.INotifyPropertyChanged item)
+    private void Observe(INotifyPropertyChanged item)
     {
-        item.PropertyChanged += (_, _) => _ = SaveAsync();
+        if (_observed.Add(item)) item.PropertyChanged += ObservedPropertyChanged;
+    }
+
+    private void Unobserve(INotifyPropertyChanged item)
+    {
+        if (_observed.Remove(item)) item.PropertyChanged -= ObservedPropertyChanged;
+    }
+
+    private void ObservedPropertyChanged(object? sender, PropertyChangedEventArgs args) => _ = SaveObservedAsync();
+
+    // Model notifications cannot await persistence; report failures instead of dropping tasks.
+    private async Task SaveObservedAsync()
+    {
+        try { await SaveAsync(); }
+        catch (Exception exception)
+        {
+            var message = LogReader.Redact(exception.Message, Settings);
+            try
+            {
+                Directory.CreateDirectory(AppPaths.DataDirectory);
+                await File.AppendAllTextAsync(Path.Combine(AppPaths.DataDirectory, "settings-save.log"),
+                    $"[{DateTimeOffset.Now:O}] {message}\n");
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
+            BackgroundSaveFailed?.Invoke(message);
+        }
     }
 }

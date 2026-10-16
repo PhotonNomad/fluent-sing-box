@@ -25,6 +25,8 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../FluentSingBox.Updates/FluentSingBox.Updates.csproj" />
+    <None Include="../../release.json" Link="release.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="2.2.1" />
     <!-- SettingsControls references the old aggregate SDK; use only the component assets above. -->
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.250108002" ExcludeAssets="all" />
@@ -36,7 +38,7 @@
     <None Update="Defaults\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Defaults\user-config.json" LogicalName="FluentSingBox.Client.Resources.default-user-config.json" />
     <None Update="ThirdParty\Schemas\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <None Update="Assets\fluent-sing-box.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Assets\fluent-sing-box.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Update="Assets\fluent-sing-box.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Update="ThirdParty\RuleSets\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Remove="ThirdParty\SingBox\sing-box-1.14.2-windows-amd64.zip" />
@@ -51,7 +53,9 @@
   <Target Name="PublishXamlResources" AfterTargets="Publish">
     <ItemGroup>
       <CompiledXamlForPublish Include="$(TargetDir)**\*.xbf;$(TargetDir)*.pri" />
+      <AppIconsForPublish Include="$(MSBuildProjectDirectory)\Assets\fluent-sing-box.png;$(MSBuildProjectDirectory)\Assets\fluent-sing-box.ico" />
     </ItemGroup>
     <Copy SourceFiles="@(CompiledXamlForPublish)" DestinationFiles="@(CompiledXamlForPublish->'$(PublishDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(AppIconsForPublish)" DestinationFolder="$(PublishDir)Assets\" SkipUnchangedFiles="true" />
   </Target>
 </Project>

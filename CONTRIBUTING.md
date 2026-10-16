@@ -14,6 +14,8 @@
 
 ## 项目结构
 
+安装发布相关代码位于 `src/FluentSingBox.Updates`（协议/签名）与 `src/FluentSingBox.Updater`（独立升级程序）；使用 `tools/Build-Installer.ps1` 生成测试包。更新回归执行 `dotnet run --project tests/Updates.Regression -c Release`，中英文设置 UI 回归执行 `tests/Updates.Regression/Run-UpdatesUi.ps1`。签名、安装范围和客体验收说明见 [安装发布指南](docs/installer-validation.md)。
+
 | 目录 | 内容 |
 | --- | --- |
 | `src/FluentSingBox.Client/Models` | 节点、规则、应用组与配置模型 |
@@ -73,6 +75,17 @@ dotnet run --project tests/Client.Regression -- "$PWD" --configuration-recovery-
 测试使用独立 `FLUENTSINGBOX_DATA_DIR`，只清理测试创建的进程。常规自动回归不应修改宿主机系统代理或创建真实 TUN。UI、CIM 和 Windows SDK 访问可能受到执行环境限制；命令在沙箱中不可用时，应比较命令解析、PATH、安装路径与权限，再判断是否缺少依赖。
 
 真实节点、系统代理、TUN、UAC、DNS 和 UDP/QUIC 的验收按[网络验证指南](docs/manual-network-validation.md)在隔离 Windows 环境执行。测试记录留在 `artifacts/`，不写入版本化文档逐次累积通过数量。
+
+## 清理开发产物
+
+`tools/Clean-DevelopmentArtifacts.ps1` 默认只展示清理清单，添加 `-Apply` 才会执行。它保留源码、测试工具与文档、`.vscode` 配置、当前 Debug/Release 发布目录、`artifacts/vscode-data` 和 `output/DailyUse`。旧测试目录及日常副本中的配置、备份、规则集、脚本和结果摘要会先复制到 `output/PreservedDevelopmentData/<时间与标识>/`，逐文件核对 SHA-256，再删除编译缓存、日志、截图和重复程序。归档保留原相对路径，并提供 `manifest.json` 与 `cleanup-report.json`。
+
+```powershell
+./tools/Clean-DevelopmentArtifacts.ps1
+./tools/Clean-DevelopmentArtifacts.ps1 -Apply
+```
+
+归档可能包含节点凭据，继续由 `.gitignore` 排除，不应提交。清理不会终止运行中的应用；遇到占用文件会报告失败。后续测试需要的核心与夹具可按上面的服务器编辑器回归入口重新准备。完整工具目录说明见[开发工具与本地产物](docs/development-tools.md)。
 
 ## 提交 Pull Request
 

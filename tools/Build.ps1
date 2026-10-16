@@ -1,7 +1,9 @@
 [CmdletBinding()]
 param(
     [ValidateSet('Debug', 'Release')][string]$Configuration = 'Debug',
-    [string]$ProjectRoot = (Resolve-Path "$PSScriptRoot/..").Path
+    [string]$ProjectRoot = (Resolve-Path "$PSScriptRoot/..").Path,
+    [switch]$SelfContained,
+    [string]$Version
 )
 $ErrorActionPreference = 'Stop'
 $taskProjectRoot = (Resolve-Path -LiteralPath $ProjectRoot).Path
@@ -33,8 +35,13 @@ try {
         }
         catch { throw "Close the running $Configuration copy before rebuilding. $($_.Exception.Message)" }
     }
-    & dotnet publish (Join-Path $taskProjectRoot 'src/FluentSingBox.Client/fluent sing-box.csproj') -c $Configuration -p:Platform=x64 --self-contained false -o $taskStaging --nologo
+    if (!$Version) { $Version = (Get-Content (Join-Path $taskProjectRoot 'release.json') -Raw | ConvertFrom-Json).version }
+    if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw 'Expected MAJOR.MINOR.PATCH version.' }
+    & dotnet publish (Join-Path $taskProjectRoot 'src/FluentSingBox.Client/fluent sing-box.csproj') -c $Configuration -p:Platform=x64 "-p:Version=$Version" --self-contained $SelfContained.IsPresent.ToString().ToLowerInvariant() -o $taskStaging --nologo
     if ($LASTEXITCODE -ne 0) { throw "$Configuration publish failed; the existing output was kept." }
+    $taskReleaseSettings = Get-Content (Join-Path $taskProjectRoot 'release.json') -Raw | ConvertFrom-Json
+    $taskReleaseSettings.version = $Version
+    $taskReleaseSettings | ConvertTo-Json | Set-Content (Join-Path $taskStaging 'release.json') -Encoding utf8
     if (!(Test-Path -LiteralPath (Join-Path $taskStaging 'fluent sing-box.exe'))) { throw 'Publish did not produce the executable.' }
     foreach ($taskRequired in @(
         'Defaults/settings.json', 'Defaults/user-config.json', 'Defaults/README.md',
