@@ -16,6 +16,8 @@ internal sealed class TrayIcon : IDisposable
     private readonly SubclassProc _callback;
     private readonly uint _taskbarCreated = RegisterWindowMessage("TaskbarCreated");
     private nint _icon;
+    private int _iconWidth;
+    private int _iconHeight;
     private bool _disposed;
 
     public TrayIcon(nint window, Action restore, Action exit)
@@ -24,8 +26,7 @@ internal sealed class TrayIcon : IDisposable
         _restore = restore;
         _exit = exit;
         _callback = WindowProc;
-        _icon = LoadImage(0, Path.Combine(AppContext.BaseDirectory, "Assets", "fluent-sing-box.ico"), 1, 16, 16, 0x10);
-        if (_icon == 0) throw new Win32Exception(Marshal.GetLastWin32Error());
+        LoadTrayImage();
         if (!SetWindowSubclass(window, _callback, 42, 0))
         {
             DestroyIcon(_icon);
@@ -47,6 +48,52 @@ internal sealed class TrayIcon : IDisposable
 
     private bool AddIcon() { var data = Data(); return ShellNotifyIcon(0, ref data); }
 
+    private bool LoadTrayImage()
+    {
+        // The tray belongs to the primary taskbar, which can be on a different
+        // monitor from our window. Never enlarge a fixed 16px HICON at high DPI.
+        var taskbar = FindWindow("Shell_TrayWnd", null);
+        var dpi = taskbar != 0 ? GetDpiForWindow(taskbar) : GetDpiForSystem();
+        if (dpi == 0) dpi = 96;
+        var width = GetSystemMetricsForDpi(49, dpi); // SM_CXSMICON
+        var height = GetSystemMetricsForDpi(50, dpi); // SM_CYSMICON
+        if (_icon != 0 && width == _iconWidth && height == _iconHeight) return false;
+
+        // Let Windows select the ICO frame at the actual notification size.
+        var icon = LoadImage(0,
+            Path.Combine(AppContext.BaseDirectory, "Assets", "fluent-sing-box.ico"),
+            1, width, height, 0x10); // IMAGE_ICON, LR_LOADFROMFILE
+        if (icon == 0) throw new Win32Exception(Marshal.GetLastWin32Error());
+        var previous = _icon;
+        _icon = icon;
+        _iconWidth = width;
+        _iconHeight = height;
+        if (previous != 0) DestroyIcon(previous);
+        return true;
+    }
+
+    private void RefreshIcon(bool add)
+    {
+        if (_disposed) return;
+        try
+        {
+            var changed = LoadTrayImage();
+            if (add) AddIcon();
+            else if (changed)
+            {
+                var data = Data();
+                data.Flags = 2; // NIF_ICON
+                ShellNotifyIcon(1, ref data); // NIM_MODIFY
+            }
+        }
+        catch (Exception)
+        {
+            // Keep the existing icon if a display transition temporarily makes
+            // the taskbar or asset unavailable; never unwind a native callback.
+            if (add) AddIcon();
+        }
+    }
+
     public void NotifyUpdate(string message)
     {
         var data = Data();
@@ -59,7 +106,9 @@ internal sealed class TrayIcon : IDisposable
 
     private nint WindowProc(nint window, uint message, nuint wParam, nint lParam, nuint id, nuint reference)
     {
-        if (message == _taskbarCreated) AddIcon();
+        if (message == _taskbarCreated) RefreshIcon(add: true);
+        if (message is 0x02E0 or 0x007E or 0x001A) // DPI / display / settings changed
+            RefreshIcon(add: false);
         if (message == 0x111 && lParam == 0) // WM_COMMAND from the native popup menu
         {
             var command = (uint)(wParam & 0xffff);
@@ -121,6 +170,10 @@ internal sealed class TrayIcon : IDisposable
     [DllImport("comctl32.dll")] private static extern nint DefSubclassProc(nint window, uint message, nuint wParam, nint lParam);
     [DllImport("shell32.dll", EntryPoint = "Shell_NotifyIconW", CharSet = CharSet.Unicode)] private static extern bool ShellNotifyIcon(uint message, ref NotifyIconData data);
     [DllImport("user32.dll", EntryPoint = "LoadImageW", CharSet = CharSet.Unicode, SetLastError = true)] private static extern nint LoadImage(nint instance, string name, uint type, int width, int height, uint flags);
+    [DllImport("user32.dll", EntryPoint = "FindWindowW", CharSet = CharSet.Unicode)] private static extern nint FindWindow(string className, string? windowName);
+    [DllImport("user32.dll")] private static extern uint GetDpiForWindow(nint window);
+    [DllImport("user32.dll")] private static extern uint GetDpiForSystem();
+    [DllImport("user32.dll")] private static extern int GetSystemMetricsForDpi(int index, uint dpi);
     [DllImport("user32.dll")] private static extern bool DestroyIcon(nint icon);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern uint RegisterWindowMessage(string message);
     [DllImport("user32.dll")] private static extern nint CreatePopupMenu();
