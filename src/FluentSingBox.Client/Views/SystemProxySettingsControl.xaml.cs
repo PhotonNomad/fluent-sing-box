@@ -8,19 +8,69 @@ namespace FluentSingBox.Client.Views;
 public sealed partial class SystemProxySettingsControl : UserControl
 {
     private bool _loading;
+    private readonly Microsoft.UI.Dispatching.DispatcherQueueTimer _saveTimer;
+    private bool _pendingSave;
+    private readonly SemaphoreSlim _saveGate = new(1, 1);
+    public async Task<bool> FlushPendingChangesAsync()
+    {
+        _saveTimer.Stop();
+        return await AutoSaveAsync();
+    }
 
     public SystemProxySettingsControl()
     {
         InitializeComponent();
+        _saveTimer = DispatcherQueue.CreateTimer();
+        _saveTimer.Interval = TimeSpan.FromMilliseconds(800);
+        _saveTimer.IsRepeating = false;
+        _saveTimer.Tick += async (_, _) => await AutoSaveAsync();
+        PortTextBox.TextChanged += (_, _) => ScheduleSave();
+        UsernameTextBox.TextChanged += (_, _) => ScheduleSave();
+        PasswordInput.PasswordChanged += (_, _) => ScheduleSave();
         Loaded += (_, _) => LoadFromSettings();
+        Unloaded += async (_, _) => { _saveTimer.Stop(); await AutoSaveAsync(); };
+    }
+
+    private void ScheduleSave()
+    {
+        if (_loading) return;
+        _pendingSave = true;
+        _saveTimer.Stop();
+        _saveTimer.Start();
+    }
+
+    private async Task<bool> AutoSaveAsync()
+    {
+        await _saveGate.WaitAsync();
+        if (_loading || !_pendingSave) { _saveGate.Release(); return true; }
+        _pendingSave = false;
+        _loading = true;
+        IsEnabled = false;
+        try
+        {
+            await SaveDraftAsync();
+            StatusMessage.Message = Localization.Get("Schema_Saved");
+            StatusMessage.Severity = InfoBarSeverity.Success;
+            StatusMessage.IsOpen = true;
+            return true;
+        }
+        catch (Exception exception)
+        {
+            LoadFromSettings();
+            StatusMessage.Message = LogReader.Redact(exception.Message, App.State.Settings);
+            StatusMessage.Severity = InfoBarSeverity.Error;
+            StatusMessage.IsOpen = true;
+            return false;
+        }
+        finally { _loading = false; IsEnabled = true; _saveGate.Release(); }
     }
 
     private void LoadFromSettings()
     {
         _loading = true;
         var settings = App.State.Settings;
-        DefaultServerComboBox.ItemsSource = settings.Servers;
-        DefaultServerComboBox.SelectedValue = settings.DefaultServerId;
+        DefaultServerComboBox.ItemsSource = new[] { new ServerProfile { Id = "direct", Name = Localization.Get(settings.Servers.Count == 0 ? "DefaultOutlet_DirectEmpty" : "DefaultOutlet_Direct") } }.Concat(settings.Servers).ToArray();
+        DefaultServerComboBox.SelectedValue = settings.DefaultServerId ?? "direct";
         SystemProxySwitch.IsOn = settings.SystemProxyEnabled;
         PortTextBox.Text = settings.SystemProxyPort.ToString();
         AuthenticationSwitch.IsOn = settings.SystemProxyAuthEnabled;
@@ -40,13 +90,14 @@ public sealed partial class SystemProxySettingsControl : UserControl
         try { await App.ProxyCoordinator.ApplyConfigurationChangesAsync(); }
         catch (Exception exception)
         {
+            LoadFromSettings();
             await ShowMessageAsync(Localization.Get("ProxyPage_CannotApplyServer"), exception.Message);
         }
     }
 
     private void AuthenticationSwitch_Toggled(object sender, RoutedEventArgs e)
     {
-        if (!_loading) UpdateAuthenticationVisibility();
+        if (!_loading) { UpdateAuthenticationVisibility(); ScheduleSave(); }
     }
 
     private void UpdateAuthenticationVisibility()
@@ -78,21 +129,6 @@ public sealed partial class SystemProxySettingsControl : UserControl
         {
             LoadFromSettings();
             await ShowMessageAsync(Localization.Get("SystemProxySettingsControl_CannotSwitchSystemProxy"), exception.Message);
-        }
-    }
-
-    private async void ApplySettings_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            await SaveDraftAsync();
-
-            StatusMessage.Message = Localization.Get("SystemProxySettingsControl_SettingsApplied");
-            StatusMessage.IsOpen = true;
-        }
-        catch (Exception exception)
-        {
-            await ShowMessageAsync(Localization.Get("SystemProxySettingsControl_CannotApplySettings"), exception.Message);
         }
     }
 

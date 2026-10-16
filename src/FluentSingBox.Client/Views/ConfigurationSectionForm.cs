@@ -24,10 +24,12 @@ internal sealed class ConfigurationSectionForm
     private readonly SemaphoreSlim _saveGate = new(1, 1);
     private bool _pendingSave;
     private Task _loadTask = Task.CompletedTask;
+    private readonly Ipv6ConnectivityHint? _ipv6Hint;
     private string Prefix => _dns ? "DNS" : "Routing";
     public ConfigurationSectionForm(Page page, StackPanel view, bool dns)
     {
         _page = page; _view = view; _dns = dns;
+        if (dns) _ipv6Hint = new Ipv6ConnectivityHint("DNS_IPv6");
         _saveTimer = page.DispatcherQueue.CreateTimer();
         _saveTimer.Interval = TimeSpan.FromMilliseconds(500);
         _saveTimer.IsRepeating = false;
@@ -68,8 +70,10 @@ internal sealed class ConfigurationSectionForm
             foreach (var key in new[] { "final", "strategy" })
                 if (properties.TryGetValue(key, out var property)) ordered[key] = property.DeepClone();
             _options = new SchemaObjectForm(_schema, new JsonObject { ["properties"] = ordered }, dns, _document, "DNS");
-            _options.Changed += ScheduleSave;
+            _options.Changed += () => { ScheduleSave(); UpdateIpv6Hint(); };
             _view.Children.Add(_options.View);
+            _view.Children.Add(_ipv6Hint!);
+            UpdateIpv6Hint();
         }
         else
         {
@@ -98,6 +102,12 @@ internal sealed class ConfigurationSectionForm
         _pendingSave = true;
         _status.IsOpen = false;
         _saveTimer.Stop(); _saveTimer.Start();
+    }
+    private void UpdateIpv6Hint()
+    {
+        if (!_dns) return;
+        try { _ipv6Hint!.Update(_options?.Read()["strategy"]?.ToString()); }
+        catch (InvalidOperationException) { } // The save path reports invalid draft values.
     }
     private void AddCollection(string title, JsonObject parent, string key, string definition, string id, bool rules)
     {
@@ -144,12 +154,20 @@ internal sealed class ConfigurationSectionForm
             await ConfigurationFileService.ImportAsync(App.State.Settings, _document.ToJsonString(), _source);
             App.State.Settings.Configuration.DisabledRules = disabled;
             _source = await File.ReadAllTextAsync(ConfigurationFileService.FilePath);
-            await App.State.SavePreferencesAsync();
+            await App.State.SavePreferencesAsync(configurationCommitted: true);
             if (_dns) _options.RefreshReferences();
             _status.Message = Localization.Get("Schema_Saved"); _status.Severity = InfoBarSeverity.Success; _status.IsOpen = true;
             return true;
         }
-        catch (Exception exception) { _pendingSave = true; ShowError(exception); return false; }
+        catch (Exception exception)
+        {
+            _pendingSave = false;
+            _document = JsonNode.Parse(_source)!.AsObject();
+            Render();
+            UpdateIpv6Hint();
+            ShowError(exception);
+            return false;
+        }
         finally { _page.IsEnabled = true; _saveGate.Release(); }
     }
     private void ShowError(Exception exception) { _status.Message = LogReader.Redact(exception.Message, App.State.Settings); _status.Severity = InfoBarSeverity.Error; _status.IsOpen = true; }

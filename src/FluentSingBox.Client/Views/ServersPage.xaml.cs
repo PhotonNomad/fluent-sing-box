@@ -166,7 +166,8 @@ public sealed partial class ServersPage : Page
         var dialog = new ContentDialog
         {
             Title = Localization.Format("ServersPage_Delete0", server.Name),
-            Content = Localization.Get("ServersPage_ApplicationsAndRoutesReferencingThisServerWillSwitch"),
+            Content = Localization.Format("DefaultOutlet_Delete", App.State.Settings.DefaultServerId == "direct" ? Localization.Get("DefaultOutlet_Direct") : App.State.Settings.Servers.FirstOrDefault(item => item.Id != server.Id && item.Id == App.State.Settings.DefaultServerId)?.Name
+                ?? App.State.Settings.Servers.FirstOrDefault(item => item.Id != server.Id)?.Name ?? Localization.Get("DefaultOutlet_Direct")),
             PrimaryButtonText = Localization.Get("ProxyPage_Delete"),
             CloseButtonText = Localization.Get("ProxyPage_Cancel"),
             DefaultButton = ContentDialogButton.Close,
@@ -205,7 +206,7 @@ public sealed partial class ServersPage : Page
             var candidateServer = candidate.Servers.FirstOrDefault(server => server.Id == source.Id);
             if (candidateServer is null) { candidateServer = new ServerProfile { Id = source.Id }; candidate.Servers.Add(candidateServer); }
             ServerEditorDraft.Apply(candidateServer, name, outbound);
-            if (!candidate.Servers.Any(server => server.Id == candidate.DefaultServerId)) candidate.DefaultServerId = candidateServer.Id;
+            if (candidate.DefaultServerId != "direct" && !candidate.Servers.Any(server => server.Id == candidate.DefaultServerId)) candidate.DefaultServerId = candidateServer.Id;
             await App.CoreService.ValidateAsync(candidate);
             ServerEditorDraft.Apply(source, name, outbound);
             if (!isNew) await App.State.SaveAsync();

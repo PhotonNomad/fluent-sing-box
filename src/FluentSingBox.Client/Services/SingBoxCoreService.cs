@@ -67,6 +67,10 @@ public sealed class SingBoxCoreService : IDisposable
     }
 
     public async Task ValidateAsync(AppSettingsData settings)
+        => _ = await BuildValidatedConfigurationAsync(settings);
+
+    // Prepare the exact next-start configuration without changing the running core.
+    public async Task<string> BuildValidatedConfigurationAsync(AppSettingsData settings)
     {
         if (!string.IsNullOrWhiteSpace(settings.Configuration.ExternalFilePath) && !File.Exists(settings.Configuration.ExternalFilePath))
             await ConfigurationFileService.EnsureAsync(settings);
@@ -77,8 +81,11 @@ public sealed class SingBoxCoreService : IDisposable
         var supportsHttpClient = await DetectHttpClientSupportAsync(executable);
         try
         {
-            await File.WriteAllTextAsync(candidate, _configBuilder.Build(settings, Path.Combine(directory, "sing-box.log"), supportsHttpClient));
+            var configuration = _configBuilder.Build(settings, Path.Combine(directory, "sing-box.log"), supportsHttpClient);
+            ConfigurationReferences.Validate(configuration);
+            await File.WriteAllTextAsync(candidate, configuration);
             await CoreCommand.CheckAsync(executable, candidate);
+            return configuration;
         }
         catch (InvalidOperationException exception) { throw new InvalidOperationException(LogReader.Redact(exception.Message, settings)); }
         finally { if (File.Exists(candidate)) File.Delete(candidate); }

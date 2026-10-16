@@ -494,7 +494,7 @@
     <comment>Source: Services\ServerEditorSchema.cs</comment>
   </data>
   <data name="ServerEditorSchema_DefaultServer" xml:space="preserve">
-    <value>默认服务器</value>
+    <value>默认出口（proxy）</value>
     <comment>Source: Services\ServerEditorSchema.cs</comment>
   </data>
   <data name="ServerEditorSchema_TestURL" xml:space="preserve">
@@ -1846,7 +1846,7 @@ Windows: {0}
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="ProxyPage_SettingsCard13.Header" xml:space="preserve">
-    <value>默认服务器</value>
+    <value>默认出口（proxy）</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="ProxyPage_DefaultServerComboBox.PlaceholderText" xml:space="preserve">
@@ -2094,7 +2094,7 @@ Windows: {0}
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Header" xml:space="preserve">
-    <value>默认服务器</value>
+    <value>默认出口（proxy）</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Description" xml:space="preserve">
@@ -2882,4 +2882,20 @@ Windows: {0}
   <data name="Updates_MeteredExcluded.Text" xml:space="preserve"><value>按流量计费的连接除外</value></data>
   <data name="Updates_AutoInstall.Text" xml:space="preserve"><value>自动下载并安装更新</value></data>
   <data name="Updates_LastChecked" xml:space="preserve"><value>上次检查时间：{0}</value></data>
+  <data name="Configuration_UnknownReference" xml:space="preserve"><value>{0}：引用的“{1}”不存在，未保存本次修改。</value></data>
+  <data name="Configuration_DuplicateTag" xml:space="preserve"><value>{0}：标签“{1}”重复，未保存本次修改。</value></data>
+  <data name="Ipv6_Title" xml:space="preserve"><value>IPv6 连通性</value></data>
+  <data name="Ipv6_CheckAgain" xml:space="preserve"><value>重新检测</value></data>
+  <data name="Ipv6_Checking" xml:space="preserve"><value>正在检测到 Cloudflare 和 Google 的 IPv6 TCP 与 TLS 连接，最长约 4 秒……</value></data>
+  <data name="Ipv6_Reachable" xml:space="preserve"><value>IPv6 连接检测通过 {0}/{1} 个测试端点。</value></data>
+  <data name="Ipv6_NoLocalAddress" xml:space="preserve"><value>本机活动网卡未发现公网 IPv6 地址，IPv6 连接检测也未通过。代理仍可能提供 IPv6 访问。</value></data>
+  <data name="Ipv6_Unsupported" xml:space="preserve"><value>系统的 IPv6 套接字功能不可用。</value></data>
+  <data name="Ipv6_Unconfirmed" xml:space="preserve"><value>暂时无法确认 IPv6 连通性：可能是测试端点被阻止，或当前 IPv6 路径不可用。</value></data>
+  <data name="Ipv6_RecommendIpv4" xml:space="preserve"><value>当前 DNS 策略仍允许 IPv6；若连接失败，建议改为 ipv4_only。程序不会自动更改你的选择。</value></data>
+  <data name="Ipv6_Ipv4Selected" xml:space="preserve"><value>DNS 当前为 ipv4_only，保持该设置。</value></data>
+  <data name="Ipv6_TunWithoutAddress" xml:space="preserve"><value>TUN 没有 IPv6 地址，但 DNS 仍允许 IPv6。IPv6 流量可能改走其他网卡；删除 TUN 地址不等于禁用 IPv6。</value></data>
+  <data name="Ipv6_Scope" xml:space="preserve"><value>检测沿用当前路由，可能经过 TUN/VPN；通过不代表所选代理节点或所有目标网站的 IPv6 都可用。</value></data>
+  <data name="DefaultOutlet_DirectEmpty" xml:space="preserve"><value>直连（未添加节点）</value></data>
+  <data name="DefaultOutlet_Direct" xml:space="preserve"><value>直连</value></data>
+  <data name="DefaultOutlet_Delete" xml:space="preserve"><value>删除后，引用此节点的应用和规则将改用：{0}。若删除的是默认节点，proxy 也会改选此出口。是否继续？</value></data>
 </root>

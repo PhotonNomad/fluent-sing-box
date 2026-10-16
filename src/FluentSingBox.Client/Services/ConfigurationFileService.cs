@@ -34,7 +34,6 @@ public static class ConfigurationFileService
         var settings = Snapshot(source);
         settings.Configuration.ExternalFilePath = "";
         settings.Configuration.NativeEnabled = false;
-        if (!settings.Servers.Any(server => server.Id == settings.DefaultServerId)) return null;
         return new SingBoxConfigBuilder().Build(settings, Path.Combine(AppPaths.DataDirectory, "sing-box", "sing-box.log"), true, validateApplicationPaths: false, useUpdatedRuleSets: false);
     }
 
@@ -162,17 +161,18 @@ public static class ConfigurationFileService
             candidate.Configuration.ExternalFilePath = staging;
             candidate.Configuration.NativeEnabled = false;
             // Check the configuration that the client will actually start, before replacing its source.
+            string? runtime = null;
             if (validateWithCore)
             {
                 using var core = new SingBoxCoreService();
-                await core.ValidateAsync(candidate);
+                runtime = await core.BuildValidatedConfigurationAsync(candidate);
             }
             string? baseline;
             try { baseline = Generated(settings); }
             catch (InvalidOperationException) { baseline = null; } // A valid imported file need not have valid GUI profiles.
             if (expectedSource is not null && await File.ReadAllTextAsync(FilePath) != expectedSource)
                 throw new InvalidOperationException(Localization.Get("Schema_SourceChanged"));
-            await ReplacePairAsync(FilePath, node.ToJsonString(JsonOptions), baseline ?? "{}");
+            await ReplacePairAsync(FilePath, node.ToJsonString(JsonOptions), baseline ?? "{}", runtime);
             await DnsCachePolicy.TrackAsync(settings, node.ToJsonString());
             settings.Configuration.ExternalFilePath = FilePath;
             settings.Configuration.NativeEnabled = false;
@@ -204,18 +204,44 @@ public static class ConfigurationFileService
 
     public static async Task SynchronizeAsync(AppSettingsData settings)
     {
-        if (settings.Configuration.NativeEnabled && string.IsNullOrWhiteSpace(settings.Configuration.ExternalFilePath)) return;
+        if (settings.Configuration.NativeEnabled && string.IsNullOrWhiteSpace(settings.Configuration.ExternalFilePath))
+        {
+            await Gate.WaitAsync();
+            try
+            {
+                using var core = new SingBoxCoreService();
+                var runtime = await core.BuildValidatedConfigurationAsync(Snapshot(settings));
+                await ReplaceAsync(Path.Combine(AppPaths.DataDirectory, "sing-box", "config.json"), runtime);
+            }
+            finally { Gate.Release(); }
+            return;
+        }
         await EnsureAsync(settings);
         await Gate.WaitAsync();
         try
         {
             var generated = Generated(settings);
-            if (generated is null) return;
+            if (generated is null)
+            {
+                // Imported configurations do not require a default node in the UI model.
+                if (!string.IsNullOrWhiteSpace(settings.Configuration.ExternalFilePath))
+                {
+                    var document = JsonNode.Parse(await File.ReadAllTextAsync(settings.Configuration.ExternalFilePath))!.AsObject();
+                    var inbounds = document["inbounds"] as JsonArray ?? new JsonArray();
+                    if (document["inbounds"] is null) document["inbounds"] = inbounds;
+                    foreach (var inbound in inbounds.OfType<JsonObject>().Where(item => item["tag"]?.ToString() == "system-http").ToArray()) inbounds.Remove(inbound);
+                    inbounds.Add(SingBoxConfigBuilder.BuildManagedInbound(settings));
+                    var content = document.ToJsonString(JsonOptions);
+                    await CommitValidatedAsync(settings, settings.Configuration.ExternalFilePath, content,
+                        File.Exists(BaselinePath) ? await File.ReadAllTextAsync(BaselinePath) : "{}");
+                }
+                return;
+            }
             if (string.IsNullOrWhiteSpace(settings.Configuration.ExternalFilePath))
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
                 var content = File.Exists(FilePath) ? await File.ReadAllTextAsync(FilePath) : generated;
-                await ReplacePairAsync(FilePath, content, generated);
+                await CommitValidatedAsync(settings, FilePath, content, generated);
                 settings.Configuration.ExternalFilePath = FilePath;
                 return;
             }
@@ -223,30 +249,59 @@ public static class ConfigurationFileService
             var previous = File.Exists(BaselinePath) ? JsonNode.Parse(await File.ReadAllTextAsync(BaselinePath))!.AsObject() : new JsonObject();
             if (JsonNode.DeepEquals(previous, next))
             {
-                await DnsCachePolicy.TrackAsync(settings, await File.ReadAllTextAsync(settings.Configuration.ExternalFilePath));
+                var content = await File.ReadAllTextAsync(settings.Configuration.ExternalFilePath);
+                await CommitValidatedAsync(settings, settings.Configuration.ExternalFilePath, content, generated);
+                await DnsCachePolicy.TrackAsync(settings, content);
                 return;
             }
             var path = settings.Configuration.ExternalFilePath;
             var current = JsonNode.Parse(await File.ReadAllTextAsync(path)) as JsonObject ?? throw new InvalidOperationException(Localization.Get("ConfigurationFileService_TheApplicationConfigurationMustBeAJSONObject2"));
             ApplyChanges(current, previous, next);
-            await ReplacePairAsync(path, current.ToJsonString(JsonOptions), generated);
+            await CommitValidatedAsync(settings, path, current.ToJsonString(JsonOptions), generated);
             await DnsCachePolicy.TrackAsync(settings, current.ToJsonString());
         }
         finally { Gate.Release(); }
     }
 
-    private static async Task ReplacePairAsync(string path, string content, string baseline)
+    private static async Task CommitValidatedAsync(AppSettingsData settings, string path, string content, string baseline)
+    {
+        var staging = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, ".save-" + Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            await File.WriteAllTextAsync(staging, content);
+            var candidate = Snapshot(settings);
+            candidate.Configuration.ExternalFilePath = staging;
+            candidate.Configuration.NativeEnabled = false;
+            using var core = new SingBoxCoreService();
+            var runtime = await core.BuildValidatedConfigurationAsync(candidate);
+            await ReplacePairAsync(path, content, baseline, runtime);
+        }
+        finally { if (File.Exists(staging)) File.Delete(staging); }
+    }
+
+    private static async Task ReplacePairAsync(string path, string content, string baseline, string? runtime = null)
     {
         var previous = File.Exists(path) ? await File.ReadAllTextAsync(path) : null;
+        var runtimePath = Path.Combine(AppPaths.DataDirectory, "sing-box", "config.json");
+        var previousBaseline = File.Exists(BaselinePath) ? await File.ReadAllTextAsync(BaselinePath) : null;
+        var previousRuntime = File.Exists(runtimePath) ? await File.ReadAllTextAsync(runtimePath) : null;
         try
         {
             await ReplaceAsync(path, content);
             await ReplaceAsync(BaselinePath, baseline);
+            if (runtime is not null) await ReplaceAsync(runtimePath, runtime);
         }
         catch
         {
             if (previous is not null) await ReplaceAsync(path, previous);
             else if (File.Exists(path)) File.Delete(path);
+            if (previousBaseline is not null) await ReplaceAsync(BaselinePath, previousBaseline);
+            else if (File.Exists(BaselinePath)) File.Delete(BaselinePath);
+            if (runtime is not null)
+            {
+                if (previousRuntime is not null) await ReplaceAsync(runtimePath, previousRuntime);
+                else if (File.Exists(runtimePath)) File.Delete(runtimePath);
+            }
             throw;
         }
     }

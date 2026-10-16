@@ -6,7 +6,7 @@
   "GlobalTunEnabled": false,
   "SystemProxyPort": 10809,
   "SystemProxyAuthEnabled": false,
-  "RouteFinalMode": "auto",
+  "RouteFinalMode": "default",
   "Servers": [],
   "Applications": [],
   "RoutingRules": [],
@@ -21,7 +21,7 @@
       "ServerName": "cloudflare-dns.com",
       "Path": "/dns-query"
     },
-    "DnsStrategy": "prefer_ipv4",
+    "DnsStrategy": "ipv4_only",
     "DnsCacheEnabled": true,
     "DnsReverseMapping": true,
     "ChinaDnsDirect": true,

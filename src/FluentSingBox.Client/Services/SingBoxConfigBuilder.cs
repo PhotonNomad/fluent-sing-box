@@ -13,13 +13,14 @@ public sealed class SingBoxConfigBuilder
         if (options.UsesFileConfiguration) return ConfigurationComposer.BuildNative(settings, logPath, useUpdatedRuleSets);
         ConfigurationComposer.ValidateOptions(options);
         if (settings.SystemProxyPort is < 1 or > 65535) throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_TheLocalProxyPortMustBeBetween1"));
-        var defaultServer = settings.Servers.FirstOrDefault(server => server.Id == settings.DefaultServerId)
-            ?? throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_AddAndSelectADefaultServerFirst"));
+        var defaultServer = settings.Servers.FirstOrDefault(server => server.Id == settings.DefaultServerId);
+        if (defaultServer is null && settings.Servers.Count > 0 && settings.DefaultServerId != "direct")
+            throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_AddAndSelectADefaultServerFirst"));
         var finalOutbound = settings.RouteFinalMode switch
         {
-            "auto" => settings.GlobalTunEnabled ? OutboundTag(defaultServer.Id) : "direct",
+            "auto" => settings.GlobalTunEnabled ? "proxy" : "direct",
             "direct" => "direct",
-            "default" => OutboundTag(defaultServer.Id),
+            "default" => "proxy",
             "server" => settings.Servers.Any(server => server.Id == settings.RouteFinalServerId)
                 ? OutboundTag(settings.RouteFinalServerId!)
                 : throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_TheServerSelectedForUnmatchedTrafficFinalNo")),
@@ -66,11 +67,17 @@ public sealed class SingBoxConfigBuilder
             if (!string.IsNullOrWhiteSpace(sourceTag) && !importedTags.TryAdd(sourceTag, OutboundTag(server.Id)))
                 throw new InvalidOperationException(Localization.Format("SingBoxConfigBuilder_DuplicateServerTag0GiveEachServerA", sourceTag));
         }
-        foreach (var server in settings.Servers.OrderByDescending(server => server.Id == defaultServer.Id))
+        foreach (var server in settings.Servers.OrderByDescending(server => server.Id == defaultServer?.Id))
         {
             (server.ConfigSection == "endpoints" ? endpoints : outbounds).Add(BuildServerOutbound(server, OutboundTag(server.Id), importedTags));
         }
         outbounds.Add(new JsonObject { ["type"] = "direct", ["tag"] = "direct" });
+        outbounds.Add(new JsonObject
+        {
+            ["type"] = "selector", ["tag"] = "proxy",
+            ["outbounds"] = new JsonArray(settings.Servers.Select(server => (JsonNode?)JsonValue.Create(OutboundTag(server.Id))).Append(JsonValue.Create("direct")).ToArray()),
+            ["default"] = defaultServer is null ? "direct" : OutboundTag(defaultServer.Id)
+        });
 
         var systemHttpInbound = BuildManagedInbound(settings);
 
@@ -145,7 +152,7 @@ public sealed class SingBoxConfigBuilder
                 ["inbound"] = new JsonArray("app-tun"),
                 [group.Key] = new JsonArray(group.Select(path => (JsonNode?)JsonValue.Create(group.Key == "process_path_regex" ? ApplicationMatching.StorePathRegex(path)! : path)).ToArray()),
                 ["action"] = "route",
-                ["outbound"] = OutboundTag(server.Id)
+                ["outbound"] = server is null ? "proxy" : OutboundTag(server.Id)
             });
         }
 
@@ -200,7 +207,7 @@ public sealed class SingBoxConfigBuilder
         {
             ["inbound"] = new JsonArray("system-http"),
             ["action"] = "route",
-            ["outbound"] = OutboundTag(defaultServer.Id)
+            ["outbound"] = "proxy"
         });
 
         var route = new JsonObject
@@ -225,10 +232,11 @@ public sealed class SingBoxConfigBuilder
         var dnsServers = new JsonArray
         {
             ConfigurationComposer.Resolver(options.DirectDns, "local"),
-            ConfigurationComposer.Resolver(options.ProxyDns, "proxy-dns", OutboundTag(defaultServer.Id)),
             new JsonObject { ["type"] = "local", ["tag"] = "system-dns" }
         };
 
+        if (defaultServer is not null) dnsServers.Insert(1, ConfigurationComposer.Resolver(options.ProxyDns, "proxy-dns", "proxy"));
+        var dnsFinal = defaultServer is null ? "local" : "proxy-dns";
         var dnsRules = new JsonArray
         {
             new JsonObject
@@ -243,7 +251,7 @@ public sealed class SingBoxConfigBuilder
         // resolver: all foreign DNS uses the default node; app rules select connections.
         if (options.ChinaDnsDirect && settings.RoutingRules.Any(rule => rule.IsEnabled && rule.BuiltInKind == "china-domains"))
             dnsRules.Add(new JsonObject { ["rule_set"] = "geosite-geolocation-cn", ["server"] = "local" });
-        dnsRules.Add(new JsonObject { ["inbound"] = new JsonArray("system-http"), ["server"] = "proxy-dns" });
+        dnsRules.Add(new JsonObject { ["inbound"] = new JsonArray("system-http"), ["server"] = dnsFinal });
 
         var config = new JsonObject
         {
@@ -257,7 +265,7 @@ public sealed class SingBoxConfigBuilder
             {
                 ["servers"] = dnsServers,
                 ["rules"] = dnsRules,
-                ["final"] = "proxy-dns",
+                ["final"] = dnsFinal,
                 ["strategy"] = options.DnsStrategy,
                 ["disable_cache"] = !options.DnsCacheEnabled,
                 ["reverse_mapping"] = options.DnsReverseMapping
@@ -313,7 +321,7 @@ public sealed class SingBoxConfigBuilder
         return ruleSet;
     }
 
-    private static void AddAddressRule(JsonArray routeRules, RouteRuleProfile rule, ServerProfile defaultServer, AppSettingsData settings)
+    private static void AddAddressRule(JsonArray routeRules, RouteRuleProfile rule, ServerProfile? defaultServer, AppSettingsData settings)
     {
         RouteAddressValidator.Validate(rule.Addresses);
         var tokens = rule.Addresses
@@ -483,13 +491,13 @@ public sealed class SingBoxConfigBuilder
         }
     }
 
-    private static string ResolveOutbound(RouteRuleProfile rule, ServerProfile defaultServer, AppSettingsData settings) =>
+    private static string ResolveOutbound(RouteRuleProfile rule, ServerProfile? defaultServer, AppSettingsData settings) =>
         rule.Outbound switch
         {
             "direct" => "direct",
             "block" => "block",
-            "proxy" => OutboundTag(settings.Servers.FirstOrDefault(server => server.Id == rule.ServerId)?.Id ?? defaultServer.Id),
-            _ => OutboundTag(defaultServer.Id)
+            "proxy" => settings.Servers.FirstOrDefault(server => server.Id == rule.ServerId) is { } selected ? OutboundTag(selected.Id) : "proxy",
+            _ => "proxy"
         };
 
     private static bool IsIpRule(string value)

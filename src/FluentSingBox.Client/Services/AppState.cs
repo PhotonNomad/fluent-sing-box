@@ -10,6 +10,8 @@ public sealed class AppState
     private readonly HashSet<INotifyPropertyChanged> _observed = new(ReferenceEqualityComparer.Instance);
     private readonly List<Action> _removeCollectionObservers = [];
     private string _settingsPath = string.Empty;
+    private AppSettingsData? _committedSettings;
+    private bool _restoring;
 
     public static AppState Current { get; } = new();
     public AppSettingsData Settings { get; private set; } = new();
@@ -40,7 +42,7 @@ public sealed class AppState
         }
 
 
-        if (!Settings.Servers.Any(server => server.Id == Settings.DefaultServerId))
+        if (Settings.DefaultServerId != "direct" && !Settings.Servers.Any(server => server.Id == Settings.DefaultServerId))
         {
             Settings.DefaultServerId = Settings.Servers.FirstOrDefault()?.Id;
         }
@@ -66,6 +68,7 @@ public sealed class AppState
         foreach (var item in Settings.Servers) Observe(item);
         foreach (var item in Settings.RoutingRules) Observe(item);
         await SavePreferencesAsync();
+        _committedSettings = ConfigurationFileService.Snapshot(Settings);
     }
 
     public void AddServer(ServerProfile server)
@@ -149,8 +152,33 @@ public sealed class AppState
         await _saveGate.WaitAsync();
         try
         {
-            await ConfigurationFileService.SynchronizeAsync(Settings);
-            await SettingsStore.SaveAsync(_settingsPath, Settings);
+            var candidate = ConfigurationFileService.Snapshot(Settings);
+            await ConfigurationFileService.SynchronizeAsync(candidate);
+            await SettingsStore.SaveAsync(_settingsPath, candidate);
+            Settings.Configuration.ExternalFilePath = candidate.Configuration.ExternalFilePath;
+            Settings.Configuration.NativeEnabled = candidate.Configuration.NativeEnabled;
+            Settings.Configuration.NativeFilePath = candidate.Configuration.NativeFilePath;
+            Settings.Configuration.NativeJson = candidate.Configuration.NativeJson;
+            _committedSettings = candidate;
+        }
+        catch
+        {
+            if (_committedSettings is not null)
+            {
+                _restoring = true;
+                try
+                {
+                    SettingsCheckpoint.Restore(Settings, ConfigurationFileService.Snapshot(_committedSettings));
+                    foreach (var server in Settings.Servers) server.IsDefault = server.Id == Settings.DefaultServerId;
+                    foreach (var app in Settings.Applications)
+                    {
+                        app.AvailableServers.Clear();
+                        foreach (var server in Settings.Servers) app.AvailableServers.Add(server);
+                    }
+                }
+                finally { _restoring = false; }
+            }
+            throw;
         }
         finally
         {
@@ -159,11 +187,17 @@ public sealed class AppState
     }
 
     // Closing must not depend on reading, rebuilding or validating core configuration.
-    public async Task SavePreferencesAsync()
+    public async Task SavePreferencesAsync(bool configurationCommitted = false)
     {
         if (string.IsNullOrEmpty(_settingsPath)) return;
         await _saveGate.WaitAsync();
-        try { await SettingsStore.SaveAsync(_settingsPath, Settings); }
+        try
+        {
+            await SettingsStore.SaveAsync(_settingsPath, Settings);
+            // Source-form edits have already passed ImportAsync; retain their disabled
+            // entries and TUN preferences as part of the next rollback checkpoint.
+            if (configurationCommitted) _committedSettings = ConfigurationFileService.Snapshot(Settings);
+        }
         finally { _saveGate.Release(); }
     }
 
@@ -206,6 +240,9 @@ public sealed class AppState
     // Model notifications cannot await persistence; report failures instead of dropping tasks.
     private async Task SaveObservedAsync()
     {
+        if (_restoring) return;
+        // Coalesce the multiple property notifications belonging to one UI edit.
+        await Task.Yield();
         try { await SaveAsync(); }
         catch (Exception exception)
         {

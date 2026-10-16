@@ -12,6 +12,11 @@ var root = Path.GetFullPath(args.FirstOrDefault() ?? Environment.CurrentDirector
 var artifacts = Path.Combine(root, "artifacts", "client", "run-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(artifacts);
 Environment.SetEnvironmentVariable("FLUENTSINGBOX_DATA_DIR", artifacts);
+if (args.Contains("--probe-ipv6"))
+{
+    Console.WriteLine(JsonSerializer.Serialize(await new Ipv6ConnectivityService().CheckAsync(force: true)));
+    return 0;
+}
 if (args.Length >= 3 && args[1] == "--pipe-client-fixture")
 {
     using var pipe = new System.IO.Pipes.NamedPipeClientStream(".", args[2], System.IO.Pipes.PipeDirection.InOut, System.IO.Pipes.PipeOptions.Asynchronous);
@@ -53,6 +58,8 @@ int failures = 0;
 void Assert(bool test, string reason) { if (!test) throw new Exception(reason); }
 async Task Case(string name, Func<Task> action)
 {
+    if (args.Contains("--ipv6-only") && !name.StartsWith("ipv6/", StringComparison.Ordinal)) return;
+    if (args.Contains("--config-save-only") && !name.StartsWith("configuration-save/", StringComparison.Ordinal)) return;
     if (args.Contains("--china-defaults-only") && !name.StartsWith("defaults/china-", StringComparison.Ordinal)) return;
     if (args.Contains("--configuration-recovery-only") && !name.StartsWith("configuration-recovery/", StringComparison.Ordinal)) return;
     if (args.Contains("--check-logs-only") && !name.StartsWith("check-logs/", StringComparison.Ordinal)) return;
@@ -60,6 +67,53 @@ async Task Case(string name, Func<Task> action)
     catch (Exception e) { failures++; results.Add(new { name, status = "failed", message = e.Message }); Console.WriteLine("FAIL " + name + ": " + e.Message); }
 }
 int FreePort() { var socket = new TcpListener(IPAddress.Loopback, 0); socket.Start(); var port = ((IPEndPoint)socket.LocalEndpoint).Port; socket.Stop(); return port; }
+await Case("ipv6/local-address-is-not-connectivity", async () =>
+{
+    Assert(!Ipv6ConnectivityService.IsGlobalAddress(IPAddress.Parse("fdfe:dcba:9876::1")) && !Ipv6ConnectivityService.IsGlobalAddress(IPAddress.Parse("fe80::1")) && !Ipv6ConnectivityService.IsGlobalAddress(IPAddress.IPv6Loopback), "TUN, link-local or loopback counted as global IPv6");
+    var failed = new Ipv6ConnectivityService(() => new(true, true), (_, _) => Task.FromResult(false));
+    Assert((await failed.CheckAsync()).Status == Ipv6ConnectivityStatus.Unconfirmed, "A global address incorrectly proved IPv6 connectivity");
+    var tun = new Ipv6ConnectivityService(() => new(true, false), (_, _) => Task.FromResult(true));
+    var result = await tun.CheckAsync();
+    Assert(result.Status == Ipv6ConnectivityStatus.Reachable && !result.HasGlobalAddress, "Working current TUN path was rejected for lacking a native global address");
+});
+await Case("ipv6/no-local-and-unsupported-are-distinct", async () =>
+{
+    var unavailable = new Ipv6ConnectivityService(() => new(true, false), (_, _) => Task.FromResult(false));
+    Assert((await unavailable.CheckAsync()).Status == Ipv6ConnectivityStatus.NoLocalAddress, "Missing local address was not distinguished");
+    var probes = 0;
+    var unsupported = new Ipv6ConnectivityService(() => new(false, false), (_, _) => { probes++; return Task.FromResult(true); });
+    Assert((await unsupported.CheckAsync()).Status == Ipv6ConnectivityStatus.Unsupported && probes == 0, "Unsupported IPv6 stack attempted a probe");
+});
+await Case("ipv6/coalescing-cache-network-change-and-cancellation", async () =>
+{
+    var probes = 0;
+    var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    var service = new Ipv6ConnectivityService(() => new(true, true), async (_, _) => { Interlocked.Increment(ref probes); return await release.Task; });
+    using var cancellation = new CancellationTokenSource();
+    var canceled = service.CheckAsync(cancellation: cancellation.Token);
+    var retained = service.CheckAsync();
+    cancellation.Cancel();
+    var canceledOnlyWaiter = false;
+    try { await canceled; } catch (OperationCanceledException) { canceledOnlyWaiter = true; }
+    release.SetResult(true);
+    Assert(canceledOnlyWaiter && (await retained).Status == Ipv6ConnectivityStatus.Reachable && probes == 2, "Canceling one page canceled the shared probe or probes were duplicated");
+    await service.CheckAsync();
+    Assert(probes == 2, "Recent result was not cached");
+    service.Invalidate();
+    await service.CheckAsync();
+    Assert(probes == 4, "Network change did not invalidate cached connectivity");
+    await service.CheckAsync(force: true);
+    Assert(probes == 6, "Explicit recheck reused the old result");
+});
+await Case("ipv6/timeout-and-single-provider-success", async () =>
+{
+    var bounded = new Ipv6ConnectivityService(() => new(true, true), async (_, token) => { await Task.Delay(Timeout.Infinite, token); return true; }, TimeSpan.FromMilliseconds(80));
+    var timer = Stopwatch.StartNew();
+    Assert((await bounded.CheckAsync()).Status == Ipv6ConnectivityStatus.Unconfirmed && timer.Elapsed < TimeSpan.FromSeconds(2), "Probe timeout blocked or claimed definitive lack of IPv6");
+    var partial = new Ipv6ConnectivityService(() => new(true, true), (target, _) => Task.FromResult(target.Name == "Cloudflare"));
+    var result = await partial.CheckAsync();
+    Assert(result.Status == Ipv6ConnectivityStatus.Reachable && result.SuccessfulProbes == 1 && result.TotalProbes == 2, "Partial reachability was lost");
+});
 foreach (var correctIdentity in new[] { true, false })
 await Case("ipc/controller-created-pipe-identity-" + correctIdentity, async () =>
 {
@@ -112,17 +166,139 @@ await Case("check-logs/runtime-log-isolation-and-cleanup", async () =>
 });
 AppSettingsData SyntaxFixture()
 {
-    var fixture = new AppSettingsData { SystemProxyPort = FreePort(), SingBoxExecutablePath = syntaxCore };
+    var fixture = new AppSettingsData { SystemProxyPort = FreePort(), SingBoxExecutablePath = syntaxCore, RouteFinalMode = "auto" };
     fixture.Servers.Add(new ServerProfile { Id = "syntax-node", Name = "syntax-node", OutboundJson = """{"type":"socks","server":"127.0.0.1","server_port":1}""" });
     fixture.DefaultServerId = "syntax-node"; fixture.EnsureBuiltInRules();
     return fixture;
 }
+await Case("configuration-save/validated-source-and-runtime-without-restart", async () =>
+{
+    var previousData = Environment.GetEnvironmentVariable("FLUENTSINGBOX_DATA_DIR");
+    Environment.SetEnvironmentVariable("FLUENTSINGBOX_DATA_DIR", Path.Combine(artifacts, "validated-save"));
+    try
+    {
+        var settings = SyntaxFixture();
+        await ConfigurationFileService.EnsureAsync(settings);
+        settings.Applications.Add(new() { Id = "autosave", Name = "Codex", MatchMode = "name", ProcessNames = ["ChatGPT.exe", "codex.exe"], IsEnabled = true, ServerId = settings.DefaultServerId! });
+        await ConfigurationFileService.SynchronizeAsync(settings);
+        var runtimePath = Path.Combine(AppPaths.DataDirectory, "sing-box", "config.json");
+        var runtime = JsonNode.Parse(await File.ReadAllTextAsync(runtimePath))!;
+        Assert(runtime["route"]!["rules"]!.AsArray().Any(rule => rule?["process_name"]?.AsArray().Any(name => name?.ToString() == "codex.exe") == true), "App rule missing from actual next-start config");
+        var source = JsonNode.Parse(await File.ReadAllTextAsync(ConfigurationFileService.FilePath))!;
+        source["dns"]!["strategy"] = "ipv4_only";
+        await ConfigurationFileService.ImportAsync(settings, source.ToJsonString());
+        Assert(JsonNode.Parse(await File.ReadAllTextAsync(runtimePath))!["dns"]!["strategy"]!.ToString() == "ipv4_only", "DNS edit missing from actual config");
+        var beforeSource = await File.ReadAllTextAsync(ConfigurationFileService.FilePath);
+        var beforeRuntime = await File.ReadAllTextAsync(runtimePath);
+        var beforeBaseline = await File.ReadAllTextAsync(ConfigurationFileService.FilePath + ".generated-base");
+        source["route"]!["final"] = "nonexistent-outbound";
+        var rejected = false;
+        try { await ConfigurationFileService.ImportAsync(settings, source.ToJsonString()); } catch (InvalidOperationException) { rejected = true; }
+        Assert(rejected, "Invalid route accepted");
+        Assert(await File.ReadAllTextAsync(ConfigurationFileService.FilePath) == beforeSource && await File.ReadAllTextAsync(runtimePath) == beforeRuntime, "Invalid import changed source or runtime config");
+        settings.Configuration.Sections["route"] = """{"final":"nonexistent-outbound"}""";
+        rejected = false;
+        try { await ConfigurationFileService.SynchronizeAsync(settings); } catch (InvalidOperationException) { rejected = true; }
+        Assert(rejected && await File.ReadAllTextAsync(ConfigurationFileService.FilePath) == beforeSource && await File.ReadAllTextAsync(runtimePath) == beforeRuntime, "Invalid model edit changed committed files");
+        Assert(await File.ReadAllTextAsync(ConfigurationFileService.FilePath + ".generated-base") == beforeBaseline, "Invalid edit advanced merge baseline");
+        Assert(!File.Exists(Path.Combine(AppPaths.DataDirectory, "sing-box", "process.json")) && !File.Exists(Path.Combine(AppPaths.DataDirectory, "sing-box", "sing-box.log")), "Saving started core or touched runtime log");
+    }
+    finally { Environment.SetEnvironmentVariable("FLUENTSINGBOX_DATA_DIR", previousData); }
+});
+await Case("configuration-save/imported-without-gui-node-port-sync", async () =>
+{
+    var previousData = Environment.GetEnvironmentVariable("FLUENTSINGBOX_DATA_DIR");
+    Environment.SetEnvironmentVariable("FLUENTSINGBOX_DATA_DIR", Path.Combine(artifacts, "node-free-save"));
+    try
+    {
+        var settings = new AppSettingsData { SingBoxExecutablePath = syntaxCore, SystemProxyPort = FreePort() };
+        await ConfigurationFileService.ImportAsync(settings, """{"outbounds":[{"type":"direct","tag":"custom-direct"}],"route":{"final":"custom-direct"}}""");
+        settings.SystemProxyPort = FreePort();
+        await ConfigurationFileService.SynchronizeAsync(settings);
+        foreach (var path in new[] { ConfigurationFileService.FilePath, Path.Combine(AppPaths.DataDirectory, "sing-box", "config.json") })
+        {
+            var config = JsonNode.Parse(await File.ReadAllTextAsync(path))!;
+            Assert(config["inbounds"]!.AsArray().Single(item => item?["tag"]?.ToString() == "system-http")!["listen_port"]!.GetValue<int>() == settings.SystemProxyPort, "Node-free port edit missing from source or runtime");
+            Assert(config["route"]!["final"]!.ToString() == "custom-direct", "Node-free edit discarded imported routing");
+        }
+    }
+    finally { Environment.SetEnvironmentVariable("FLUENTSINGBOX_DATA_DIR", previousData); }
+});
+await Case("configuration-save/restore-bound-models-and-membership", () =>
+{
+    var settings = SyntaxFixture();
+    settings.Applications.Add(new() { Id = "checkpoint-app", Name = "Saved", ProcessNames = ["codex.exe"] });
+    var saved = ConfigurationFileService.Snapshot(settings);
+    var server = settings.Servers[0];
+    var app = settings.Applications[0];
+    app.ProcessNames.Clear(); app.ProcessNames.Add("invalid/path.exe");
+    server.Name = "Invalid";
+    settings.Servers.Add(new() { Id = "invalid-added" });
+    settings.SystemProxyPort = -1;
+    SettingsCheckpoint.Restore(settings, saved);
+    Assert(ReferenceEquals(server, settings.Servers[0]) && ReferenceEquals(app, settings.Applications[0]), "Rollback broke UI model identities");
+    Assert(settings.Servers.Count == 1 && server.Name == "syntax-node" && app.ProcessNames.SequenceEqual(new[] { "codex.exe" }) && settings.SystemProxyPort == saved.SystemProxyPort, "Rollback did not restore last saved values");
+    return Task.CompletedTask;
+});
 async Task CheckOptions(AppSettingsData settings, string name)
 {
     var path = Path.Combine(artifacts, name + ".json");
     await File.WriteAllTextAsync(path, new SingBoxConfigBuilder().Build(settings, path + ".log", true));
     await File.WriteAllTextAsync(path + ".check.txt", await CoreCommand.CheckAsync(syntaxCore, path));
 }
+foreach (var scenario in new[] { "empty", "node", "explicit-direct", "missing-default" })
+await Case("default-outlet/" + scenario, async () =>
+{
+    var settings = SyntaxFixture(); settings.RouteFinalMode = "default";
+    if (scenario == "empty") { settings.Servers.Clear(); settings.DefaultServerId = null; }
+    if (scenario == "explicit-direct") settings.DefaultServerId = "direct";
+    if (scenario == "missing-default")
+    {
+        settings.DefaultServerId = "missing";
+        var rejected = false;
+        try { new SingBoxConfigBuilder().Build(settings, "fixture.log", true); } catch (InvalidOperationException) { rejected = true; }
+        Assert(rejected, "Missing selected node silently fell back to direct");
+        return;
+    }
+    await CheckOptions(settings, "default-outlet-" + scenario);
+    var config = JsonNode.Parse(new SingBoxConfigBuilder().Build(settings, "fixture.log", true))!;
+    var selector = config["outbounds"]!.AsArray().Single(item => item?["tag"]?.ToString() == "proxy")!;
+    Assert(selector["type"]!.ToString() == "selector" && config["route"]!["final"]!.ToString() == "proxy", "Stable default outlet missing");
+    Assert(selector["default"]!.ToString() == (scenario == "node" ? "proxy-syntax-node" : "direct"), "Wrong selected outlet");
+    Assert(!selector.ToJsonString().Contains("urltest"), "Automatic fallback introduced");
+    Assert(config["dns"]!["final"]!.ToString() == (scenario == "node" ? "proxy-dns" : "local"), "DNS does not follow the actual outlet");
+});
+await Case("default-outlet/managed-node-lifecycle", async () =>
+{
+    var previousData = Environment.GetEnvironmentVariable("FLUENTSINGBOX_DATA_DIR");
+    Environment.SetEnvironmentVariable("FLUENTSINGBOX_DATA_DIR", Path.Combine(artifacts, "default-outlet-lifecycle"));
+    try
+    {
+        var settings = new AppSettingsData { SingBoxExecutablePath = syntaxCore, SystemProxyPort = FreePort() }; settings.EnsureBuiltInRules();
+        await ConfigurationFileService.EnsureAsync(settings);
+        var path = ConfigurationFileService.FilePath;
+        var document = JsonNode.Parse(await File.ReadAllTextAsync(path))!;
+        document["route"]!["rules"]!.AsArray().Insert(0, new JsonObject { ["action"] = "reject", ["domain_suffix"] = new JsonArray("keep.example") });
+        await ConfigurationFileService.ImportAsync(settings, document.ToJsonString());
+        var node = SyntaxFixture().Servers[0]; settings.Servers.Add(node); settings.DefaultServerId = node.Id;
+        foreach (var selected in new string?[] { node.Id, "direct", node.Id, null })
+        {
+            if (selected is null) settings.Servers.Clear();
+            settings.DefaultServerId = selected;
+            await ConfigurationFileService.SynchronizeAsync(settings);
+            var source = JsonNode.Parse(await File.ReadAllTextAsync(path))!;
+            var runtime = JsonNode.Parse(await File.ReadAllTextAsync(Path.Combine(AppPaths.DataDirectory, "sing-box", "config.json")))!;
+            foreach (var config in new[] { source, runtime })
+            {
+                var outlet = config["outbounds"]!.AsArray().Single(item => item?["tag"]?.ToString() == "proxy")!;
+                Assert(outlet["default"]!.ToString() == (selected is null or "direct" ? "direct" : "proxy-syntax-node"), "Node lifecycle did not synchronize");
+                Assert(config["route"]!["rules"]!.AsArray().Any(item => item?["domain_suffix"]?[0]?.ToString() == "keep.example"), "Manual rule lost during node lifecycle");
+                Assert(config["dns"]!["final"]!.ToString() == (selected is null or "direct" ? "local" : "proxy-dns"), "Stale proxy DNS remained");
+            }
+        }
+    }
+    finally { Environment.SetEnvironmentVariable("FLUENTSINGBOX_DATA_DIR", previousData); }
+});
 foreach (var scenario in new[] { "first-run", "deleted-default", "backup", "invalid-backup", "generated", "external-missing", "existing", "synchronize-deleted" })
 await Case("configuration-recovery/" + scenario, async () =>
 {
@@ -180,7 +356,7 @@ await Case("configuration-recovery/" + scenario, async () =>
             if (scenario == "generated") Assert(json["outbounds"]!.AsArray().Any(item => item?["tag"]?.ToString() == "proxy-syntax-node"), "Saved nodes were not regenerated");
             else
             {
-                Assert(json["route"]!["final"]!.ToString() == "direct" && json["outbounds"]!.AsArray().Count == 1, "First-run recovery contains proxy nodes");
+                Assert(json["route"]!["final"]!.ToString() == "proxy" && json["outbounds"]!.AsArray().Count == 2, "First-run recovery contains proxy nodes");
                 Assert(json["route"]!["rule_set"]!.AsArray().All(item => Path.IsPathFullyQualified(item!["path"]!.ToString()) && File.Exists(item["path"]!.ToString())), "Template-relative paths leaked into the live file");
             }
             if (scenario == "invalid-backup") Assert(await File.ReadAllTextAsync(path + ".backup") == "{invalid", "Invalid backup was discarded");
@@ -220,7 +396,7 @@ await Case("defaults/china-routing-" + mode, async () =>
     Assert(rules.Any(item => item?["action"]?.ToString() == "hijack-dns") == (mode != "system"), "DNS interception does not follow TUN availability");
     var dns = config["dns"]!;
     Assert(dns["reverse_mapping"]!.GetValue<bool>() && !dns["disable_cache"]!.GetValue<bool>(), "DNS domain mapping or caching disabled");
-    Assert(dns["strategy"]!.ToString() == "prefer_ipv4", "Default DNS strategy was overridden");
+    Assert(dns["strategy"]!.ToString() == "ipv4_only", "Default DNS strategy must be IPv4 only");
     Assert(dns["servers"]!.AsArray().Count == 3 && !dns["rules"]!.ToJsonString().Contains("process_"), "Process DNS must not be generated");
     var domestic = dns["servers"]![0]!;
     Assert(domestic["type"]!.ToString() == "udp" && domestic["server"]!.ToString() == "114.114.114.114" && domestic["detour"] is null, "Domestic DNS must use 114 directly");
@@ -228,11 +404,11 @@ await Case("defaults/china-routing-" + mode, async () =>
     Assert(!dns["servers"]!.AsArray().Any(server => server?["tag"]?.ToString() == "bootstrap") && route["default_domain_resolver"]!.ToString() == "local", "Node resolution must reuse domestic DNS");
     Assert(dns["rules"]![0]!["server"]!.ToString() == "system-dns", "LAN names must use system DNS");
     Assert(!config["experimental"]!["cache_file"]!["store_dns"]!.GetValue<bool>() && !config["experimental"]!["cache_file"]!["store_fakeip"]!.GetValue<bool>(), "Persistent DNS cache enabled");
-    Assert(dns["servers"]![1]!["detour"]!.ToString() == "proxy-syntax-node", "Foreign DNS bypasses proxy");
+    Assert(dns["servers"]![1]!["detour"]!.ToString() == "proxy", "Foreign DNS bypasses proxy");
     Assert(dns["rules"]!.AsArray().Single(item => item?["rule_set"]?.ToString() == "geosite-geolocation-cn")!["server"]!.ToString() == "local", "China DNS uses overseas resolver");
     Assert(dns["rules"]![0]!["domain_suffix"]![0]!.ToString() == ".local", "LAN DNS priority lost");
     Assert(dns["final"]!.ToString() == "proxy-dns", "Default DNS does not use the proxy resolver");
-    Assert(route["final"]!.ToString() == (mode == "global" ? "proxy-syntax-node" : "direct"), "Unselected app routing behavior changed");
+    Assert(route["final"]!.ToString() == (mode == "global" ? "proxy" : "direct"), "Unselected app routing behavior changed");
     if (mode == "application")
     {
         var appIndex = Index(item => item?["process_name"] is not null);
@@ -240,7 +416,7 @@ await Case("defaults/china-routing-" + mode, async () =>
         Assert(dns["rules"]![1]!["rule_set"]!.ToString() == "geosite-geolocation-cn", "China DNS priority lost");
     }
     else if (mode == "system")
-        Assert(rules.Last()!["inbound"]![0]!.ToString() == "system-http" && rules.Last()!["outbound"]!.ToString() == "proxy-syntax-node", "Unmatched system proxy traffic does not use default node");
+        Assert(rules.Last()!["inbound"]![0]!.ToString() == "system-http" && rules.Last()!["outbound"]!.ToString() == "proxy", "Unmatched system proxy traffic does not use default node");
 });
 await Case("defaults/china-saved-preferences-preserved", () =>
 {
@@ -633,7 +809,7 @@ await Case("configuration/route-final-" + mode, async () =>
     settings.RoutingRules.Insert(0, new RouteRuleProfile { Name = "Explicit direct", Addresses = "full:example.com", Outbound = "direct", Scope = "both", IsEnabled = true });
     await CheckOptions(settings, "route-final-" + mode);
     var config = JsonNode.Parse(new SingBoxConfigBuilder().Build(settings, "fixture.log", true))!;
-    var expected = mode == "direct" ? "direct" : SingBoxConfigBuilder.OutboundTag(mode == "default" ? "syntax-node" : "final-node");
+    var expected = mode == "direct" ? "direct" : mode == "default" ? "proxy" : SingBoxConfigBuilder.OutboundTag("final-node");
     Assert(config["route"]!["final"]!.ToString() == expected, "Incorrect final outbound");
     var rules = config["route"]!["rules"]!.AsArray();
     Assert(!rules.Any(rule => rule?["action"]?.ToString() == "route" && rule?["inbound"]?[0]?.ToString() == "system-http" && rule?["domain"] is null && rule?["ip_cidr"] is null), "System proxy catch-all shadows final");
@@ -657,7 +833,7 @@ await Case("configuration/global-tun-without-app-matching", async () =>
     await CheckOptions(settings, "global-tun");
     var config = JsonNode.Parse(new SingBoxConfigBuilder().Build(settings, "fixture.log", true))!;
     Assert(config["inbounds"]!.AsArray().Count(item => item!["type"]!.ToString() == "tun") == 1, "Global TUN missing or duplicated");
-    Assert(config["route"]!["final"]!.ToString() == SingBoxConfigBuilder.OutboundTag(settings.DefaultServerId!), "Global traffic did not select default server");
+    Assert(config["route"]!["final"]!.ToString() == "proxy", "Global traffic did not select default server");
     Assert(config["dns"]!["final"]!.ToString() == "proxy-dns", "Global TUN DNS is local by default");
     Assert(!config["route"]!["rules"]!.AsArray().Any(item => item?["process_path"] is not null), "Global TUN retained app routing");
     Assert(ConfigurationComposer.RequiresElevation(config.ToJsonString()), "Global TUN did not request elevation");
@@ -749,7 +925,7 @@ await Case("configuration/group-" + type + "-references", async () =>
     await CheckOptions(settings, "group-" + type);
     var config = JsonNode.Parse(new SingBoxConfigBuilder().Build(settings, "fixture.log", true))!;
     Assert(config["outbounds"]![0]!["outbounds"]![0]!.ToString() == "proxy-syntax-node", "Group member reference not mapped");
-    Assert(config["route"]!["rules"]!.AsArray().Last()!["outbound"]!.ToString() == "proxy-group", "Group not selected as default");
+    Assert(config["route"]!["rules"]!.AsArray().Last()!["outbound"]!.ToString() == "proxy" && config["outbounds"]!.AsArray().Single(item => item?["tag"]?.ToString() == "proxy")!["default"]!.ToString() == "proxy-group", "Group not selected as default");
 });
 await Case("configuration/reference-deletion-guard-and-selector-cache", async () =>
 {
@@ -987,7 +1163,7 @@ await Case("import/wireguard-endpoint-preserved-in-correct-section", async () =>
     Assert(imported.ConfigSection == "endpoints" && JsonNode.DeepEquals(entry, JsonNode.Parse(imported.OutboundJson)), "Endpoint changed at import");
     var settings = new AppSettingsData { DefaultServerId = imported.Id }; settings.Servers.Add(imported);
     var config = JsonNode.Parse(new SingBoxConfigBuilder().Build(settings, Path.Combine(artifacts, "wg.log"), true))!;
-    Assert(config["endpoints"]!.AsArray().Count == 1 && config["outbounds"]!.AsArray().Count == 1, "Endpoint emitted as outbound");
+    Assert(config["endpoints"]!.AsArray().Count == 1 && config["outbounds"]!.AsArray().Count == 2, "Endpoint emitted as outbound");
     var path = Path.Combine(artifacts, "wg.json"); await File.WriteAllTextAsync(path, config.ToJsonString()); await CoreCommand.CheckAsync(corePath, path);
 });
 var upstreamPort = FreePort();
@@ -1036,7 +1212,7 @@ await Case("routing/application-shared-dns-and-duplicate-process-check", async (
     settings.RoutingRules.Add(new() { Addresses = "blocked.example", Outbound = "block" });
     var config = JsonNode.Parse(new SingBoxConfigBuilder().Build(settings, Path.Combine(artifacts, "app.log"), true))!;
     var dns = config["dns"]!["servers"]!.AsArray();
-    Assert(dns.Count == 3 && dns.Single(n => n!["tag"]!.ToString() == "proxy-dns")!["detour"]!.ToString() == "proxy-fixture-node", "DNS must use default node for every application");
+    Assert(dns.Count == 3 && dns.Single(n => n!["tag"]!.ToString() == "proxy-dns")!["detour"]!.ToString() == "proxy", "DNS must use default node for every application");
     var routes = config["route"]!["rules"]!.AsArray();
     Assert(routes.Single(n => n!["domain_suffix"]?[0]?.ToString() == "example.com")!["inbound"]![0]!.ToString() == "system-http", "Address rule caught unrelated TUN traffic");
     Assert(routes.Single(n => n!["domain_suffix"]?[0]?.ToString() == "blocked.example")!["inbound"] is null, "Block rule not global");
@@ -1084,6 +1260,24 @@ try
         Assert(await HttpGet() == "fixture-origin-through-core", "HTTP did not reach origin");
         var log = await LogReader.ReadTailAsync(upstreamLog);
         Assert(log.Contains($"127.0.0.1:{originPort}"), "Selected upstream did not observe destination");
+    });
+    await Case("network/default-outlet-direct-and-failed-node-no-fallback", async () =>
+    {
+        var candidate = ConfigurationFileService.Snapshot(settingsLive);
+        candidate.RouteFinalMode = "default"; candidate.RoutingRules.Clear();
+        candidate.Servers.Clear(); candidate.DefaultServerId = null;
+        try
+        {
+            await service.RestartAsync(candidate);
+            Assert(await HttpGet() == "fixture-origin-through-core", "Node-free default outlet cannot connect directly");
+            candidate.Servers.Add(new ServerProfile { Id = "failed-node", Name = "Failed node", OutboundJson = """{"type":"http","server":"127.0.0.1","server_port":1}""" });
+            candidate.DefaultServerId = "failed-node";
+            await service.RestartAsync(candidate);
+            var failed = false;
+            try { await HttpGet(); } catch (HttpRequestException) { failed = true; }
+            Assert(failed, "Failed selected node silently fell back to direct");
+        }
+        finally { await service.RestartAsync(settingsLive); }
     });
     await Case("network/socks5-uses-same-mixed-listener", async () =>
     {

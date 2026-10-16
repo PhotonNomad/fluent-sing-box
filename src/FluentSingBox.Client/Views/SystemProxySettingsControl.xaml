@@ -8,7 +8,7 @@
                 <ToggleSwitch x:Name="SystemProxySwitch" AutomationProperties.AutomationId="Proxy_SystemToggle" Toggled="SystemProxySwitch_Toggled" x:Uid="SystemProxySettingsControl_SystemProxySwitch" />
             </controls:SettingsCard>
             <controls:SettingsCard x:Uid="ProxyPage_SettingsCard13">
-                <ComboBox x:Name="DefaultServerComboBox" MinWidth="{StaticResource SettingActionControlMinWidth}" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="DefaultServer_SelectionChanged" x:Uid="ProxyPage_DefaultServerComboBox" />
+                <ComboBox x:Name="DefaultServerComboBox" AutomationProperties.AutomationId="Proxy_DefaultOutlet" MinWidth="{StaticResource SettingActionControlMinWidth}" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="DefaultServer_SelectionChanged" x:Uid="ProxyPage_DefaultServerComboBox" />
             </controls:SettingsCard>
             <controls:SettingsCard x:Uid="SystemProxySettingsControl_SettingsCard7">
                 <TextBox x:Name="PortTextBox" AutomationProperties.AutomationId="Proxy_PortTextBox" MinWidth="{StaticResource SettingActionControlMinWidth}" PlaceholderText="10809" InputScope="Number" />
@@ -21,9 +21,6 @@
             </controls:SettingsCard>
             <controls:SettingsCard x:Name="PasswordCard" Visibility="Collapsed" x:Uid="SystemProxySettingsControl_PasswordCard">
                 <PasswordBox x:Name="PasswordInput" AutomationProperties.AutomationId="Proxy_PasswordInput" MinWidth="{StaticResource SettingActionControlMinWidth}" x:Uid="SystemProxySettingsControl_PasswordInput" />
-            </controls:SettingsCard>
-            <controls:SettingsCard x:Uid="SystemProxySettingsControl_SettingsCard15">
-                <Button AutomationProperties.AutomationId="Proxy_Apply" Click="ApplySettings_Click" Style="{StaticResource AccentButtonStyle}" x:Uid="SystemProxySettingsControl_Button16" />
             </controls:SettingsCard>
         </controls:SettingsExpander.Items>
         <controls:SettingsExpander.ItemsFooter>

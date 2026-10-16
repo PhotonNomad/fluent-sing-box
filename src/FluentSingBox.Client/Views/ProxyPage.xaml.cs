@@ -37,7 +37,8 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
         }
     }
 
-    public Task<bool> FlushPendingChangesAsync() => _tun.FlushPendingChangesAsync();
+    public async Task<bool> FlushPendingChangesAsync()
+        => await SystemProxySettings.FlushPendingChangesAsync() && await _tun.FlushPendingChangesAsync();
 
     private void Applications_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs args) => UpdateEmptyApplicationsMessage();
 

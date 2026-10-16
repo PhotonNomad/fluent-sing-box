@@ -360,7 +360,7 @@ public sealed class AppSettingsData
     public ObservableCollection<RouteRuleProfile> RoutingRules { get; set; } = [];
     public ObservableCollection<ApplicationProxyProfile> Applications { get; set; } = [];
     public string? DefaultServerId { get; set; }
-    public string RouteFinalMode { get; set; } = "auto";
+    public string RouteFinalMode { get; set; } = "default";
     public string? RouteFinalServerId { get; set; }
     public string SingBoxExecutablePath { get; set; } = string.Empty;
     public string ThemeChoice { get; set; } = "system";

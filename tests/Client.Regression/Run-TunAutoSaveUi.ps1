@@ -71,7 +71,7 @@ function Case([string]$Name,[scriptblock]$Work) { & $Work; $taskResults.Add([psc
 
 try {
     $directory=Join-Path $taskRoot 'data'; New-Item -ItemType Directory -Path $directory | Out-Null
-    @{LanguageChoice='en-US';SingBoxExecutablePath=(Join-Path $ProjectRoot 'artifacts/server-editor/core/sing-box.exe');Servers=@(@{Id='lang-node';Name='Schema fixture';OutboundJson='{"type":"socks","server":"127.0.0.1","server_port":1}'});DefaultServerId='lang-node';SystemProxyEnabled=$false;Applications=@()} | ConvertTo-Json -Depth 20 | Set-Content (Join-Path $directory 'settings.json')
+    @{Configuration=@{DnsStrategy='prefer_ipv4'};LanguageChoice='en-US';SingBoxExecutablePath=(Join-Path $ProjectRoot 'artifacts/server-editor/core/sing-box.exe');Servers=@(@{Id='lang-node';Name='Schema fixture';OutboundJson='{"type":"socks","server":"127.0.0.1","server_port":1}'});DefaultServerId='lang-node';SystemProxyEnabled=$false;Applications=@()} | ConvertTo-Json -Depth 20 | Set-Content (Join-Path $directory 'settings.json')
     $script:sourcePath=Join-Path $directory 'sing-box/user-config.json'
     Start-Fixture $directory
     Case 'tun/top-level-minimal-fields' {
@@ -93,13 +93,25 @@ try {
         do { $errorSeen=@(Tree | Where-Object {$_.name -match 'bad-cidr'}).Count -gt 0; if(!$errorSeen){Start-Sleep -Milliseconds 150} } while(!$errorSeen -and [DateTime]::UtcNow -lt $deadline)
         Assert $errorSeen 'Core validation error was not displayed after automatic save'
         Assert ((Get-FileHash $script:sourcePath).Hash -eq $hash) 'Invalid CIDR overwrote configuration'
+        Assert ((Ui @('get-value','Proxy_Tun_0_address')).text -notmatch 'bad-cidr') 'Invalid CIDR did not revert in UI'
+        $runtime = Get-Content (Join-Path $directory 'sing-box/config.json') -Raw | ConvertFrom-Json
+        Assert (@($runtime.inbounds | Where-Object {$_.type -eq 'tun' -and $_.mtu -eq 1400}).Count -eq 1) 'Valid TUN edit missing from next-start config'
         Ui @('wait-for','Proxy_Tun_Status') | Out-Null
         Ui @('set-value','Proxy_Tun_0_address',"172.19.0.1/30`nfdfe:dcba:9876::1/126") | Out-Null
+    }
+    Case 'tun/ipv6-address-removal-shows-warning-without-changing-dns' {
+        Ui @('set-value','Proxy_Tun_0_address','172.19.0.1/30') | Out-Null
+        Wait-Document {param($d) @($d.inbounds | Where-Object {$_.type -eq 'tun' -and @($_.address).Count -eq 1}).Count -eq 1} | Out-Null
+        Ui @('wait-for','Proxy_Tun_IPv6_Status') | Out-Null
+        Assert (@(Tree | Where-Object { $_.name -match 'TUN has no IPv6 address' }).Count -gt 0) 'Removing TUN IPv6 did not warn about other interfaces'
+        Assert ((Get-Content $script:sourcePath -Raw | ConvertFrom-Json).dns.strategy -eq 'prefer_ipv4') 'TUN hint silently changed DNS strategy'
+        Ui @('set-value','Proxy_Tun_0_address',"172.19.0.1/30`nfdfe:dcba:9876::1/126") | Out-Null
+        Wait-Document {param($d) @($d.inbounds | Where-Object {$_.type -eq 'tun' -and @($_.address).Count -eq 2}).Count -eq 1} | Out-Null
     }
     Case 'tun/disable-and-restore-settings-without-starting-core' {
         Ui @('invoke','Proxy_Tun_Enabled','--action','toggle') | Out-Null
         Wait-Document {param($d) @($d.inbounds | Where-Object type -eq 'tun').Count -eq 0} | Out-Null
-        Ui @('invoke','Navigation_Routing') | Out-Null; Ui @('wait-for','Routing_Save') | Out-Null
+        Ui @('invoke','Navigation_Routing') | Out-Null; Ui @('wait-for','Routing_final') | Out-Null
         Ui @('invoke','Navigation_Proxy') | Out-Null; Ui @('wait-for','Proxy_Tun_0_mtu') | Out-Null
         Assert ((Ui @('get-value','Proxy_Tun_0_mtu')).text -eq '1400') 'Disabled TUN lost parameters'
         Ui @('invoke','Proxy_Tun_Enabled','--action','toggle') | Out-Null

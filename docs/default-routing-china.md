@@ -28,7 +28,7 @@
 
 ## IPv6、应用路径与缓存
 
-DNS 解析策略直接使用 DNS 页的 `strategy`，默认 `prefer_ipv4`（优先 IPv4，同时允许 IPv6）。客户端不再检测 IPv6 可用性或自动覆盖策略；`prefer_ipv6`、`ipv4_only`、`ipv6_only` 均按用户明确选择生效。`sing-box/dns-policy.log` 记录实际运行策略。
+DNS 解析策略直接使用 DNS 页的 `strategy`，新配置默认 `ipv4_only`（仅 IPv4）。IPv6 检测只提供提示，不自动覆盖策略；已有配置及明确选择的 `prefer_ipv4`、`prefer_ipv6`、`ipv6_only` 均保持原值。`sing-box/dns-policy.log` 记录实际运行策略。
 
 Store 应用保留设置中的具体路径，在生成路由时转成 `process_path_regex`，仅版本号通配，包名、架构、发布者和包内程序路径仍严格匹配。不存在的路径在应用页和路由页提示，生成配置时不阻断；名称模式必须使用完整 `.exe` 文件名，且**大小写要与磁盘上的真实文件名一致**：sing-box 的 `process_name` 是按 `processMap[filepath.Base(ProcessInfo.ProcessPath)]` 精确查表的，写错大小写等于这条规则不存在，不会报错，应用会静默落到默认出口（见[整改证据 1.2](china-dns-app-routing-rework.md#12-证据-bcodexexe-未命中名字规则)）。未带扩展名且能从正在运行的进程或 PATH 解析的输入会补全；带扩展名但大小写不符的输入也会改写成真实大小写；解析不到时按原样保存，需自行核对。可从运行进程列表选择名称，适合升级后变化的 CLI `bin/<哈希>/codex.exe`。
 
@@ -68,7 +68,7 @@ Store 应用保留设置中的具体路径，在生成路由时转成 `process_p
 ]
 ```
 
-DNS 国内规则为 `{ "rule_set": "geosite-geolocation-cn", "server": "local" }`，放在局域网 DNS 规则之后、无条件代理 DNS 规则之前。DNS 设置中启用 `reverse_mapping`，保留 `prefer_ipv4` 和缓存。以上标签必须与自己文件中的直连出站、DNS 服务器和规则集标签一致。
+DNS 国内规则为 `{ "rule_set": "geosite-geolocation-cn", "server": "local" }`，放在局域网 DNS 规则之后、无条件代理 DNS 规则之前。新配置的 DNS 设置启用 `reverse_mapping`，使用 `ipv4_only` 并保留缓存。以上标签必须与自己文件中的直连出站、DNS 服务器和规则集标签一致。
 
 ## 验证
 

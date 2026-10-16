@@ -13,7 +13,7 @@ public sealed class ConfigurationOptions
     public string NativeFilePath { get; set; } = "";
     public DnsResolverOptions DirectDns { get; set; } = new() { Type = "udp", Server = "114.114.114.114", Port = 53 };
     public DnsResolverOptions ProxyDns { get; set; } = new();
-    public string DnsStrategy { get; set; } = "prefer_ipv4";
+    public string DnsStrategy { get; set; } = "ipv4_only";
     public bool DnsCacheEnabled { get; set; } = true;
     public bool DnsReverseMapping { get; set; } = true;
     public bool ChinaDnsDirect { get; set; } = true;

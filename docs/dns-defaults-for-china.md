@@ -33,7 +33,7 @@
       { "rule_set": "geosite-geolocation-cn", "action": "route", "server": "local" }
     ],
     "final": "proxy-dns",
-    "strategy": "prefer_ipv4",
+    "strategy": "ipv4_only",
     "disable_cache": false,
     "disable_expire": false,
     "optimistic": false,
@@ -54,7 +54,7 @@
 | servers | 定义 DNS 服务器及访问方式 | 基础页显示国内 DNS、国外 DNS；系统 DNS 作为可选项 |
 | rules | 根据查询的域名等条件选择 DNS | 基础页显示“国内域名分流”开关，自定义规则放高级页 |
 | final | 未匹配 DNS 规则的默认解析器 | 自动设置为国外 DNS，基础页可隐藏 |
-| strategy | IPv4/IPv6 解析偏好 | 默认“优先 IPv4”，严格按所选策略生效，不自动覆盖 |
+| strategy | IPv4/IPv6 解析偏好 | 新配置默认“仅 IPv4”，已有配置与用户明确选择保持不变 |
 | disable_cache | 禁用内存 DNS 缓存，主要用于调试 | 详情页隐藏，默认缓存开启 |
 | optimistic | TTL 过期后先用旧记录、后台刷新 | 详情页隐藏，默认关闭；已有布尔值或对象原样保留 |
 | disable_expire | 不按 TTL 让缓存失效 | 基础页隐藏，默认关闭，与乐观缓存冲突 |

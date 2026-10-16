@@ -46,7 +46,14 @@ function Save-Dialog {
 function Wait-Document([scriptblock]$Condition) {
     $deadline = [DateTime]::UtcNow.AddSeconds(15)
     do {
-        try { $document = Get-Content -LiteralPath $taskSource -Raw | ConvertFrom-Json; if (& $Condition $document) { return $document } }
+        try {
+            $document = Get-Content -LiteralPath $taskSource -Raw | ConvertFrom-Json
+            $runtimePath = Join-Path $taskRoot 'sing-box/config.json'
+            if ((& $Condition $document) -and (Test-Path $runtimePath)) {
+                $runtime = Get-Content -LiteralPath $runtimePath -Raw | ConvertFrom-Json
+                if (& $Condition $runtime) { return $document }
+            }
+        }
         catch [IO.IOException] {} catch [System.Management.Automation.ItemNotFoundException] {}
         Start-Sleep -Milliseconds 100
     } while ([DateTime]::UtcNow -lt $deadline)
@@ -142,6 +149,11 @@ try {
     Case 'dns/strategy-autosave-and-hidden-defaults' {
         Choice 'DNS_strategy' 'prefer_ipv6'
         Wait-Document {param($d) $d.dns.strategy -eq 'prefer_ipv6'} | Out-Null
+        $runtime = Get-Content (Join-Path $taskRoot 'sing-box/config.json') -Raw | ConvertFrom-Json
+        Assert ($runtime.dns.strategy -eq 'prefer_ipv6') 'DNS strategy was not synchronized to actual core config'
+        Ui @('wait-for','DNS_IPv6_Status') | Out-Null
+        Assert (@(Tree | Where-Object { $_.name -match 'could not be confirmed|still allows IPv6' }).Count -gt 0) 'IPv6-enabled DNS did not show the connectivity hint'
+        Assert ($runtime.dns.strategy -eq 'prefer_ipv6') 'Connectivity hint changed the explicit strategy'
         $document = Get-Content $taskSource -Raw | ConvertFrom-Json
         Assert ($document.dns.reverse_mapping -eq $true) 'Hidden reverse mapping default changed'
         foreach ($key in @('disable_cache','disable_expire','cache_capacity','optimistic','timeout','reverse_mapping','client_subnet')) {
@@ -186,8 +198,12 @@ try {
         Ui @('wait-for','Select an existing DNS server.','--type','Text') | Out-Null
         Start-Sleep -Milliseconds 800
         Assert ((Get-FileHash $taskSource).Hash -eq $hash) 'Deleting selected DNS server wrote invalid final'
+        Assert ((Ui @('get-value','DNS_final')).text -eq 'temporary-dns') 'Invalid DNS deletion did not restore UI selection'
         Choice 'DNS_final' 'proxy-dns'
-        Wait-Document {param($d) $d.dns.final -eq 'proxy-dns' -and @($d.dns.servers | Where-Object tag -eq 'temporary-dns').Count -eq 0} | Out-Null
+        Wait-Document {param($d) $d.dns.final -eq 'proxy-dns' -and @($d.dns.servers | Where-Object tag -eq 'temporary-dns').Count -eq 1} | Out-Null
+        Expand-Group "DNS_Servers_$index"
+        Ui @('invoke',"DNS_Servers_${index}_Delete") | Out-Null
+        Wait-Document {param($d) @($d.dns.servers | Where-Object tag -eq 'temporary-dns').Count -eq 0} | Out-Null
     }
 }
 catch { if ($taskWindow) { try { Ui @('screenshot','-o',(Join-Path $taskRoot 'failure.png')) | Out-Null } catch {} }; throw }

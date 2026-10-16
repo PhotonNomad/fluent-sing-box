@@ -11,13 +11,16 @@
       { "rule_set": "geosite-geolocation-cn", "action": "route", "server": "local" }
     ],
     "final": "local",
-    "strategy": "prefer_ipv4",
+    "strategy": "ipv4_only",
     "reverse_mapping": true
   },
   "inbounds": [
     { "type": "mixed", "tag": "system-http", "listen": "127.0.0.1", "listen_port": 10809 }
   ],
-  "outbounds": [{ "type": "direct", "tag": "direct" }],
+  "outbounds": [
+    { "type": "direct", "tag": "direct" },
+    { "type": "selector", "tag": "proxy", "outbounds": ["direct"], "default": "direct" }
+  ],
   "route": {
     "rules": [
       { "action": "sniff" },
@@ -38,7 +41,7 @@
       { "type": "local", "tag": "geosite-geolocation-!cn", "format": "binary", "path": "../ThirdParty/RuleSets/geosite-geolocation-!cn.srs" },
       { "type": "local", "tag": "geoip-cn", "format": "binary", "path": "../ThirdParty/RuleSets/geoip-cn.srs" }
     ],
-    "final": "direct",
+    "final": "proxy",
     "default_domain_resolver": "local",
     "auto_detect_interface": true
   }

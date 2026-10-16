@@ -7,7 +7,7 @@
             <local:PageLayout.PageContent>
                 <StackPanel Spacing="0">
 
-                    <local:SystemProxySettingsControl Margin="0,32,0,0" />
+                    <local:SystemProxySettingsControl x:Name="SystemProxySettings" Margin="0,32,0,0" />
 
                     <local:SettingsSection Header="TUN">
                         <local:SettingsSection.SectionContent>

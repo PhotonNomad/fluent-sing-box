@@ -86,6 +86,7 @@ public sealed partial class MainWindow : Window
         {
             if (starting)
             {
+                if (ContentFrame.Content is IPendingConfigurationPage pending && !await pending.FlushPendingChangesAsync()) return;
                 await App.CoreService.StartAsync(App.State.Settings);
                 App.State.Settings.CoreOnlyEnabled = true;
                 RecoveryMessage.IsOpen = false;

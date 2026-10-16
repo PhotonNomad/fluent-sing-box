@@ -21,6 +21,7 @@ internal sealed class TunConfigurationForm
     private int _revision;
     private int _savedRevision;
     private Task _loadTask = Task.CompletedTask;
+    private readonly Ipv6ConnectivityHint _ipv6Hint = new("Proxy_Tun_IPv6");
     public TunConfigurationForm(Page page, StackPanel view)
     {
         _page = page; _view = view;
@@ -49,6 +50,7 @@ internal sealed class TunConfigurationForm
     private void Render()
     {
         _forms.Clear(); _view.Children.Clear(); _status.IsOpen = false; _view.Children.Add(_status);
+        _view.Children.Add(_ipv6Hint);
         var catalog = new ConfigurationSchema(ConfigurationSchema.LocalPath);
         var inbounds = _document["inbounds"] as JsonArray ?? new JsonArray();
         var active = inbounds.OfType<JsonObject>().Where(value => value["type"]?.ToString() == "tun").ToArray();
@@ -96,6 +98,14 @@ internal sealed class TunConfigurationForm
             finally { cleanup.IsEnabled = true; }
         };
         _view.Children.Add(new SettingsCard { Header = Localization.Get("TunCleanup_Button"), Description = Localization.Get("TunCleanup_Help"), Content = cleanup });
+        UpdateIpv6Hint();
+    }
+    private void UpdateIpv6Hint()
+    {
+        var hasIpv6 = _forms.Any(item => item.Value["address"] is JsonArray addresses
+            && addresses.Any(address => System.Net.IPAddress.TryParse(address?.ToString().Split('/')[0], out var ip)
+                && ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6));
+        _ipv6Hint.Update(_document["dns"]?["strategy"]?.ToString(), _enabled.IsOn && !hasIpv6);
     }
     private async Task CleanupAsync()
     {
@@ -137,6 +147,7 @@ internal sealed class TunConfigurationForm
         if (revision == _savedRevision) { _saveGate.Release(); return true; }
         try
         {
+            _page.IsEnabled = false;
             var candidate = (JsonObject)_document.DeepClone();
             candidate["inbounds"] ??= new JsonArray();
             var values = candidate["inbounds"]!.AsArray();
@@ -181,15 +192,24 @@ internal sealed class TunConfigurationForm
                 throw;
             }
             _document = candidate;
+            for (var index = 0; index < edits.Length; index++) _forms[index] = (edits[index], _forms[index].Form, _forms[index].Prefer, _forms[index].Key);
             for (var index = 0; index < edits.Length; index++) _forms[index].Form.UpdatePreservedFields(edits[index]);
             _source = await File.ReadAllTextAsync(ConfigurationFileService.FilePath);
-            await App.State.SavePreferencesAsync();
+            await App.State.SavePreferencesAsync(configurationCommitted: true);
             _savedRevision = revision;
+            UpdateIpv6Hint();
             _status.Message = Localization.Get("Schema_Saved"); _status.Severity = InfoBarSeverity.Success; _status.IsOpen = true;
             return true;
         }
-        catch (Exception exception) { Error(exception); return false; }
-        finally { _saveGate.Release(); }
+        catch (Exception exception)
+        {
+            _document = JsonNode.Parse(_source)!.AsObject();
+            _savedRevision = _revision;
+            Render();
+            Error(exception);
+            return false;
+        }
+        finally { _page.IsEnabled = true; _saveGate.Release(); }
     }
     private void Error(Exception exception) { _status.Message = LogReader.Redact(exception.Message, App.State.Settings); _status.Severity = InfoBarSeverity.Error; _status.IsOpen = true; }
 }
