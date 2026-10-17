@@ -5,22 +5,14 @@ param(
     [switch]$SkipPublish,
     [string]$CertificateThumbprint,
     [string]$SignToolPath,
-    [string]$UpdateFeedDirectory,
-    [string]$UpdateManifestPublicKeyPath,
     [string]$TimestampUrl = 'http://timestamp.digicert.com'
 )
 $ErrorActionPreference = 'Stop'
 $taskRoot = (Resolve-Path "$PSScriptRoot/..").Path
 $taskSettings = Get-Content (Join-Path $taskRoot 'release.json') -Raw | ConvertFrom-Json
-if ($UpdateFeedDirectory -or $UpdateManifestPublicKeyPath) {
-    if (!$UpdateFeedDirectory -or !$UpdateManifestPublicKeyPath -or ![IO.Path]::IsPathFullyQualified($UpdateFeedDirectory)) { throw 'Signed feed requires an absolute directory and public key file.' }
-    $taskPublicKey = Get-Content -LiteralPath $UpdateManifestPublicKeyPath -Raw
-    $taskRsa = [Security.Cryptography.RSA]::Create()
-    try { $taskRsa.ImportFromPem($taskPublicKey); if($taskRsa.KeySize -lt 3072){throw 'Update signing key must be at least 3072 bits.'} }
-    finally { $taskRsa.Dispose() }
-    $taskSettings | Add-Member NoteProperty updateFeedDirectory ([IO.Path]::GetFullPath($UpdateFeedDirectory)) -Force
-    $taskSettings | Add-Member NoteProperty updateManifestPublicKey $taskPublicKey -Force
-}
+# Never ship legacy local-feed configuration, even if an old release.json contains it.
+$taskSettings.PSObject.Properties.Remove('updateFeedDirectory')
+$taskSettings.PSObject.Properties.Remove('updateManifestPublicKey')
 if (!$Version) { $Version = $taskSettings.version }
 if ($Version -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') { throw 'Version must be MAJOR.MINOR.PATCH.' }
 $taskVersionParts = $Version.Split('.') | ForEach-Object { [int]$_ }

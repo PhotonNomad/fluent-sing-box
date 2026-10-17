@@ -726,4 +726,7 @@
   <data name="Updates_MeteredExcluded.Text" xml:space="preserve"><value>Except on metered connections</value></data>
   <data name="Updates_AutoInstall.Text" xml:space="preserve"><value>Automatically download and install updates</value></data>
   <data name="Updates_LastChecked" xml:space="preserve"><value>Last checked: {0}</value></data>
+  <data name="Updates_GitHubAccess.Content" xml:space="preserve">
+    <value>GitHub access</value>
+  </data>
 </root>

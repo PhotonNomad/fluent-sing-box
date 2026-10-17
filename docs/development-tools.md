@@ -17,8 +17,8 @@
 
 以下内容不能当作编译缓存删除：
 
-- `artifacts/local-update-feed/latest.json` 及其引用的安装包：已安装客户端的本机更新来源。
-- `artifacts/update-signing`：本机更新签名密钥与公钥，继续使用原密钥，不提交 Git。
+- `artifacts/local-update-feed/latest.json` 及其引用的安装包：旧版 0.1.13 的本机更新来源，迁移完成前保留供回退，新版不再使用。
+- `artifacts/update-signing`：旧本机通道的签名密钥与公钥，保留供旧版回退，不提交 Git。
 - `artifacts/preserved-data`：此前清理保存的配置归档，可能包含凭据。
 - `artifacts/vscode-data` 或其他数据目录内的个人节点和设置：需要时先单独备份。
 

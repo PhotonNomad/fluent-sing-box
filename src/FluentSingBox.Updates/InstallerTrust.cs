@@ -6,6 +6,13 @@ namespace FluentSingBox.Updates;
 
 public static class InstallerTrust
 {
+    public static async Task VerifyInstallerAsync(ReleaseSettings settings, UpdateRelease release, string path, CancellationToken cancellation = default)
+    {
+        UpdateProtocol.ValidateRelease(release, settings.Repository);
+        await UpdateProtocol.VerifyHashAsync(path, release, cancellation);
+        Verify(path, settings.PublisherCertificateSha256);
+    }
+
     public static void Verify(string path, string publisherCertificateSha256)
     {
         if (publisherCertificateSha256.Length != 64 || !publisherCertificateSha256.All(Uri.IsHexDigit))

@@ -9,7 +9,7 @@
 | `FluentSingBox.Client` | WinUI 3 窗口、托盘、节点、DNS、路由、配置、核心启停与更新入口 | `fluent sing-box.exe` |
 | `SingBoxCoreHost` | 管理核心子进程，与主界面通过命名管道通信；需要 TUN 权限时提升权限 | 同一个 EXE 的 `--fluent-sing-box-core-host` 模式，没有单独项目 |
 | sing-box | 根据配置监听本地代理或创建 TUN，执行 DNS 与流量路由 | 单独的 `sing-box.exe`，随应用内置，也可指定其他核心 |
-| `FluentSingBox.Updates` | 版本和资产选择、哈希、签名清单、Authenticode 校验、更新状态文件 | 被客户端和更新器共同引用的 DLL，不是后台进程 |
+| `FluentSingBox.Updates` | 版本和资产选择、GitHub API、凭据存储、哈希、Authenticode 校验、更新状态文件 | 被客户端和更新器共同引用的 DLL，不是后台进程 |
 | `FluentSingBox.Updater` | 等待主程序退出、重新验证安装器、安装、核对目标版本并重启主程序 | `FluentSingBox.Update.exe`，仅更新时运行 |
 | WiX Burn / MSI | 安装目录、程序文件替换、升级注册、卸载与回滚 | Setup EXE 封装 MSI，安装期间运行 |
 
@@ -59,17 +59,18 @@ flowchart LR
 
 1. 修改代码并提交，提升 `release.json` 版本，运行相关检查。
 2. `Build-Installer.ps1` 自包含构建客户端和更新器，生成用户或全机范围的 MSI/EXE。构建过程不会自动发布。
-3. 发布本机签名清单，或者上传 GitHub 稳定 Release。现有 Actions 使用手动触发，不是 push/tag 自动发布。
+3. 上传 GitHub 稳定 Release。现有 Actions 使用手动触发，不是 push/tag 自动发布。
 4. 主程序手动或后台检查，比对版本，选择同范围的 x64 EXE，下载并校验可信来源。
 5. 保存配置、停止核心、完成本应用网络清理后，主程序退出。任何清理失败会阻止进入安装。
 6. 复制到缓存目录的独立更新器等待原进程退出，再次校验安装器，以 `/install /passive /norestart` 调用 Burn，保存日志，核对实际安装版本后重启应用。
 
 `/passive` 跳过交互向导，但可以显示进度窗口。自定义 WiX 主题提供图标、版本、中英文文字及真实进度条；它不是额外的 WinUI 更新窗口。
 
-更新有两种可信来源：
+更新来源统一为 GitHub Releases API：读取最新正式发行版，跳过草稿和预发布，选择同范围的 x64 EXE，验证仓库来源、资产 SHA-256 和固定发布者的 Authenticode 签名。构建、提交或创建 tag 本身不会让客户端发现新版本，需要完成 Release 发布。
 
-- **本机开发通道**：包内固定 RSA 公钥和本机目录，读取签名的 `latest.json`，验证清单签名及安装器哈希。本机当前安装使用此通道；删除目录、私钥或替换公钥可能使后续开发更新中断。
-- **GitHub 通道**：读取 Releases API，跳过草稿和预发布，验证资产来源、SHA-256 和固定发布者的 Authenticode 签名。未签名测试 Release 可手动下载，不等于可信自动更新已经打通；私有仓库还需要可访问的发布方式。
+私有仓库由每位使用者通过“GitHub 访问”配置自己的个人访问令牌，账号本身必须具有仓库读取权限。令牌按仓库保存在当前 Windows 用户的凭据管理器，不写入 `settings.json`、`updates/state.json` 或安装包。检查使用带认证的 GitHub API；下载通过资产 API 与 `application/octet-stream`，不能依赖私有仓库的匿名浏览器下载链接。令牌只附加到指定仓库的 `api.github.com` 请求，不设置为 HttpClient 全局请求头。独立更新器读取已经下载的缓存安装包，不需要令牌。
+
+0.1.14 起忽略旧 `release.json` 的本地目录、公钥字段，并清除无效的旧本地更新缓存元数据。已安装的 0.1.13 不会因修改工作区而切换来源，需先手动安装迁移版。旧本地更新目录与密钥暂时保留供回退，不再是新版本的运行依赖。
 
 默认自动安装关闭、通知开启。启动约 30 秒后开始后台工作，每 6 小时唤醒；版本检查间隔至少一天。开启自动安装后，后台可走完整升级流程；计费、漫游、超额或成本未知的网络不自动下载。手动检查不受一天间隔限制。
 

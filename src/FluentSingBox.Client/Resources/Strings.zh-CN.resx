@@ -2898,4 +2898,34 @@ Windows: {0}
   <data name="DefaultOutlet_DirectEmpty" xml:space="preserve"><value>直连（未添加节点）</value></data>
   <data name="DefaultOutlet_Direct" xml:space="preserve"><value>直连</value></data>
   <data name="DefaultOutlet_Delete" xml:space="preserve"><value>删除后，引用此节点的应用和规则将改用：{0}。若删除的是默认节点，proxy 也会改选此出口。是否继续？</value></data>
+  <data name="Updates_RepositoryUnavailable" xml:space="preserve">
+    <value>无法访问 GitHub 仓库。私有仓库请先配置“GitHub 访问”，并确认账号拥有仓库读取权限。</value>
+  </data>
+  <data name="Updates_AccessDenied" xml:space="preserve">
+    <value>GitHub 拒绝了请求。请检查令牌是否有效、仓库权限及 API 访问限额。</value>
+  </data>
+  <data name="Updates_GitHubAccess.Content" xml:space="preserve">
+    <value>GitHub 访问</value>
+  </data>
+  <data name="Updates_GitHubAccessTitle" xml:space="preserve">
+    <value>GitHub 访问</value>
+  </data>
+  <data name="Updates_TokenHeader" xml:space="preserve">
+    <value>个人访问令牌</value>
+  </data>
+  <data name="Updates_TokenHelp" xml:space="preserve">
+    <value>使用有此仓库访问权限的账号所创建的令牌。令牌保存在当前用户的 Windows 凭据管理器中，不写入配置文件或安装包。留空可保留已有令牌。</value>
+  </data>
+  <data name="Updates_TokenMissing" xml:space="preserve">
+    <value>尚未保存访问令牌。私有发行版需要仓库访问权限。</value>
+  </data>
+  <data name="Updates_TokenRemove" xml:space="preserve">
+    <value>移除访问</value>
+  </data>
+  <data name="Updates_TokenSave" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="Updates_TokenSaved" xml:space="preserve">
+    <value>已保存访问令牌。输入新令牌可替换，也可以移除访问。</value>
+  </data>
 </root>

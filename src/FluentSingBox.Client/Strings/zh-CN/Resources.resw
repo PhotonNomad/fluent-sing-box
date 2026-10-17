@@ -726,4 +726,7 @@
   <data name="Updates_MeteredExcluded.Text" xml:space="preserve"><value>按流量计费的连接除外</value></data>
   <data name="Updates_AutoInstall.Text" xml:space="preserve"><value>自动下载并安装更新</value></data>
   <data name="Updates_LastChecked" xml:space="preserve"><value>上次检查时间：{0}</value></data>
+  <data name="Updates_GitHubAccess.Content" xml:space="preserve">
+    <value>GitHub 访问</value>
+  </data>
 </root>

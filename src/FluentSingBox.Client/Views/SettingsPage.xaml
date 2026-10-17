@@ -90,7 +90,10 @@
                                     <TextBlock x:Name="LastUpdateCheck" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AutomationId="Updates_LastCheck" />
                                 </controls:SettingsExpander.Description>
                                 <controls:SettingsExpander.Content>
-                                    <Button x:Name="CheckUpdatesButton" Click="CheckForUpdates_Click" x:Uid="SettingsPage_Button44" AutomationProperties.AutomationId="Updates_Check" />
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button x:Name="GitHubAccessButton" Click="GitHubAccess_Click" x:Uid="Updates_GitHubAccess" AutomationProperties.AutomationId="Updates_GitHubAccess" />
+                                        <Button x:Name="CheckUpdatesButton" Click="CheckForUpdates_Click" x:Uid="SettingsPage_Button44" AutomationProperties.AutomationId="Updates_Check" />
+                                    </StackPanel>
                                 </controls:SettingsExpander.Content>
                                 <controls:SettingsExpander.Items>
                                     <controls:SettingsCard ContentAlignment="Left" Padding="52,16,16,16">

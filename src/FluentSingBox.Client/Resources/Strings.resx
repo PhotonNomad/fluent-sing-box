@@ -2898,4 +2898,34 @@ Windows: {0}
   <data name="DefaultOutlet_DirectEmpty" xml:space="preserve"><value>Direct (no nodes added)</value></data>
   <data name="DefaultOutlet_Direct" xml:space="preserve"><value>Direct</value></data>
   <data name="DefaultOutlet_Delete" xml:space="preserve"><value>Applications and rules using this node will switch to: {0}. If this is the default node, proxy will also select this outlet. Continue?</value></data>
+  <data name="Updates_RepositoryUnavailable" xml:space="preserve">
+    <value>The GitHub repository is unavailable. For a private repository, configure GitHub access and ensure your account can read it.</value>
+  </data>
+  <data name="Updates_AccessDenied" xml:space="preserve">
+    <value>GitHub rejected the request. Check token validity, repository permissions, and API rate limits.</value>
+  </data>
+  <data name="Updates_GitHubAccess.Content" xml:space="preserve">
+    <value>GitHub access</value>
+  </data>
+  <data name="Updates_GitHubAccessTitle" xml:space="preserve">
+    <value>GitHub access</value>
+  </data>
+  <data name="Updates_TokenHeader" xml:space="preserve">
+    <value>Personal access token</value>
+  </data>
+  <data name="Updates_TokenHelp" xml:space="preserve">
+    <value>Use a token from an account with access to this repository. It is stored in Windows Credential Manager for the current user, not in configuration files or the installer. Leave the field empty to keep the existing token.</value>
+  </data>
+  <data name="Updates_TokenMissing" xml:space="preserve">
+    <value>No access token is saved. Private releases require repository access.</value>
+  </data>
+  <data name="Updates_TokenRemove" xml:space="preserve">
+    <value>Remove access</value>
+  </data>
+  <data name="Updates_TokenSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Updates_TokenSaved" xml:space="preserve">
+    <value>An access token is saved. Enter a new token to replace it, or remove access below.</value>
+  </data>
 </root>

@@ -26,13 +26,12 @@ try
     Directory.CreateDirectory(Path.GetDirectoryName(log)!);
     var state = JsonSerializer.Deserialize<UpdateState>(await File.ReadAllTextAsync(stateFile), UpdateProtocol.Json)!;
     var release = state.Release ?? throw new InvalidDataException("No pending release.");
-    if (SignedUpdateFeed.IsConfigured(settings)) SignedUpdateFeed.ValidateRelease(settings, release);
-    else UpdateProtocol.ValidateRelease(release, settings.Repository);
+    UpdateProtocol.ValidateRelease(release, settings.Repository);
     if (release.Scope != scope || release.AssetName != UpdateProtocol.AssetName(release.Version, scope)
         || UpdateProtocol.ParseVersion(release.Version) <= UpdateProtocol.ParseVersion(settings.Version))
         throw new InvalidDataException("Installer scope or version mismatch.");
     var installer = Path.Combine(dataDirectory, "updates", release.AssetName);
-    await SignedUpdateFeed.VerifyInstallerAsync(settings, release, installer);
+    await InstallerTrust.VerifyInstallerAsync(settings, release, installer);
     try
     {
         using var parent = Process.GetProcessById(parentId);
@@ -43,7 +42,7 @@ try
     catch (ArgumentException) { /* Parent already exited. */ }
     // Keep a read handle denying writes/deletes across signature verification and Burn launch.
     using var lockedInstaller = new FileStream(installer, FileMode.Open, FileAccess.Read, FileShare.Read);
-    await SignedUpdateFeed.VerifyInstallerAsync(settings, release, installer);
+    await InstallerTrust.VerifyInstallerAsync(settings, release, installer);
     var start = new ProcessStartInfo(installer) { UseShellExecute = false };
     start.ArgumentList.Add("/install"); start.ArgumentList.Add("/passive"); start.ArgumentList.Add("/norestart");
     start.ArgumentList.Add("/log"); start.ArgumentList.Add(Path.Combine(dataDirectory, "updates", "burn.log"));

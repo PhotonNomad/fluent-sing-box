@@ -1,13 +1,14 @@
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace FluentSingBox.Updates;
 
-public sealed record ReleaseSettings(string Version, string Repository, string PublisherCertificateSha256,
-    string? UpdateFeedDirectory = null, string? UpdateManifestPublicKey = null);
-public sealed record UpdateRelease(string Version, string Scope, string AssetName, string Url, string Sha256, long Size, string ReleaseUrl, string Notes);
+public sealed record ReleaseSettings(string Version, string Repository, string PublisherCertificateSha256);
+public sealed record UpdateRelease(string Version, string Scope, string AssetName, string Url, string Sha256, long Size, string ReleaseUrl, string Notes,
+    string? AssetApiUrl = null);
 public sealed class UpdateState
 {
     public bool AutoCheck { get; set; } = true;
@@ -24,6 +25,28 @@ public sealed class UpdateState
 public static class UpdateProtocol
 {
     public static readonly JsonSerializerOptions Json = new() { PropertyNameCaseInsensitive = true, WriteIndented = true };
+
+    public static HttpRequestMessage CreateApiRequest(string repository, string url, string? token = null, bool binary = false)
+    {
+        if (!Regex.IsMatch(repository, @"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")) throw new InvalidDataException("Invalid GitHub repository.");
+        var uri = new Uri(url, UriKind.Absolute);
+        var root = $"/repos/{repository}";
+        if (uri.Scheme != "https" || uri.Host != "api.github.com" || !uri.IsDefaultPort || uri.UserInfo.Length != 0
+            || (uri.AbsolutePath != root && !uri.AbsolutePath.StartsWith(root + "/", StringComparison.Ordinal)))
+            throw new InvalidDataException("GitHub credentials can only be sent to this repository's API.");
+        var request = new HttpRequestMessage(HttpMethod.Get, uri);
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(binary ? "application/octet-stream" : "application/vnd.github+json"));
+        if (!string.IsNullOrWhiteSpace(token)) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return request;
+    }
+
+    public static void ValidateAssetApiUrl(string url, string repository)
+    {
+        using var request = CreateApiRequest(repository, url);
+        if (!Regex.IsMatch(request.RequestUri!.AbsolutePath, "^/repos/" + Regex.Escape(repository) + @"/releases/assets/[1-9]\d*$")
+            || request.RequestUri.Query.Length != 0 || request.RequestUri.Fragment.Length != 0)
+            throw new InvalidDataException("Invalid GitHub release asset API URL.");
+    }
     public static Version ParseVersion(string text)
     {
         if (!Regex.IsMatch(text, @"^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$"))
@@ -52,6 +75,7 @@ public static class UpdateProtocol
             || !Regex.IsMatch(release.Sha256, "^[0-9a-fA-F]{64}$") || release.Size <= 0 || release.Size > 2L * 1024 * 1024 * 1024)
             throw new InvalidDataException("Invalid cached release metadata.");
         ValidateDownloadUrl(release.Url, repository);
+        if (release.AssetApiUrl is { } api) ValidateAssetApiUrl(api, repository);
         var page = new Uri(release.ReleaseUrl, UriKind.Absolute);
         if (page.Scheme != "https" || page.Host != "github.com" || !page.IsDefaultPort || page.UserInfo.Length != 0
             || !page.AbsolutePath.StartsWith($"/{repository}/releases/tag/", StringComparison.Ordinal))
@@ -80,8 +104,10 @@ public static class UpdateProtocol
                 throw new InvalidDataException("Release asset is missing its SHA-256 digest.");
             var size = asset.GetProperty("size").GetInt64();
             if (size <= 0 || size > 2L * 1024 * 1024 * 1024) throw new InvalidDataException("Invalid installer size.");
+            var api = asset.GetProperty("url").GetString()!;
+            ValidateAssetApiUrl(api, repository);
             return new(version.ToString(), scope, name, url, digest[7..].ToUpperInvariant(), size, releaseUrl,
-                root.TryGetProperty("body", out var body) ? body.GetString() ?? "" : "");
+                root.TryGetProperty("body", out var body) ? body.GetString() ?? "" : "", api);
         }
         throw new InvalidDataException("Release has no installer matching this architecture and installation scope.");
     }
@@ -95,14 +121,19 @@ public static class UpdateProtocol
     }
 
     public static async Task DownloadAsync(HttpClient client, UpdateRelease release, string repository, string destination,
-        IProgress<double>? progress = null, CancellationToken cancellation = default)
+        IProgress<double>? progress = null, CancellationToken cancellation = default, string? token = null)
     {
-        ValidateDownloadUrl(release.Url, repository);
+        ValidateRelease(release, repository);
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(destination))!);
         var partial = destination + "." + Guid.NewGuid().ToString("N") + ".partial";
         try
         {
-            using var response = await client.GetAsync(release.Url, HttpCompletionOption.ResponseHeadersRead, cancellation);
+            using var request = release.AssetApiUrl is { } api
+                ? CreateApiRequest(repository, api, token, binary: true)
+                : new HttpRequestMessage(HttpMethod.Get, release.Url);
+            if (release.AssetApiUrl is null && !string.IsNullOrWhiteSpace(token))
+                throw new InvalidDataException("Check for updates again to authorize this private release asset.");
+            using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellation);
             response.EnsureSuccessStatusCode();
             await using (var input = await response.Content.ReadAsStreamAsync(cancellation))
             await using (var output = new FileStream(partial, FileMode.CreateNew, FileAccess.Write, FileShare.None))

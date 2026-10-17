@@ -191,6 +191,36 @@ public sealed partial class SettingsPage : Page
     }
     private bool _checkingAndInstalling;
 
+    private async void GitHubAccess_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var service = AppUpdateService.Current;
+            var configured = FluentSingBox.Updates.GitHubCredentialStore.Read(service.Repository) is not null;
+            var token = new PasswordBox { Header = Localization.Get("Updates_TokenHeader"), MinWidth = 320 };
+            var content = new StackPanel { Spacing = 12, MaxWidth = 480 };
+            content.Children.Add(new TextBlock { Text = service.Repository, TextWrapping = TextWrapping.Wrap });
+            content.Children.Add(new TextBlock { Text = Localization.Get("Updates_TokenHelp"), TextWrapping = TextWrapping.Wrap });
+            content.Children.Add(new TextBlock { Text = Localization.Get(configured ? "Updates_TokenSaved" : "Updates_TokenMissing"), TextWrapping = TextWrapping.Wrap });
+            content.Children.Add(token);
+            var dialog = new ContentDialog
+            {
+                Title = Localization.Get("Updates_GitHubAccessTitle"), Content = content,
+                PrimaryButtonText = Localization.Get("Updates_TokenSave"),
+                SecondaryButtonText = Localization.Get("Updates_TokenRemove"), IsSecondaryButtonEnabled = configured,
+                IsPrimaryButtonEnabled = false, CloseButtonText = Localization.Get("ProxyPage_Cancel"),
+                DefaultButton = ContentDialogButton.Primary, XamlRoot = XamlRoot
+            };
+            token.PasswordChanged += (_, _) => dialog.IsPrimaryButtonEnabled = !string.IsNullOrWhiteSpace(token.Password);
+            var result = await DialogService.ShowAsync(dialog);
+            var value = result == ContentDialogResult.Primary ? token.Password : null;
+            token.Password = "";
+            if (result == ContentDialogResult.Primary) await service.SetGitHubTokenAsync(value);
+            else if (result == ContentDialogResult.Secondary) await service.SetGitHubTokenAsync(null);
+        }
+        catch (Exception error) { await ShowMessageAsync(Localization.Get("Updates_Title"), error.Message); }
+    }
+
     private void UpdateChanged() => DispatcherQueue.TryEnqueue(RenderUpdates);
 
     private void RenderUpdates()
@@ -202,6 +232,7 @@ public sealed partial class SettingsPage : Page
         ShowUpdateNotifications.IsChecked = state.ShowNotifications;
         _loading = false;
         CheckUpdatesButton.IsEnabled = !_checkingAndInstalling && !service.Busy && service.CheckAllowed;
+        GitHubAccessButton.IsEnabled = !_checkingAndInstalling && !service.Busy;
         AutoInstallUpdates.IsEnabled = service.Scope is not null && service.DownloadAllowed && !service.Busy;
         ShowUpdateNotifications.IsEnabled = !service.Busy && service.NotificationPolicyAllows;
         UpdateVersion.Text = "v" + service.Version;

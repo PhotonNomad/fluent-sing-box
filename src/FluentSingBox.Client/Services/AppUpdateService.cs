@@ -19,11 +19,11 @@ public sealed class AppUpdateService
     public event Action? Changed;
     public event Func<Task>? AutomaticInstallRequested;
     public string Version => _settings?.Version ?? "";
+    public string Repository => _settings?.Repository ?? "";
     public string? Scope { get; private set; }
     public bool Busy { get; private set; }
     public double Progress { get; private set; }
-    public bool UsesSignedFeed => _settings is not null && SignedUpdateFeed.IsConfigured(_settings);
-    public bool SigningConfigured => _settings?.PublisherCertificateSha256.Length == 64 || UsesSignedFeed;
+    public bool SigningConfigured => _settings?.PublisherCertificateSha256 is { Length: 64 } hash && hash.All(Uri.IsHexDigit);
     public bool CheckAllowed => !PolicyDisabled("DisableUpdateChecks");
     public bool DownloadAllowed => CheckAllowed && !PolicyDisabled("DisableAutomaticUpdateDownload");
     public bool NotificationPolicyAllows => !PolicyDisabled("DisableNewUpdateNotification");
@@ -38,7 +38,6 @@ public sealed class AppUpdateService
             ?? throw new InvalidDataException("Missing release settings.");
         UpdateProtocol.ParseVersion(_settings.Version);
         _client.DefaultRequestHeaders.UserAgent.ParseAdd($"FluentSingBox/{_settings.Version}");
-        _client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
         if (!AppPaths.HasDataOverride && !File.Exists(Path.Combine(AppContext.BaseDirectory, "portable.txt")))
         {
             var marker = Path.Combine(AppContext.BaseDirectory, "install-scope.txt");
@@ -62,8 +61,7 @@ public sealed class AppUpdateService
         {
             if (State.Release is { } cached)
             {
-                if (UsesSignedFeed) SignedUpdateFeed.ValidateRelease(_settings, cached);
-                else UpdateProtocol.ValidateRelease(cached, _settings.Repository);
+                UpdateProtocol.ValidateRelease(cached, _settings.Repository);
                 if (cached.Scope != (Scope ?? "user")) { State.Release = null; State.Status = "idle"; }
             }
             if (State.Status is not ("idle" or "checking" or "downloading" or "installing" or "installed" or "upToDate" or "noRelease" or "readyToDownload" or "readyToInstall" or "networkError" or "downloadError" or "installError")) State.Status = "idle";
@@ -127,6 +125,20 @@ public sealed class AppUpdateService
 
     public void Stop() => _lifetime.Cancel();
 
+    public async Task SetGitHubTokenAsync(string? token)
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            if (_settings is null) throw new InvalidOperationException("Updates are not initialized.");
+            if (token is null) GitHubCredentialStore.Delete(Repository);
+            else GitHubCredentialStore.Save(Repository, token);
+            State.Release = null; State.Status = "idle"; State.Error = null; State.LastCheckUtc = null;
+            await UpdateProtocol.SaveAsync(StatePath, State);
+        }
+        finally { _gate.Release(); Changed?.Invoke(); }
+    }
+
     public async Task SetPreferencesAsync(bool autoInstall, bool showNotifications)
     {
         await _gate.WaitAsync();
@@ -149,22 +161,27 @@ public sealed class AppUpdateService
         {
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
             timeout.CancelAfter(TimeSpan.FromSeconds(30));
-            if (UsesSignedFeed)
-            {
-                var release = await SignedUpdateFeed.FindAsync(_settings!, Scope ?? "user", timeout.Token);
-                await ApplyReleaseAsync(release is not null && UpdateProtocol.ParseVersion(release.Version) > UpdateProtocol.ParseVersion(Version) ? release : null, timeout.Token);
-            }
-            else
-            {
-            using var response = await _client.GetAsync($"https://api.github.com/repos/{_settings!.Repository}/releases/latest", timeout.Token);
+            var token = GitHubCredentialStore.Read(Repository);
+            using var request = UpdateProtocol.CreateApiRequest(Repository, $"https://api.github.com/repos/{Repository}/releases/latest", token);
+            using var response = await _client.SendAsync(request, timeout.Token);
+            if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+                throw new InvalidDataException(Localization.Get("Updates_AccessDenied"));
             State.LastCheckUtc = DateTimeOffset.UtcNow;
-            if (response.StatusCode == HttpStatusCode.NotFound) { State.Release = null; State.Status = "noRelease"; }
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                // GitHub also returns 404 for private repositories to unauthenticated clients.
+                using var repositoryRequest = UpdateProtocol.CreateApiRequest(Repository, $"https://api.github.com/repos/{Repository}", token);
+                using var repository = await _client.SendAsync(repositoryRequest, timeout.Token);
+                if (repository.StatusCode == HttpStatusCode.NotFound)
+                    throw new InvalidDataException(Localization.Get("Updates_RepositoryUnavailable"));
+                repository.EnsureSuccessStatusCode();
+                State.Release = null; State.Status = "noRelease";
+            }
             else
             {
                 response.EnsureSuccessStatusCode();
-                var release = UpdateProtocol.SelectRelease(await response.Content.ReadAsStringAsync(timeout.Token), Version, Scope ?? "user", _settings.Repository);
+                var release = UpdateProtocol.SelectRelease(await response.Content.ReadAsStringAsync(timeout.Token), Version, Scope ?? "user", Repository);
                 await ApplyReleaseAsync(release, timeout.Token);
-            }
             }
             State.LastCheckUtc = DateTimeOffset.UtcNow;
         }
@@ -211,8 +228,8 @@ public sealed class AppUpdateService
             var release = State.Release ?? throw new InvalidOperationException("Check for updates first.");
             State.Status = "downloading"; State.Error = null; Changed?.Invoke();
             var progress = new Progress<double>(value => { Progress = value; Changed?.Invoke(); });
-            if (UsesSignedFeed) await SignedUpdateFeed.CopyAsync(_settings!, release, InstallerPath!, progress, _lifetime.Token);
-            else await UpdateProtocol.DownloadAsync(_client, release, _settings!.Repository, InstallerPath!, progress, _lifetime.Token);
+            await UpdateProtocol.DownloadAsync(_client, release, _settings!.Repository, InstallerPath!, progress, _lifetime.Token,
+                GitHubCredentialStore.Read(Repository));
             State.Status = "readyToInstall";
             // Clean only matching application installer cache files after a successful download.
             foreach (var file in Directory.EnumerateFiles(Root, "FluentSingBox*Setup-*-x64.exe"))
@@ -228,7 +245,7 @@ public sealed class AppUpdateService
         if (!CheckAllowed) throw new InvalidOperationException(Localization.Get("Updates_PolicyDisabled"));
         if (Busy || State.Status != "readyToInstall" || State.Release is not { } release || release.Scope != Scope)
             throw new InvalidOperationException("Installer is not ready.");
-        await SignedUpdateFeed.VerifyInstallerAsync(_settings!, release, InstallerPath!);
+        await InstallerTrust.VerifyInstallerAsync(_settings!, release, InstallerPath!);
     }
 
     public void LaunchUpdater()
