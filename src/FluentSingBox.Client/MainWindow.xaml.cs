@@ -185,8 +185,11 @@ public sealed partial class MainWindow : Window
 
     private void UpdateTitleBarInsets()
     {
-        TitleBarLeftPaddingColumn.Width = new GridLength(AppWindow.TitleBar.LeftInset);
-        TitleBarRightPaddingColumn.Width = new GridLength(AppWindow.TitleBar.RightInset);
+        // AppWindow insets are physical pixels; XAML column widths use logical pixels.
+        // Without this conversion, high DPI leaves an oversized non-draggable gap.
+        var scale = RootGrid.XamlRoot?.RasterizationScale ?? 1;
+        TitleBarLeftPaddingColumn.Width = new GridLength(AppWindow.TitleBar.LeftInset / scale);
+        TitleBarRightPaddingColumn.Width = new GridLength(AppWindow.TitleBar.RightInset / scale);
     }
 
     private void ApplyMinimumWindowSize()

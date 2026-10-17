@@ -99,11 +99,10 @@ try {
         Ui @('wait-for','Proxy_Tun_Status') | Out-Null
         Ui @('set-value','Proxy_Tun_0_address',"172.19.0.1/30`nfdfe:dcba:9876::1/126") | Out-Null
     }
-    Case 'tun/ipv6-address-removal-shows-warning-without-changing-dns' {
+    Case 'tun/ipv6-address-removal-has-no-proxy-hint-and-preserves-dns' {
         Ui @('set-value','Proxy_Tun_0_address','172.19.0.1/30') | Out-Null
         Wait-Document {param($d) @($d.inbounds | Where-Object {$_.type -eq 'tun' -and @($_.address).Count -eq 1}).Count -eq 1} | Out-Null
-        Ui @('wait-for','Proxy_Tun_IPv6_Status') | Out-Null
-        Assert (@(Tree | Where-Object { $_.name -match 'TUN has no IPv6 address' }).Count -gt 0) 'Removing TUN IPv6 did not warn about other interfaces'
+        Assert (@(Tree | Where-Object { $_.automationId -like 'Proxy_Tun_IPv6*' -or $_.name -eq 'IPv6 connectivity' }).Count -eq 0) 'Proxy page still contains IPv6 connectivity UI'
         Assert ((Get-Content $script:sourcePath -Raw | ConvertFrom-Json).dns.strategy -eq 'prefer_ipv4') 'TUN hint silently changed DNS strategy'
         Ui @('set-value','Proxy_Tun_0_address',"172.19.0.1/30`nfdfe:dcba:9876::1/126") | Out-Null
         Wait-Document {param($d) @($d.inbounds | Where-Object {$_.type -eq 'tun' -and @($_.address).Count -eq 2}).Count -eq 1} | Out-Null

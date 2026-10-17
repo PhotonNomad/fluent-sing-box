@@ -45,11 +45,11 @@
                 <NavigationViewItem Tag="routing" AutomationProperties.AutomationId="Navigation_Routing" x:Uid="MainWindow_NavigationViewItem31">
                     <NavigationViewItem.Icon><SymbolIcon Symbol="Map" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Tag="logs" AutomationProperties.AutomationId="Navigation_Logs" x:Uid="MainWindow_NavigationViewItem37">
-                    <NavigationViewItem.Icon><SymbolIcon Symbol="List" /></NavigationViewItem.Icon>
-                </NavigationViewItem>
                 <NavigationViewItem Content="DNS" Tag="dns" AutomationProperties.AutomationId="Navigation_DNS">
                     <NavigationViewItem.Icon><SymbolIcon Symbol="Globe" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Tag="logs" AutomationProperties.AutomationId="Navigation_Logs" x:Uid="MainWindow_NavigationViewItem37">
+                    <NavigationViewItem.Icon><SymbolIcon Symbol="List" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItem x:Name="SettingsNavigationItem" Tag="settings" AutomationProperties.AutomationId="Navigation_Settings">
                     <NavigationViewItem.Icon><SymbolIcon Symbol="Setting" /></NavigationViewItem.Icon>

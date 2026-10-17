@@ -11,7 +11,6 @@ internal sealed class Ipv6ConnectivityHint : StackPanel
     private readonly Button _check = new() { Content = Localization.Get("Ipv6_CheckAgain") };
     private CancellationTokenSource? _wait;
     private bool _allowsIpv6;
-    private bool _tunWithoutIpv6;
     private bool _active;
     private int _revision;
     private Ipv6ConnectivityResult? _result;
@@ -38,10 +37,9 @@ internal sealed class Ipv6ConnectivityHint : StackPanel
         };
     }
 
-    public void Update(string? strategy, bool tunWithoutIpv6 = false)
+    public void Update(string? strategy)
     {
         _allowsIpv6 = strategy != "ipv4_only";
-        _tunWithoutIpv6 = tunWithoutIpv6 && _allowsIpv6;
         ShowResult();
     }
 
@@ -96,10 +94,9 @@ internal sealed class Ipv6ConnectivityHint : StackPanel
         };
         if (_allowsIpv6 && result.Status != Ipv6ConnectivityStatus.Reachable) message += " " + Localization.Get("Ipv6_RecommendIpv4");
         if (!_allowsIpv6) message += " " + Localization.Get("Ipv6_Ipv4Selected");
-        if (_tunWithoutIpv6) message += " " + Localization.Get("Ipv6_TunWithoutAddress");
         message += " " + Localization.Get("Ipv6_Scope");
         _status.Message = message;
-        _status.Severity = _tunWithoutIpv6 || _allowsIpv6 && result.Status != Ipv6ConnectivityStatus.Reachable
+        _status.Severity = _allowsIpv6 && result.Status != Ipv6ConnectivityStatus.Reachable
             ? InfoBarSeverity.Warning : InfoBarSeverity.Informational;
     }
 }

@@ -21,7 +21,6 @@ internal sealed class TunConfigurationForm
     private int _revision;
     private int _savedRevision;
     private Task _loadTask = Task.CompletedTask;
-    private readonly Ipv6ConnectivityHint _ipv6Hint = new("Proxy_Tun_IPv6");
     public TunConfigurationForm(Page page, StackPanel view)
     {
         _page = page; _view = view;
@@ -50,7 +49,6 @@ internal sealed class TunConfigurationForm
     private void Render()
     {
         _forms.Clear(); _view.Children.Clear(); _status.IsOpen = false; _view.Children.Add(_status);
-        _view.Children.Add(_ipv6Hint);
         var catalog = new ConfigurationSchema(ConfigurationSchema.LocalPath);
         var inbounds = _document["inbounds"] as JsonArray ?? new JsonArray();
         var active = inbounds.OfType<JsonObject>().Where(value => value["type"]?.ToString() == "tun").ToArray();
@@ -98,14 +96,6 @@ internal sealed class TunConfigurationForm
             finally { cleanup.IsEnabled = true; }
         };
         _view.Children.Add(new SettingsCard { Header = Localization.Get("TunCleanup_Button"), Description = Localization.Get("TunCleanup_Help"), Content = cleanup });
-        UpdateIpv6Hint();
-    }
-    private void UpdateIpv6Hint()
-    {
-        var hasIpv6 = _forms.Any(item => item.Value["address"] is JsonArray addresses
-            && addresses.Any(address => System.Net.IPAddress.TryParse(address?.ToString().Split('/')[0], out var ip)
-                && ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6));
-        _ipv6Hint.Update(_document["dns"]?["strategy"]?.ToString(), _enabled.IsOn && !hasIpv6);
     }
     private async Task CleanupAsync()
     {
@@ -197,7 +187,6 @@ internal sealed class TunConfigurationForm
             _source = await File.ReadAllTextAsync(ConfigurationFileService.FilePath);
             await App.State.SavePreferencesAsync(configurationCommitted: true);
             _savedRevision = revision;
-            UpdateIpv6Hint();
             _status.Message = Localization.Get("Schema_Saved"); _status.Severity = InfoBarSeverity.Success; _status.IsOpen = true;
             return true;
         }
