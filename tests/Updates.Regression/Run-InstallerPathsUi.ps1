@@ -8,7 +8,7 @@ $taskWinapp=(Get-Command winapp -ErrorAction Stop).Source
 $taskRoot=Join-Path $taskProject ('artifacts/installer-ui/' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $taskRoot -Force | Out-Null
 $taskResults=[Collections.Generic.List[object]]::new()
-$taskLabels=if($Language -eq 'zh-CN'){@{Options='选项';Browse='浏览';OK='确定';Cancel='取消';Version='版本';LanguageId='2052'}}else{@{Options='Options';Browse='Browse';OK='OK';Cancel='Cancel';Version='Version';LanguageId='1033'}}
+$taskLabels=if($Language -eq 'zh-CN'){@{Options='选项';Browse='浏览';OK='确定';Cancel='取消';Close='关闭';Uninstall='卸载';Version='版本';LanguageId='2052'}}else{@{Options='Options';Browse='Browse';OK='OK';Cancel='Cancel';Close='Close';Uninstall='Uninstall';Version='Version';LanguageId='1033'}}
 function Nodes($Items) { foreach ($taskNode in $Items) { $taskNode; if ($taskNode.children) { Nodes $taskNode.children } } }
 function Ui([string[]]$Arguments) {
     $taskRaw=& $taskWinapp ui @Arguments -w "$script:taskWindow" --json 2>&1 | Out-String
@@ -39,10 +39,20 @@ foreach ($taskScope in $taskScopes) {
             if(!$script:taskWindow) { Start-Sleep -Milliseconds 200 }
         } while(!$script:taskWindow -and [DateTime]::UtcNow -lt $taskDeadline)
         if(!$script:taskWindow) { throw 'Installer did not expose a test window.' }
-        Ui @('wait-for',$taskLabels.Options,'--timeout','15000') | Out-Null
+        Ui @('wait-for',"$($taskLabels.Version) $Version",'--timeout','15000') | Out-Null
         $taskHome=@(Nodes (Ui @('inspect','--depth','15')).windows.elements)
         if(!@($taskHome|Where-Object {$_.name -eq "$($taskLabels.Version) $Version"}).Count){throw 'Brand header does not show the localized target version.'}
         Ui @('screenshot','-o',(Join-Path $taskRoot "$taskScope-home.png")) | Out-Null
+        if(!@($taskHome|Where-Object {$_.type -eq 'Button' -and $_.name -eq $taskLabels.Options}).Count){
+            # Launching the already-installed bundle opens maintenance, where the
+            # standard BA deliberately offers no installation-path selection.
+            if(!@($taskHome|Where-Object {$_.type -eq 'Button' -and $_.name -eq $taskLabels.Uninstall}).Count){throw 'Expected installation options or installed maintenance controls.'}
+            $taskResults.Add([pscustomobject]@{Scope=$taskScope;Language=$Language;Version='visible';Mode='maintenance';Installed=$false})
+            $taskClose=@($taskHome|Where-Object {$_.type -eq 'Button' -and $_.name -eq $taskLabels.Close -and $_.automationId -ne 'Close'})[0]
+            if(!$taskClose){throw 'Maintenance page has no close action.'}
+            Ui @('invoke',$taskClose.selector)|Out-Null
+            continue
+        }
         Ui @('invoke',$taskLabels.Options) | Out-Null
         $taskTree=@(Nodes (Ui @('inspect','--depth','15')).windows.elements)
         $taskTree | ConvertTo-Json -Depth 30 | Set-Content (Join-Path $taskRoot "$taskScope-options-tree.json")
