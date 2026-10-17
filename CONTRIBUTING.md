@@ -78,7 +78,7 @@ dotnet run --project tests/Client.Regression -- "$PWD" --configuration-recovery-
 
 ## 清理开发产物
 
-`tools/Clean-DevelopmentArtifacts.ps1` 默认只展示清理清单，添加 `-Apply` 才会执行。它保留源码、测试工具与文档、`.vscode` 配置、当前 Debug/Release 发布目录、`artifacts/vscode-data` 和 `output/DailyUse`。旧测试目录及日常副本中的配置、备份、规则集、脚本和结果摘要会先复制到 `output/PreservedDevelopmentData/<时间与标识>/`，逐文件核对 SHA-256，再删除编译缓存、日志、截图和重复程序。归档保留原相对路径，并提供 `manifest.json` 与 `cleanup-report.json`。
+`tools/Clean-DevelopmentArtifacts.ps1` 默认只展示清理清单，添加 `-Apply` 才会执行。它保留源码、测试工具与文档、`.vscode` 配置、固定 Debug/Release、当前版本安装包、WiX 工具、`artifacts/vscode-data` 和 `output/DailyUse`。本机更新清单、当前引用的安装器和签名密钥保留；清单与当前资产验证成功后才清理旧版 feed 安装器。旧测试目录及日常副本中的配置、备份、规则集、脚本和结果摘要会先复制到 `output/PreservedDevelopmentData/<时间与标识>/`，逐文件核对 SHA-256，再删除编译缓存、日志、截图和重复程序。归档保留原相对路径，并提供 `manifest.json` 与 `cleanup-report.json`。
 
 ```powershell
 ./tools/Clean-DevelopmentArtifacts.ps1

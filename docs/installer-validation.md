@@ -13,7 +13,7 @@ dotnet run --project tests/Updates.Regression -c Release
 
 EXE 首页的“Options / 选项”提供安装位置文本框与“Browse / 浏览”；可以输入或选择目录，确定后回到安装首页。MSI 使用独立的目录选择页。用户包默认 LocalAppData/Programs/fluent sing-box，全机包默认 Program Files/fluent sing-box。EXE 的 InstallFolder 映射到 MSI 的 BOOTSTRAPPERINSTALLFOLDER；没有明确更改默认位置的升级会复用既有安装路径，明确选择新位置时优先采用该位置。这是程序文件目录，节点配置仍使用现有用户数据目录。实际位置迁移需要客体验收。
 
-`release.json` 当前版本为本机测试版 `0.1.6`，不是已经公开发布的版本承诺。`-Version` 同时设置程序集、MSI、Burn、安装包内 release.json 和资产名。固定 GUID 属于产品身份，不可随发布更改。打包从固定 Release 目录复制到独立 staging，不收集本机用户数据或 portable.txt。
+当前版本以 `release.json` 为准，本机测试已到 `0.1.13`，不代表同版本已经发布至 GitHub。`-Version` 同时设置程序集、MSI、Burn、安装包内 release.json 和资产名。固定 GUID 属于产品身份，不可随发布更改。打包从固定 Release 目录复制到独立 staging，不收集本机用户数据或 portable.txt。
 
 ## 正式签名
 
@@ -33,7 +33,25 @@ GitHub `build-installers.yml` 手动构建未签名测试资产；`publish-relea
 
 应用启动 30 秒后开始后台工作，每 6 小时唤醒；检查间隔至少一天。手动检查不受一天间隔影响。开发夹具、便携副本不启动后台工作，也不执行安装更新；手动检查可以查看发布信息。
 
-状态与安装缓存存于用户数据目录 `updates`。检查失败与没有发布版本是不同状态。下载失败不会覆盖原有完整缓存。后台下载遵守计费/漫游/超额状态，未知网络成本时不自动下载。点击“检查更新”明确授权检查、下载、安装和重启整个流程。展开选项仅有“自动下载并安装更新”和“显示新更新通知”：默认关闭自动安装、开启通知；启用自动安装后，后台通过同一退出清理与安装入口完成更新。旧状态中的自动下载偏好不会直接授权自动安装。0.1.5 的界面及真实安装验证见[验证记录](update-card-validation-2026-10-16.md)。
+状态与安装缓存存于用户数据目录 `updates`。检查失败与没有发布版本是不同状态。下载失败不会覆盖原有完整缓存。后台下载遵守计费/漫游/超额状态，未知网络成本时不自动下载。点击“检查更新”明确授权检查、下载、安装和重启整个流程。展开选项仅有“自动下载并安装更新”和“显示新更新通知”：默认关闭自动安装、开启通知；启用自动安装后，后台通过同一退出清理与安装入口完成更新。旧状态中的自动下载偏好不会直接授权自动安装。进程交接及测试脚本行为见[项目架构](architecture.md)。
+
+## 本机开发更新
+
+首次配置需要创建并妥善保管 RSA 私钥、公钥，并通过受控安装将公钥固定到客户端。已有客户端必须继续使用原来的签名密钥；不要因清理而轮换或删除它。当前工作区已配置该通道，后续版本可执行：
+
+```powershell
+$version = (Get-Content release.json -Raw | ConvertFrom-Json).version
+./tools/Build-Installer.ps1 -Version $version -Scope user -UpdateFeedDirectory "$PWD/artifacts/local-update-feed" -UpdateManifestPublicKeyPath "$PWD/artifacts/update-signing/local-update.public.pem"
+./tools/Inspect-Installers.ps1 -Version $version -Scope user
+./tools/Publish-LocalUpdate.ps1 -Version $version -Scope user -FeedDirectory "$PWD/artifacts/local-update-feed" -SigningKeyPath "$PWD/artifacts/update-signing/local-update.pem"
+./tools/Update-InstalledClient.ps1 -Version $version
+```
+
+先提高版本号；已经发布到本机清单的同版本文件不可换成不同字节。不要把带本机更新目录和测试公钥的开发包上传给其他用户；GitHub 发行应重新构建未附带本机通道配置的包。
+
+`Update-InstalledClient.ps1` 备份用户配置，通过设置页触发一次检查，等待新进程和目标版本；重启后不再导航设置页或切换任何复选框。`-VerifyOnly` 只核对当前安装、配置和更新偏好，不操作界面。开关交互验证使用隔离数据的 `Run-UpdatesUi.ps1`。实际升级时退出清理会停止核心，升级不等于恢复此前的联网会话。
+
+截至 0.1.13，用户安装的多次真实升级与重启、配置哈希保留、自定义主题中英文界面已验证。安装进度页截图未成功捕获；这不应表述为完成该页面的视觉验收。全机范围、干净 Windows 客体和真实 GitHub 签名更新仍按下列矩阵验收。历史逐次记录已合并，原始文档可从 Git 查阅；开发日志与截图允许清理。
 
 读取 HKLM 和 HKCU（任一值为 DWORD 1 即禁用）：`Software\Policies\PhotonNomad\FluentSingBox` 下 `DisableUpdateChecks`、`DisableAutomaticUpdateDownload`、`DisableNewUpdateNotification`。禁用自动下载不会阻止用户手动下载。新版本在主窗口提示，已有托盘图标时另显示原生托盘通知；当前没有 PowerToys 的 Action Center 持久 toast/企业 ADMX 管理模板，这个展示差异不应表述为完全相同。
 

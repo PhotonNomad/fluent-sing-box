@@ -20,7 +20,7 @@
 
 ## DNS 的选择
 
-`local` 是国内解析器的标签，默认使用 114.114.114.114 UDP 直连；`system-dns` 才使用 Windows 系统 DNS，供局域网名称解析。`proxy-dns` 使用 `https://1.1.1.1/dns-query`，TLS 名称为 `cloudflare-dns.com`，通过默认节点访问；三种模式共用这一解析器，应用节点仅用于连接。Windows 应用调用系统解析器时，DNS Client 服务以 `svchost.exe` 代发查询，不能依靠 DNS 的进程名或路径选择应用节点（见[整改证据 1.1](china-dns-app-routing-rework.md#11-证据-atun-模式下-dns-请求不属于应用进程)）。节点主机名和 DNS 上游域名使用 `bootstrap`（114 UDP 直连）解析，避免“先解析节点才能连接节点、先连接节点才能解析”的循环。
+`local` 是国内解析器的标签，默认使用 114.114.114.114 UDP 直连；`system-dns` 才使用 Windows 系统 DNS，供局域网名称解析。`proxy-dns` 使用 `https://1.1.1.1/dns-query`，TLS 名称为 `cloudflare-dns.com`，通过默认节点访问；三种模式共用这一解析器，应用节点仅用于连接。Windows 应用调用系统解析器时，DNS Client 服务可能以 `svchost.exe` 代发查询，不能依靠 DNS 的进程名或路径可靠识别原始应用。生成配置通过 `route.default_domain_resolver = local` 为节点主机名提供直连解析入口，避免解析依赖尚未连接的代理；已有导入配置仍需单独核对。
 
 有节点的新配置使用 `proxy-dns` 作为默认 DNS 服务器，局域网和国内域名规则优先匹配。无节点的直连模板使用 `local`。DNS 页面完成修改后自动校验并保存，无需另点校验保存按钮。
 
@@ -30,7 +30,7 @@
 
 DNS 解析策略直接使用 DNS 页的 `strategy`，新配置默认 `ipv4_only`（仅 IPv4）。IPv6 检测只提供提示，不自动覆盖策略；已有配置及明确选择的 `prefer_ipv4`、`prefer_ipv6`、`ipv6_only` 均保持原值。`sing-box/dns-policy.log` 记录实际运行策略。
 
-Store 应用保留设置中的具体路径，在生成路由时转成 `process_path_regex`，仅版本号通配，包名、架构、发布者和包内程序路径仍严格匹配。不存在的路径在应用页和路由页提示，生成配置时不阻断；名称模式必须使用完整 `.exe` 文件名，且**大小写要与磁盘上的真实文件名一致**：sing-box 的 `process_name` 是按 `processMap[filepath.Base(ProcessInfo.ProcessPath)]` 精确查表的，写错大小写等于这条规则不存在，不会报错，应用会静默落到默认出口（见[整改证据 1.2](china-dns-app-routing-rework.md#12-证据-bcodexexe-未命中名字规则)）。未带扩展名且能从正在运行的进程或 PATH 解析的输入会补全；带扩展名但大小写不符的输入也会改写成真实大小写；解析不到时按原样保存，需自行核对。可从运行进程列表选择名称，适合升级后变化的 CLI `bin/<哈希>/codex.exe`。
+Store 应用保留设置中的具体路径，在生成路由时转成 `process_path_regex`，仅版本号通配，包名、架构、发布者和包内程序路径仍严格匹配。不存在的路径在应用页和路由页提示，生成配置时不阻断；名称模式必须使用完整 `.exe` 文件名，且**大小写要与磁盘上的真实文件名一致**：当前核心的名称查表可能因大小写不符而不匹配，使连接落到默认出口。未带扩展名且能从正在运行的进程或 PATH 解析的输入会补全；带扩展名但大小写不符的输入也会改写成真实大小写；解析不到时按原样保存，需自行核对。可从运行进程列表选择名称，适合升级后变化的 CLI `bin/<哈希>/codex.exe`。
 
 生成配置禁用 `store_dns` 和 `store_fakeip`。DNS、应用列表、默认节点或 TUN 设置变更会标记应用缓存失效；在下次核心启动前删除应用数据目录中的 `sing-box/cache.db`，避免删除正在使用的数据库。手工指定到其他位置的缓存文件不自动删除。运行中的核心需要重启才能应用新配置及清空内存 DNS 缓存。
 

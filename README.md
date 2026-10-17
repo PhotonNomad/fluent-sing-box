@@ -40,9 +40,9 @@
 
 设置页的“检查更新”会连续检查、下载校验、保存配置、停止核心、执行本应用网络清理，再由独立更新器安装并重启，无需分别点击下载和安装。“版本和更新”展开后仅保留“自动下载并安装更新”和“显示新更新通知”。默认关闭自动安装、开启通知；启用自动安装后，后台可完成下载、安装和重启，计费连接及网络成本未知时除外。应用、规则集、内置核心更新是不同流程。
 
-GitHub Releases 通道要求正式发布者签名；本机构建还可使用固定公钥验证的签名清单通道，不需要把开发证书加入系统信任。构建与发布本地更新的方法见 [一键更新实施方案](docs/update-execution-plan-2026-10-16.md)。
+GitHub Releases 通道要求正式发布者签名；本机构建还可使用固定公钥验证的签名清单通道，不需要把开发证书加入系统信任。构建、发布本机更新及签名要求见[安装与发布](docs/installer-validation.md)。
 
-当前提供 v0.1.6 未签名测试版，安装选择和限制见 [GitHub 发行说明](docs/github-release-v0.1.6.md)。2026-10-16 已在现有用户安装上完成签名本地清单通道的一键升级与重启验收，配置哈希保持不变。没有可信发布者证书或固定清单公钥的包仍不能在应用内执行更新。GitHub 正式签名发布、全机安装/卸载及运行中 TUN 清理仍需另行验收。详见 [实际升级记录](docs/installed-update-validation-2026-10-16.md)、[PowerToys 对齐方案](docs/powertoys-release-plan.md) 和 [安装包验证与签名发布](docs/installer-validation.md)。
+当前本机测试版本为 0.1.13，已完成本机签名清单通道的实际升级与重启验收，配置哈希保持不变；GitHub Release 与本机测试通道独立。没有可信发布者证书或固定清单公钥的包仍不能在应用内执行更新。GitHub 正式签名发布、全机安装/卸载及运行中 TUN 清理仍需另行验收。主程序、核心宿主与更新器的关系，以及验收脚本为何会操作设置页，见[项目架构](docs/architecture.md)。
 
 ## 从源码构建
 
@@ -120,6 +120,8 @@ dotnet run --project tests/Client.Regression -- "$PWD"
 
 ## 文档
 
+- [项目架构、进程与更新流程](docs/architecture.md)
+- [安装包、签名与版本发布](docs/installer-validation.md)
 - [配置文件、DNS 与路由表单](docs/schema-driven-configuration.md)
 - [国内默认路由、sniff 与 hijack-dns](docs/default-routing-china.md)
 - [真实网络验证与故障反馈](docs/manual-network-validation.md)

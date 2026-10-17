@@ -7,6 +7,8 @@ $ErrorActionPreference = 'Stop'
 $taskRoot = (Resolve-Path -LiteralPath $ProjectRoot).Path
 $taskArchive = Join-Path $taskRoot ('output/PreservedDevelopmentData/' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
 $taskTargets = [Collections.Generic.List[string]]::new()
+$taskVersion = (Get-Content -LiteralPath (Join-Path $taskRoot 'release.json') -Raw | ConvertFrom-Json).version
+if ($taskVersion -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid current release version.' }
 
 function Assert-WorkspacePath([string]$Path) {
     $taskFull = [IO.Path]::GetFullPath($Path)
@@ -38,7 +40,41 @@ if (Test-Path -LiteralPath (Join-Path $taskRoot 'artifacts')) {
     foreach ($taskItem in Get-ChildItem -LiteralPath (Join-Path $taskRoot 'artifacts') -Force) {
         # The installed local update channel depends on these persistent files.
         # In particular, deleting/rotating its private key would strand installed clients.
-        if ($taskItem.Name -notin @('publish', 'vscode-data', 'local-update-feed', 'update-signing')) { $taskTargets.Add($taskItem.FullName) }
+        if ($taskItem.Name -notin @('publish', 'vscode-data', 'local-update-feed', 'update-signing', 'tools', 'installers')) { $taskTargets.Add($taskItem.FullName) }
+    }
+}
+foreach ($taskContainer in @('artifacts/publish', 'artifacts/installers')) {
+    $taskPath = Join-Path $taskRoot $taskContainer
+    if (!(Test-Path -LiteralPath $taskPath)) { continue }
+    foreach ($taskItem in Get-ChildItem -LiteralPath $taskPath -Directory -Force) {
+        $taskKeep = if ($taskContainer -eq 'artifacts/publish') { $taskItem.Name -in @('Debug', 'Release') } else { $taskItem.Name -eq $taskVersion }
+        if (!$taskKeep) { $taskTargets.Add($taskItem.FullName) }
+    }
+}
+$taskFeed = Join-Path $taskRoot 'artifacts/local-update-feed'
+$taskManifestPath = Join-Path $taskFeed 'latest.json'
+if (Test-Path -LiteralPath $taskManifestPath) {
+    $null = Assert-WorkspacePath $taskManifestPath
+    $taskEnvelope = Get-Content -LiteralPath $taskManifestPath -Raw | ConvertFrom-Json
+    $taskPayload = [Convert]::FromBase64String($taskEnvelope.Payload)
+    $taskPublicKeyPath = Join-Path $taskRoot 'artifacts/update-signing/local-update.public.pem'
+    $null = Assert-WorkspacePath $taskPublicKeyPath
+    $taskRsa = [Security.Cryptography.RSA]::Create()
+    try {
+        $taskRsa.ImportFromPem((Get-Content -LiteralPath $taskPublicKeyPath -Raw))
+        if (!$taskRsa.VerifyData($taskPayload, [Convert]::FromBase64String($taskEnvelope.Signature), [Security.Cryptography.HashAlgorithmName]::SHA256, [Security.Cryptography.RSASignaturePadding]::Pkcs1)) { throw 'Refusing to prune an unverified local update feed.' }
+    } finally { $taskRsa.Dispose() }
+    $taskReleases = ([Text.Encoding]::UTF8.GetString($taskPayload) | ConvertFrom-Json).Releases
+    if (!$taskReleases) { throw 'Refusing to prune an empty local update feed.' }
+    $taskKeepAssets = @($taskReleases | ForEach-Object {
+        if ($_.AssetName -notmatch '^FluentSingBox(User)?Setup-\d+\.\d+\.\d+-x64\.exe$') { throw 'Invalid local update asset name.' }
+        if (!(Test-Path -LiteralPath (Join-Path $taskFeed $_.AssetName))) { throw 'The active update asset is missing.' }
+        $taskActive = Get-Item -LiteralPath (Join-Path $taskFeed $_.AssetName)
+        if ($taskActive.Length -ne $_.Size -or (Get-FileHash -LiteralPath $taskActive.FullName -Algorithm SHA256).Hash -ne $_.Sha256) { throw 'The active update asset does not match the signed manifest.' }
+        $_.AssetName
+    })
+    foreach ($taskItem in Get-ChildItem -LiteralPath $taskFeed -File) {
+        if ($taskItem.Name -match '^FluentSingBox(User)?Setup-\d+\.\d+\.\d+-x64\.exe$' -and $taskItem.Name -notin $taskKeepAssets) { $taskTargets.Add($taskItem.FullName) }
     }
 }
 if (Test-Path -LiteralPath (Join-Path $taskRoot 'output')) {
@@ -51,7 +87,7 @@ $taskManifest = [Collections.Generic.List[object]]::new()
 $taskPlan = [Collections.Generic.List[object]]::new()
 # Keep configuration, source, scripts, documentation and test result summaries.
 # Omit generated build files, logs, screenshots, caches and duplicate executables.
-$taskDiscardExtensions = @('.exe', '.dll', '.winmd', '.mui', '.xbf', '.pri', '.pdb', '.png', '.ico', '.zip', '.html', '.log', '.db', '.cache', '.v2', '.sqlite', '.sqlite3')
+$taskDiscardExtensions = @('.exe', '.dll', '.msi', '.wixpdb', '.cab', '.winmd', '.mui', '.xbf', '.pri', '.pdb', '.png', '.ico', '.zip', '.html', '.log', '.db', '.cache', '.v2', '.sqlite', '.sqlite3')
 foreach ($taskTarget in $taskTargets) {
     $null = Assert-WorkspacePath $taskTarget
     $taskItems = @((Get-Item -LiteralPath $taskTarget -Force))

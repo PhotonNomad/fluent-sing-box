@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$Version,[switch]$VerifyOnly,[switch]$RestoreDefaultNotifications)
+param([string]$Version,[switch]$VerifyOnly)
 $ErrorActionPreference='Stop'
 $taskProject=(Resolve-Path "$PSScriptRoot/..").Path
 if(!$Version){$Version=(Get-Content (Join-Path $taskProject 'release.json') -Raw|ConvertFrom-Json).version}
@@ -13,6 +13,14 @@ $taskRun=[guid]::NewGuid().ToString('N')
 $taskEvidence=Join-Path $taskProject "artifacts/installed-update/$taskRun"
 New-Item -ItemType Directory -Path $taskEvidence -Force|Out-Null
 $taskData=Join-Path $env:LOCALAPPDATA 'fluent sing-box'
+$taskStatePath=Join-Path $taskData 'updates/state.json'
+function Preferences($State){
+    [pscustomobject]@{
+        AutoInstall=($State.AutoInstall -eq $true)
+        ShowNotifications=($null -eq $State.ShowNotifications -or $State.ShowNotifications -eq $true)
+    }
+}
+$taskPreferencesBefore=if(Test-Path $taskStatePath){Preferences (Get-Content $taskStatePath -Raw|ConvertFrom-Json)}else{Preferences $null}
 $taskBackup=Join-Path $env:LOCALAPPDATA "fluent-sing-box-upgrade-backups/$taskRun"
 $taskHashes=@{}
 foreach($taskRelative in @('settings.json','sing-box/user-config.json')){
@@ -24,8 +32,8 @@ foreach($taskRelative in @('settings.json','sing-box/user-config.json')){
         Copy-Item -LiteralPath $taskFile -Destination $taskCopy
     }
 }
-$taskWinapp=(Get-Command winapp -ErrorAction Stop).Source
-if(!('InstalledUpdateWindow' -as [type])){
+$taskWinapp=if(!$VerifyOnly){(Get-Command winapp -ErrorAction Stop).Source}
+if(!$VerifyOnly -and !('InstalledUpdateWindow' -as [type])){
     Add-Type @'
 using System;
 using System.Runtime.InteropServices;
@@ -73,17 +81,12 @@ function Attach([int]$ProcessId){
     }
     Ui @('wait-for','Navigation_Settings','--timeout','10000')|Out-Null
 }
-function Wait-State([string]$Property,[bool]$Expected){
-    $taskDeadline=[DateTime]::UtcNow.AddSeconds(5)
-    do{$taskState=Get-Content (Join-Path $taskData 'updates/state.json') -Raw|ConvertFrom-Json;if($taskState.$Property -eq $Expected){return};Start-Sleep -Milliseconds 100}while([DateTime]::UtcNow -lt $taskDeadline)
-    throw "Preference did not persist: $Property"
-}
 $taskProcess=@(Processes)|Select-Object -First 1
-if(!$taskProcess){$taskProcess=Start-Process -FilePath $taskExe -WindowStyle Hidden -PassThru}
+if(!$taskProcess -and !$VerifyOnly){$taskProcess=Start-Process -FilePath $taskExe -WindowStyle Hidden -PassThru}
+if(!$VerifyOnly){
 Attach $taskProcess.Id
 Ui @('invoke','Navigation_Settings')|Out-Null
 Ui @('wait-for','Updates_Check','--property','IsEnabled','--value','true')|Out-Null
-if(!$VerifyOnly){
 Ui @('invoke','Updates_Check')|Out-Null
 $taskDeadline=[DateTime]::UtcNow.AddMinutes(4)
 $taskNew=$null
@@ -94,39 +97,16 @@ do{
 }while([DateTime]::UtcNow -lt $taskDeadline)
 if(!$taskNew){throw 'Installed application did not update and restart.'}
 }else{$taskNew=$taskProcess}
-Attach $taskNew.Id
-Ui @('invoke','Navigation_Settings')|Out-Null
-Ui @('wait-for','Updates_LastCheck')|Out-Null
-Ui @('scroll','PageScrollViewer','--to','bottom')|Out-Null
-Ui @('screenshot','-o',(Join-Path $taskEvidence 'collapsed.png'))|Out-Null
-$taskExpander=@(Nodes (Ui @('inspect','Updates_Options','--depth','4')).windows.elements|Where-Object className -eq 'Microsoft.UI.Xaml.Controls.Expander')[0]
-Ui @('invoke',$taskExpander.selector,'--action','expand')|Out-Null
-Ui @('scroll','PageScrollViewer','--to','bottom')|Out-Null
-$taskTree=@(Nodes (Ui @('inspect','--depth','25')).windows.elements)
-if(@($taskTree|Where-Object type -eq 'CheckBox').Count -ne 2){throw 'Expected exactly two update checkboxes.'}
-foreach($taskId in @('Updates_AutoInstall','Updates_ShowNotifications')){if(!@($taskTree|Where-Object automationId -eq $taskId)[0].isEnabled){throw "Installed preference is disabled: $taskId"}}
-foreach($taskPreference in @(@('Updates_AutoInstall','AutoInstall'),@('Updates_ShowNotifications','ShowNotifications'))){
-    # An upgraded legacy state file can omit new properties; the loaded UI applies
-    # the model defaults. Capture those effective values rather than casting null.
-    $taskOriginal=@($taskTree|Where-Object automationId -eq $taskPreference[0])[0].toggleState -eq 'on'
-    if($RestoreDefaultNotifications -and $taskPreference[1] -eq 'ShowNotifications' -and !$taskOriginal){
-        Ui @('invoke',$taskPreference[0],'--action','toggle')|Out-Null
-        Wait-State 'ShowNotifications' $true
-        $taskOriginal=$true
-    }
-    Ui @('invoke',$taskPreference[0],'--action','toggle')|Out-Null
-    Wait-State $taskPreference[1] (!$taskOriginal)
-    Ui @('invoke',$taskPreference[0],'--action','toggle')|Out-Null
-    Wait-State $taskPreference[1] $taskOriginal
-}
-Ui @('invoke','Updates_Check')|Out-Null
-Ui @('wait-for','Updates_Check','--property','IsEnabled','--value','true')|Out-Null
-Ui @('screenshot','-o',(Join-Path $taskEvidence 'expanded.png'))|Out-Null
-Ui @('inspect','--depth','25')|ConvertTo-Json -Depth 40|Set-Content (Join-Path $taskEvidence 'tree.json')
+# Verify files/state without navigating the restarted app or toggling live preferences.
+$taskCurrent=Get-Content (Join-Path $taskPath 'release.json') -Raw|ConvertFrom-Json
+if($taskCurrent.version -ne $Version){throw 'Installed version does not match target.'}
 foreach($taskRelative in $taskHashes.Keys){if((Get-FileHash (Join-Path $taskData $taskRelative)).Hash -ne $taskHashes[$taskRelative]){throw "Configuration changed: $taskRelative"}}
-$taskState=Get-Content (Join-Path $taskData 'updates/state.json') -Raw|ConvertFrom-Json
-if($taskState.Status -ne 'upToDate'){throw "Expected upToDate, got $($taskState.Status)"}
-$taskResult=[pscustomobject]@{FromVersion=$taskOldVersion;InstalledVersion=$Version;ProcessId=$taskNew.Id;TwoCheckboxes=$true;BothPreferencesPersisted=$true;ConfigurationPreserved=$true;CheckStatus=$taskState.Status;Result='passed'}
+$taskState=Get-Content $taskStatePath -Raw|ConvertFrom-Json
+$taskPreferencesAfter=Preferences $taskState
+if(($taskPreferencesBefore|ConvertTo-Json -Compress) -ne ($taskPreferencesAfter|ConvertTo-Json -Compress)){throw 'Update preferences changed.'}
+if($taskState.Status -notin @('installed','upToDate')){throw "Unexpected update state: $($taskState.Status)"}
+if($taskState.Status -eq 'installed' -and $taskState.Release.Version -ne $Version){throw 'Installer state does not match target.'}
+$taskResult=[pscustomobject]@{FromVersion=$taskOldVersion;InstalledVersion=$Version;ProcessId=$taskNew.Id;UpdatePreferencesPreserved=$true;ConfigurationPreserved=$true;CheckStatus=$taskState.Status;Result='passed'}
 $taskResult|ConvertTo-Json|Set-Content (Join-Path $taskEvidence 'result.json')
 $taskResult|Format-List
 Write-Output "Evidence: $taskEvidence"
