@@ -1,11 +1,13 @@
 [CmdletBinding()]
 param(
     [string]$ProjectRoot = (Resolve-Path "$PSScriptRoot/..").Path,
-    [switch]$Apply
+    [switch]$Apply,
+    [switch]$Minimal
 )
 $ErrorActionPreference = 'Stop'
 $taskRoot = (Resolve-Path -LiteralPath $ProjectRoot).Path
-$taskArchive = Join-Path $taskRoot ('output/PreservedDevelopmentData/' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
+$taskArchiveBase = if ($Minimal) { 'artifacts/preserved-data/' } else { 'output/PreservedDevelopmentData/' }
+$taskArchive = Join-Path $taskRoot ($taskArchiveBase + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
 $taskTargets = [Collections.Generic.List[string]]::new()
 $taskVersion = (Get-Content -LiteralPath (Join-Path $taskRoot 'release.json') -Raw | ConvertFrom-Json).version
 if ($taskVersion -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid current release version.' }
@@ -40,10 +42,11 @@ if (Test-Path -LiteralPath (Join-Path $taskRoot 'artifacts')) {
     foreach ($taskItem in Get-ChildItem -LiteralPath (Join-Path $taskRoot 'artifacts') -Force) {
         # The installed local update channel depends on these persistent files.
         # In particular, deleting/rotating its private key would strand installed clients.
-        if ($taskItem.Name -notin @('publish', 'vscode-data', 'local-update-feed', 'update-signing', 'tools', 'installers')) { $taskTargets.Add($taskItem.FullName) }
+        $taskKeep = if ($Minimal) { @('local-update-feed', 'update-signing', 'preserved-data') } else { @('publish', 'vscode-data', 'local-update-feed', 'update-signing', 'tools', 'installers', 'preserved-data') }
+        if ($taskItem.Name -notin $taskKeep) { $taskTargets.Add($taskItem.FullName) }
     }
 }
-foreach ($taskContainer in @('artifacts/publish', 'artifacts/installers')) {
+foreach ($taskContainer in $(if ($Minimal) { @() } else { @('artifacts/publish', 'artifacts/installers') })) {
     $taskPath = Join-Path $taskRoot $taskContainer
     if (!(Test-Path -LiteralPath $taskPath)) { continue }
     foreach ($taskItem in Get-ChildItem -LiteralPath $taskPath -Directory -Force) {
@@ -77,7 +80,12 @@ if (Test-Path -LiteralPath $taskManifestPath) {
         if ($taskItem.Name -match '^FluentSingBox(User)?Setup-\d+\.\d+\.\d+-x64\.exe$' -and $taskItem.Name -notin $taskKeepAssets) { $taskTargets.Add($taskItem.FullName) }
     }
 }
-if (Test-Path -LiteralPath (Join-Path $taskRoot 'output')) {
+if ($Minimal) {
+    foreach ($taskDirectory in @('output', '.wix')) {
+        $taskPath = Join-Path $taskRoot $taskDirectory
+        if (Test-Path -LiteralPath $taskPath) { $taskTargets.Add($taskPath) }
+    }
+} elseif (Test-Path -LiteralPath (Join-Path $taskRoot 'output')) {
     foreach ($taskItem in Get-ChildItem -LiteralPath (Join-Path $taskRoot 'output') -Directory -Force) {
         if ($taskItem.Name -like 'DailyUse-Backup-*' -or $taskItem.Name -in @('DailyUse-Update', 'icon-concepts')) { $taskTargets.Add($taskItem.FullName) }
     }
@@ -96,7 +104,10 @@ foreach ($taskTarget in $taskTargets) {
     $taskFiles = @($taskItems | Where-Object { !$_.PSIsContainer })
     $taskIsBuildCache = (Split-Path -Leaf $taskTarget) -in @('bin', 'obj')
     $taskPreserved = @($taskFiles | Where-Object {
-        (!$taskIsBuildCache -or $_.FullName -match '[\\/]data[\\/]') -and $_.Extension.ToLowerInvariant() -notin $taskDiscardExtensions -and $_.Name -notlike 'command-*.json'
+        $taskIsData = $_.FullName -match '[\\/](data|vscode-data|PreservedDevelopmentData)[\\/]'
+        $taskIsLocalTool = $_.FullName.StartsWith((Join-Path $taskRoot 'output') + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -and $_.Extension.ToLowerInvariant() -in @('.cs', '.csproj', '.ps1', '.cmd')
+        $taskIsExtractedPayload = $_.FullName -match '[\\/]artifacts[\\/]updater-theme-[^\\/]+[\\/]extracted[\\/]'
+        (!$taskIsBuildCache -or $taskIsData) -and (!$Minimal -or (($taskIsData -or $taskIsLocalTool) -and !$taskIsExtractedPayload)) -and $_.Extension.ToLowerInvariant() -notin $taskDiscardExtensions -and $_.Name -notlike 'command-*.json'
     })
     $taskPlan.Add([pscustomobject]@{
         path = $taskTarget.Substring($taskRoot.Length + 1)
@@ -121,6 +132,25 @@ foreach ($taskTarget in $taskTargets) {
 if (!$Apply) { $taskPlan | Format-Table -AutoSize; Write-Output 'Preview only. Use -Apply to archive configurations and remove these targets.'; return }
 New-Item -ItemType Directory -Path $taskArchive -Force | Out-Null
 $taskManifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $taskArchive 'manifest.json') -Encoding utf8
+$taskArchiveResult = $taskArchive
+if ($Minimal) {
+    $taskZipPath = Assert-WorkspacePath ($taskArchive + '.zip')
+    [IO.Compression.ZipFile]::CreateFromDirectory($taskArchive, $taskZipPath, [IO.Compression.CompressionLevel]::SmallestSize, $false)
+    $taskZip = [IO.Compression.ZipFile]::OpenRead($taskZipPath)
+    try {
+        foreach ($taskFile in $taskManifest) {
+            $taskEntry = $taskZip.GetEntry($taskFile.originalPath.Replace('\', '/'))
+            if (!$taskEntry -or $taskEntry.Length -ne $taskFile.bytes) { throw "Compressed backup is missing $($taskFile.originalPath)" }
+            $taskStream = $taskEntry.Open()
+            try { $taskHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($taskStream)) }
+            finally { $taskStream.Dispose() }
+            if ($taskHash -ne $taskFile.sha256) { throw "Compressed backup hash mismatch: $($taskFile.originalPath)" }
+        }
+    } finally { $taskZip.Dispose() }
+    $null = Assert-WorkspacePath $taskArchive
+    Remove-Item -LiteralPath $taskArchive -Recurse -Force
+    $taskArchiveResult = $taskZipPath
+}
 $taskRemoved = [Collections.Generic.List[string]]::new()
 $taskFailures = [Collections.Generic.List[object]]::new()
 foreach ($taskTarget in $taskTargets) {
@@ -131,7 +161,8 @@ foreach ($taskTarget in $taskTargets) {
     }
     catch { $taskFailures.Add([pscustomobject]@{path=$taskTarget;message=$_.Exception.Message}) }
 }
-[pscustomobject]@{archive=$taskArchive;plan=$taskPlan;removed=$taskRemoved;failures=$taskFailures} |
-    ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $taskArchive 'cleanup-report.json') -Encoding utf8
-[pscustomobject]@{Archive=$taskArchive;PreservedFiles=$taskManifest.Count;RemovedTargets=$taskRemoved.Count;Failures=$taskFailures.Count} | Format-List
+$taskReportPath = if ($Minimal) { $taskArchive + '.cleanup.json' } else { Join-Path $taskArchive 'cleanup-report.json' }
+[pscustomobject]@{archive=$taskArchiveResult;minimal=[bool]$Minimal;plan=$taskPlan;removed=$taskRemoved;failures=$taskFailures} |
+    ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $taskReportPath -Encoding utf8
+[pscustomobject]@{Archive=$taskArchiveResult;PreservedFiles=$taskManifest.Count;RemovedTargets=$taskRemoved.Count;Failures=$taskFailures.Count} | Format-List
 if ($taskFailures.Count) { throw 'Some targets could not be removed. See cleanup-report.json; no existing application was stopped.' }

@@ -83,6 +83,7 @@ dotnet run --project tests/Client.Regression -- "$PWD" --configuration-recovery-
 ```powershell
 ./tools/Clean-DevelopmentArtifacts.ps1
 ./tools/Clean-DevelopmentArtifacts.ps1 -Apply
+./tools/Clean-DevelopmentArtifacts.ps1 -Minimal -Apply  # 移除可重建的发布目录、工具缓存；配置先压缩备份
 ```
 
 归档可能包含节点凭据，继续由 `.gitignore` 排除，不应提交。清理不会终止运行中的应用；遇到占用文件会报告失败。后续测试需要的核心与夹具可按上面的服务器编辑器回归入口重新准备。完整工具目录说明见[开发工具与本地产物](docs/development-tools.md)。

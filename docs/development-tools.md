@@ -21,9 +21,9 @@
 
 UI 脚本中的 `FLUENTSINGBOX_DATA_DIR`、`FLUENTSINGBOX_TEST_BACKGROUND` 与文件选择夹具用于隔离自动化。不要用个人配置替换测试夹具。命令不可用时先区分沙箱权限和真正缺少安装。真实网络验收见 `manual-network-validation.md`，虚拟机说明见 `windows-test-vm-setup.md`。
 
-## 仅当前工作区保留的工具
+## 历史本地工具
 
-`output/` 已由 Git 忽略。下列工具存在于当前开发工作区，不是源码分发的必要依赖，清理时保留其脚本与源码：
+`output/` 已由 Git 忽略。下列历史工具不是源码分发的必要依赖；普通清理在它们存在时保留脚本与源码，最小模式将其压缩备份后移除，需要时从备份恢复：
 
 - `output/DefaultConfigTool/Program.cs` 与项目文件：读取指定数据目录的节点，生成独立的国内默认配置；三个参数依次为源数据目录、应用目录、输出目录。它会清除应用组、代理启用状态和部分旧配置，只应用于独立输出目录。
 - `output/Prepare-DailyUse.ps1`：从 Release 与原用户目录准备便携副本。
@@ -46,3 +46,11 @@ UI 脚本中的 `FLUENTSINGBOX_DATA_DIR`、`FLUENTSINGBOX_TEST_BACKGROUND` 与�
 配置归档可能含凭据，不自动脱敏，以免破坏可恢复性。它与日常使用数据一样留在被 Git 忽略的本地目录中。
 
 运行 `./tools/Clean-DevelopmentArtifacts.ps1` 查看预览；加 `-Apply` 才删除。脚本检查所有目标都位于工作区内，拒绝联接点和符号链接；先归档并核对配置，再清理。不结束现有应用，文件占用会报告失败。`tests/Run-CleanupRegression.ps1` 使用独立的合成工作区验证保留规则，不读取个人节点配置。
+
+## 最小可用模式
+
+`./tools/Clean-DevelopmentArtifacts.ps1 -Minimal` 预览，增加 `-Apply` 执行。此模式只保留源码、开发配置、随包必需的第三方文件，以及本机更新清单、清单当前引用的 EXE 和签名密钥；已有 `artifacts/preserved-data` 备份也保留。
+
+普通模式保留的发布目录、当前 MSI/EXE 副本、WiX 工具与缓存、调试数据目录和 `output` 也会清理。数据目录、历史归档和本地工具源码先备份为 `artifacts/preserved-data/<标识>.zip`，逐条核对解压数据的 SHA-256 后再删除原件；已确认可再生成的安装器解包文件不进入备份。ZIP 不含加密保护，可能含凭据，应留在 Git 忽略的本地目录。ZIP 内 `manifest.json` 记录工作区相对路径与原始文件哈希；恢复单个文件时先核对哈希，不要直接覆盖当前配置。
+
+已安装在用户目录或 Program Files 的应用不受影响。清理后没有可直接运行的开发发布副本；下次使用 `tools/Build.ps1` 重建 Debug/Release，打包前执行 `tools/Setup-InstallerTools.ps1` 重建 WiX 工具。该模式不会删除 `.git`、源码内的核心压缩包、SRS、Schema、许可证及对应源码包。

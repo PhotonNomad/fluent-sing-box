@@ -32,5 +32,20 @@ try{
     try{& (Join-Path $taskProject 'tools/Clean-DevelopmentArtifacts.ps1') -ProjectRoot $taskFixture -Apply|Out-Null}catch{$taskRejected=$true}
     Assert $taskRejected 'Invalid signature was accepted'
     Assert (Test-Path (Join-Path $taskFixture 'artifacts/local-update-feed/FluentSingBoxUserSetup-1.0.0-x64.exe')) 'Failed signature check still deleted feed assets'
-    Write-Output 'PASS cleanup preview, protected outputs, signed feed retention, configuration archive and invalid-signature rejection'
+    $taskEnvelope.Signature=[Convert]::ToBase64String($taskRsa.SignData($taskPayload,[Security.Cryptography.HashAlgorithmName]::SHA256,[Security.Cryptography.RSASignaturePadding]::Pkcs1))
+    Write-Fixture 'artifacts/local-update-feed/latest.json' ($taskEnvelope|ConvertTo-Json)
+    Write-Fixture 'output/PreservedDevelopmentData/legacy/artifacts/updater-theme-test/extracted/File/FIgenerated' 'regenerable payload'
+    & (Join-Path $taskProject 'tools/Clean-DevelopmentArtifacts.ps1') -ProjectRoot $taskFixture -Minimal|Out-Null
+    Assert (Test-Path (Join-Path $taskFixture 'artifacts/publish/Debug/app.exe')) 'Minimal preview deleted a file'
+    & (Join-Path $taskProject 'tools/Clean-DevelopmentArtifacts.ps1') -ProjectRoot $taskFixture -Minimal -Apply|Out-Null
+    foreach($taskDrop in @('artifacts/publish','artifacts/installers','artifacts/tools','artifacts/vscode-data','output')){Assert (!(Test-Path (Join-Path $taskFixture $taskDrop))) "Minimal mode retained $taskDrop"}
+    foreach($taskKeep in @('artifacts/update-signing/local-update.pem','artifacts/local-update-feed/latest.json','artifacts/local-update-feed/FluentSingBoxUserSetup-1.0.1-x64.exe')){Assert (Test-Path (Join-Path $taskFixture $taskKeep)) "Minimal mode removed $taskKeep"}
+    $taskBackup=@(Get-ChildItem (Join-Path $taskFixture 'artifacts/preserved-data') -File -Filter '*.zip')[0]
+    $taskZip=[IO.Compression.ZipFile]::OpenRead($taskBackup.FullName)
+    try{
+        Assert (@($taskZip.Entries|Where-Object FullName -like '*artifacts/ui/data/settings.json').Count -gt 0) 'Compressed backup lost archived configuration'
+        Assert (@($taskZip.Entries|Where-Object FullName -like '*output/DailyUse/data/settings.json').Count -gt 0) 'Compressed backup lost portable configuration'
+        Assert (@($taskZip.Entries|Where-Object FullName -like '*extracted/File/FIgenerated').Count -eq 0) 'Compressed backup retained generated native payload'
+    }finally{$taskZip.Dispose()}
+    Write-Output 'PASS normal/minimal cleanup previews, protected update feed, verified compressed configuration backup, generated payload exclusion and invalid-signature rejection'
 }finally{$taskRsa.Dispose()}
