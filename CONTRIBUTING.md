@@ -4,7 +4,7 @@
 
 ## 开发环境
 
-使用 Windows x64、.NET 10 SDK 和 Windows SDK。项目使用 WinUI 3，目标框架为 `net10.0-windows10.0.19041.0`；NuGet 依赖版本以项目文件为准。UI 自动化使用 winapp CLI，须在可交互的 Windows 桌面运行。
+使用 Windows x64、.NET 10 SDK 和 Windows SDK。项目使用 WinUI 3，目标框架为 `net10.0-windows10.0.19041.0`；NuGet 依赖版本以项目文件为准。
 
 ```powershell
 ./tools/Build.ps1 -Configuration Debug
@@ -14,18 +14,16 @@
 
 ## 项目结构
 
-安装发布相关代码位于 `src/FluentSingBox.Updates`（协议/签名）与 `src/FluentSingBox.Updater`（独立升级程序）；使用 `tools/Build-Installer.ps1` 生成测试包。更新回归执行 `dotnet run --project tests/Updates.Regression -c Release`，中英文设置 UI 回归执行 `tests/Updates.Regression/Run-UpdatesUi.ps1`。签名、安装范围和客体验收说明见 [安装发布指南](docs/installer-validation.md)。
-
 | 目录 | 内容 |
 | --- | --- |
-| `src/FluentSingBox.Client/Models` | 节点、规则、应用组与配置模型 |
-| `src/FluentSingBox.Client/Services` | 配置生成、校验、核心生命周期和 Windows 集成 |
-| `src/FluentSingBox.Client/Views` | WinUI 页面与表单 |
-| `src/FluentSingBox.Client/Resources`、`Strings` | 本地化资源 |
-| `src/FluentSingBox.Client/ThirdParty` | 核心、Schema、规则集及许可说明 |
-| `tests` | 配置、核心、本地网络夹具与 UI 回归 |
-| `tools` | 构建、本地化同步和测试环境工具 |
+| `src/FluentSingBox.Client` | WinUI 页面、配置模型、核心生命周期和 Windows 集成 |
+| `src/FluentSingBox.Updates` | 更新协议、哈希和签名验证 |
+| `src/FluentSingBox.Updater` | 独立升级程序 |
+| `installer` | 安装器主题、语言和许可资源 |
+| `tools` | 应用构建、安装包构建、WiX 准备和语言资源同步 |
 | `docs` | 使用与维护指南 |
+
+使用 `tools/Build-Installer.ps1` 生成安装包。签名、安装范围和客体验收说明见[安装发布指南](docs/installer-validation.md)。完整工具说明见[构建工具与本地产物](docs/development-tools.md)。
 
 ## 修改约定
 
@@ -36,57 +34,13 @@
 - 第三方文件更新须保留来源、版本、校验值和许可文件。
 - 说明实际验证的路径与限制，避免将配置校验等同于网络可用性。
 
-## 测试
+## 验证
 
-服务器编辑与核心配置回归：
+仓库不再附带自动化测试项目和辅助验收脚本。提交前完成受影响项目的构建，并手动核对修改涉及的行为；构建通过不能替代功能或真实网络验证。
 
-```powershell
-dotnet run --project tests/ServerEditor.Regression -- "$PWD"
-dotnet run --project tests/Client.Regression -- "$PWD"
-```
+手动验证界面时使用独立 `FLUENTSINGBOX_DATA_DIR`，只清理本次创建的进程，不改变宿主机既有代理或 TUN。真实节点、系统代理、TUN、UAC、DNS 和 UDP/QUIC 的验收按[网络验证指南](docs/manual-network-validation.md)在隔离 Windows 环境执行。记录实际操作和未覆盖范围。
 
-服务器回归会准备后续测试使用的核心和 UI 夹具，因此首次运行先执行它。
-
-国内默认配置的专用检查：
-
-```powershell
-dotnet run --project tests/Client.Regression -- "$PWD" --china-defaults-only
-dotnet run --project tests/Client.Regression -- "$PWD" --configuration-recovery-only
-```
-
-统一开发回归：
-
-```powershell
-./tests/Run-Development.ps1 -SkipUi
-```
-
-该入口构建 Debug，运行配置/本地核心回归和隔离宿主检查。去掉 `-SkipUi` 会继续运行 UI 回归；先确认 winapp 在当前环境可用。
-
-已构建 Debug 并准备夹具后，可单独运行受影响的 UI 检查：
-
-```powershell
-./tests/Client.Regression/Run-SchemaUi.ps1
-./tests/Client.Regression/Run-ConfigurationUi.ps1
-./tests/Client.Regression/Run-LocalizationUi.ps1
-./tests/Client.Regression/Run-StartupDialogUi.ps1
-./tests/Client.Regression/Run-ChinaRoutingUi.ps1
-```
-
-测试使用独立 `FLUENTSINGBOX_DATA_DIR`，只清理测试创建的进程。常规自动回归不应修改宿主机系统代理或创建真实 TUN。UI、CIM 和 Windows SDK 访问可能受到执行环境限制；命令在沙箱中不可用时，应比较命令解析、PATH、安装路径与权限，再判断是否缺少依赖。
-
-真实节点、系统代理、TUN、UAC、DNS 和 UDP/QUIC 的验收按[网络验证指南](docs/manual-network-validation.md)在隔离 Windows 环境执行。测试记录留在 `artifacts/`，不写入版本化文档逐次累积通过数量。
-
-## 清理开发产物
-
-`tools/Clean-DevelopmentArtifacts.ps1` 默认只展示清理清单，添加 `-Apply` 才会执行。它保留源码、测试工具与文档、`.vscode` 配置、固定 Debug/Release、当前版本安装包、WiX 工具、`artifacts/vscode-data` 和 `output/DailyUse`。本机更新清单、当前引用的安装器和签名密钥保留；清单与当前资产验证成功后才清理旧版 feed 安装器。旧测试目录及日常副本中的配置、备份、规则集、脚本和结果摘要会先复制到 `output/PreservedDevelopmentData/<时间与标识>/`，逐文件核对 SHA-256，再删除编译缓存、日志、截图和重复程序。归档保留原相对路径，并提供 `manifest.json` 与 `cleanup-report.json`。
-
-```powershell
-./tools/Clean-DevelopmentArtifacts.ps1
-./tools/Clean-DevelopmentArtifacts.ps1 -Apply
-./tools/Clean-DevelopmentArtifacts.ps1 -Minimal -Apply  # 移除可重建的发布目录、工具缓存；配置先压缩备份
-```
-
-归档可能包含节点凭据，继续由 `.gitignore` 排除，不应提交。清理不会终止运行中的应用；遇到占用文件会报告失败。后续测试需要的核心与夹具可按上面的服务器编辑器回归入口重新准备。完整工具目录说明见[开发工具与本地产物](docs/development-tools.md)。
+命令在沙箱中不可用时，应比较命令解析、PATH、安装路径与权限，再判断是否缺少依赖。
 
 ## 提交 Pull Request
 

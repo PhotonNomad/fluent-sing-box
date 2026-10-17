@@ -5,8 +5,6 @@
 ```powershell
 ./tools/Setup-InstallerTools.ps1
 ./tools/Build-Installer.ps1                  # release.json 的版本，user + machine
-./tools/Inspect-Installers.ps1
-dotnet run --project tests/Updates.Regression -c Release
 ```
 
 输出 `artifacts/installers/<版本>/FluentSingBoxUserSetup-<版本>-x64.exe/.msi` 与 `FluentSingBoxSetup-<版本>-x64.exe/.msi`。默认推荐 UserSetup EXE；MSI 提供给需要直接部署的用户。两个范围不能共存，切换范围前卸载旧包，数据保留。EXE 包含 MSI，两者都携带 .NET/WinUI，不要求另装 .NET。自包含运行时通过发布新版应用更新。
@@ -33,23 +31,22 @@ GitHub `build-installers.yml` 手动构建未签名测试资产；`publish-relea
 
 应用启动 30 秒后开始后台工作，每 6 小时唤醒；检查间隔至少一天。手动检查不受一天间隔影响。开发夹具、便携副本不启动后台工作，也不执行安装更新；手动检查可以查看发布信息。
 
-状态与安装缓存存于用户数据目录 `updates`。检查失败与没有发布版本是不同状态。下载失败不会覆盖原有完整缓存。后台下载遵守计费/漫游/超额状态，未知网络成本时不自动下载。点击“检查更新”明确授权检查、下载、安装和重启整个流程。展开选项仅有“自动下载并安装更新”和“显示新更新通知”：默认关闭自动安装、开启通知；启用自动安装后，后台通过同一退出清理与安装入口完成更新。旧状态中的自动下载偏好不会直接授权自动安装。进程交接及测试脚本行为见[项目架构](architecture.md)。
+状态与安装缓存存于用户数据目录 `updates`。检查失败与没有发布版本是不同状态。下载失败不会覆盖原有完整缓存。后台下载遵守计费/漫游/超额状态，未知网络成本时不自动下载。点击“检查更新”明确授权检查、下载、安装和重启整个流程。展开选项仅有“自动下载并安装更新”和“显示新更新通知”：默认关闭自动安装、开启通知；启用自动安装后，后台通过同一退出清理与安装入口完成更新。旧状态中的自动下载偏好不会直接授权自动安装。进程交接及重启行为见[项目架构](architecture.md)。
 
 ## 本机开发更新
 
-首次配置需要创建并妥善保管 RSA 私钥、公钥，并通过受控安装将公钥固定到客户端。已有客户端必须继续使用原来的签名密钥；不要因清理而轮换或删除它。当前工作区已配置该通道，后续版本可执行：
+首次配置需要创建并妥善保管 RSA 私钥、公钥，并通过受控安装将公钥固定到客户端。已有客户端必须继续使用原来的签名密钥；不要因清理而轮换或删除它。当前工作区已配置该通道，现有清单、安装包和密钥继续保留。仓库精简后不再提供本机签名清单发布或自动操作已安装客户端的辅助脚本。
+
+构建带现有本机公钥和目录的安装包：
 
 ```powershell
 $version = (Get-Content release.json -Raw | ConvertFrom-Json).version
 ./tools/Build-Installer.ps1 -Version $version -Scope user -UpdateFeedDirectory "$PWD/artifacts/local-update-feed" -UpdateManifestPublicKeyPath "$PWD/artifacts/update-signing/local-update.public.pem"
-./tools/Inspect-Installers.ps1 -Version $version -Scope user
-./tools/Publish-LocalUpdate.ps1 -Version $version -Scope user -FeedDirectory "$PWD/artifacts/local-update-feed" -SigningKeyPath "$PWD/artifacts/update-signing/local-update.pem"
-./tools/Update-InstalledClient.ps1 -Version $version
 ```
 
-先提高版本号；已经发布到本机清单的同版本文件不可换成不同字节。不要把带本机更新目录和测试公钥的开发包上传给其他用户；GitHub 发行应重新构建未附带本机通道配置的包。
+此命令仅生成安装包，不更新 `latest.json`。后续本机通道升级仍须另外按更新协议使用原私钥生成签名清单并发布对应安装包，再在客户端点击“检查更新”；仅构建或复制新安装包不会发布更新。也可以退出客户端后手动运行安装包升级。
 
-`Update-InstalledClient.ps1` 备份用户配置，通过设置页触发一次检查，等待新进程和目标版本；重启后不再导航设置页或切换任何复选框。`-VerifyOnly` 只核对当前安装、配置和更新偏好，不操作界面。开关交互验证使用隔离数据的 `Run-UpdatesUi.ps1`。实际升级时退出清理会停止核心，升级不等于恢复此前的联网会话。
+先提高版本号；已经发布到本机清单的同版本文件不可换成不同字节。不要把带本机更新目录和测试公钥的开发包上传给其他用户；GitHub 发行应重新构建未附带本机通道配置的包。实际升级时退出清理会停止核心，升级不等于恢复此前的联网会话。
 
 截至 0.1.13，用户安装的多次真实升级与重启、配置哈希保留、自定义主题中英文界面已验证。安装进度页截图未成功捕获；这不应表述为完成该页面的视觉验收。全机范围、干净 Windows 客体和真实 GitHub 签名更新仍按下列矩阵验收。历史逐次记录已合并，原始文档可从 Git 查阅；开发日志与截图允许清理。
 

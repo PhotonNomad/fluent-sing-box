@@ -26,12 +26,10 @@
 ```powershell
 ./tools/Sync-LocalizationResources.ps1
 ./tools/Build.ps1 -Configuration Debug
-dotnet run --project tests/Client.Regression -c Release -- "$PWD"
-./tests/Client.Regression/Run-LocalizationUi.ps1
 ```
 
-resw 是生成文件，不单独修改；同步脚本只选取带属性后缀的资源键。新增语言时增加相应 resx 和 resw 目录，同时扩展 Localization 的支持语言、设置选项、同步脚本及资源覆盖测试。英文始终作为最终回退。发布包须保留 `fluent sing-box.pri` 和语言卫星程序集。
+resw 是生成文件，不单独修改；同步脚本只选取带属性后缀的资源键。新增语言时增加相应 resx 和 resw 目录，同时扩展 Localization 的支持语言、设置选项、同步脚本并核对资源覆盖。英文始终作为最终回退。发布包须保留 `fluent sing-box.pri` 和语言卫星程序集。
 
-## 验证边界
+## 手动验证
 
-资源测试检查两种语言键集合、占位符、英文无中文残留以及生成配置完全一致。UI 测试为每种语言创建独立数据目录，检查七个页面、动态服务器表单、偏好持久化与重启，不启动代理核心或改变主机网络。Windows 原生标题栏、WinUI Popup 容器和滚动条的部分无障碍名称沿用操作系统语言，检查排除这些框架节点，但仍检查弹窗内部应用文案。语言资源回归不验证真实节点、系统代理和 TUN 网络能力。
+核对两种语言的键集合、占位符、英文残留和 RESW 同步结果。使用独立数据目录分别启动两种语言，检查页面、动态表单、弹窗、偏好保存与重启；不启动代理核心或改变主机网络。发布包须保留 PRI 和语言卫星程序集。仓库不再附带本地化自动回归脚本。

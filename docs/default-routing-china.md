@@ -72,4 +72,4 @@ DNS 国内规则为 `{ "rule_set": "geosite-geolocation-cn", "server": "local" }
 
 ## 验证
 
-测试命令见[贡献指南](../CONTRIBUTING.md)。配置校验与本地夹具不证明真实 ISP、远程节点或 TUN 路由可用，实际网络按[网络验证指南](manual-network-validation.md)验收。
+构建与手动验证约定见[贡献指南](../CONTRIBUTING.md)。配置校验与本地夹具不证明真实 ISP、远程节点或 TUN 路由可用，实际网络按[网络验证指南](manual-network-validation.md)验收。

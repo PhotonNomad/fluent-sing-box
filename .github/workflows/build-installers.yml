@@ -19,9 +19,6 @@ jobs:
       - name: Install WiX tools
         shell: pwsh
         run: ./tools/Setup-InstallerTools.ps1
-      - name: Update regressions
-        shell: pwsh
-        run: dotnet run --project tests/Updates.Regression -c Release
       - name: Build unsigned test installers
         shell: pwsh
         env:

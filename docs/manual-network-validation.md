@@ -2,7 +2,7 @@
 
 配置校验证明配置能被核心接受；本地代理夹具证明指定的本地转发路径。它们不能替代真实节点、目标应用、管理员 TUN 或 Windows 网络清理的验证。
 
-优先使用[独立 Windows 测试虚拟机](windows-test-vm-setup.md)。每轮记录代理方式、目标进程、核心版本、协议、节点和配置变化，不把一个场景的成功扩展为其他场景已通过。
+优先使用独立 Windows 虚拟机并保留干净检查点。每轮记录代理方式、目标进程、核心版本、协议、节点和配置变化，不把一个场景的成功扩展为其他场景已通过。
 
 ## 需要独立验证的场景
 
@@ -32,18 +32,7 @@ $env:FLUENTSINGBOX_DATA_DIR = Join-Path $PWD 'artifacts/manual-network/session-0
 & './artifacts/publish/Release/fluent sing-box.exe'
 ```
 
-采集测试前、运行中、停止后的 Windows 状态：
-
-```powershell
-./tools/Save-NetworkTestSnapshot.ps1 -CaseName session-01 -Stage Before
-# 在测试应用中执行本轮操作后：
-./tools/Save-NetworkTestSnapshot.ps1 -CaseName session-01 -Stage Running
-./tools/Save-NetworkTestSnapshot.ps1 -CaseName session-01 -Stage Stopped
-```
-
-按实际时序在启用代理前采集 Before。正常退出和重新打开后可使用 `Exited`、`Reopened`。每轮使用新 CaseName，避免覆盖基线。
-
-脚本只读采集网络状态，并写入 `artifacts/manual-network`；不会启停应用、切换代理或创建/删除网卡。可选 `-TestUrl` 会额外从脚本进程发起直接 HTTP 请求和显式本地 HTTP 代理请求；这仍不是目标应用测试。关闭 HTTP 代理不等于绕过 TUN。
+在启用代理前、运行中、停止后和退出后，手动记录网卡、地址、路由、DNS、系统代理设置及核心日志。可使用 Windows 的 `Get-NetAdapter`、`Get-NetIPAddress`、`Get-NetRoute`、`Get-DnsClientServerAddress` 只读查看网络状态，并结合 Windows 设置检查系统代理。每轮使用新数据目录，保留对应时间和操作步骤，避免覆盖基线。
 
 ## 判断结果
 

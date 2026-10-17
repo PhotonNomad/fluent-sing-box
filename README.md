@@ -21,7 +21,6 @@
 | --- | --- |
 | 运行 | Windows x64；MSI/EXE 安装包自带 .NET 10，普通开发发布目录需要对应运行时 |
 | 构建 | .NET 10 SDK、Windows SDK（项目目标版本 10.0.19041.0）、Windows 上的 PowerShell |
-| UI 测试 | 可交互的 Windows 桌面及 winapp CLI |
 | TUN | 管理员权限；启用时可能请求 UAC 授权 |
 
 发布目录携带 WinUI 运行组件和内置核心。普通使用无需安装开发工具；从源码构建时，NuGet 会还原项目依赖。
@@ -33,16 +32,15 @@
 ```powershell
 ./tools/Setup-InstallerTools.ps1
 ./tools/Build-Installer.ps1
-./tools/Inspect-Installers.ps1
 ```
 
 用户范围和全机范围各生成 EXE/MSI，位于 `artifacts/installers/<版本>`。默认推荐 `FluentSingBoxUserSetup-<版本>-x64.exe`；安装包包含 .NET 和 WinUI，不要求用户另装运行时。升级/卸载保留用户配置，两个安装范围不能并存。普通 `Build.ps1` 输出仍按下文约定；安装包使用额外的自包含构建。
 
 设置页的“检查更新”会连续检查、下载校验、保存配置、停止核心、执行本应用网络清理，再由独立更新器安装并重启，无需分别点击下载和安装。“版本和更新”展开后仅保留“自动下载并安装更新”和“显示新更新通知”。默认关闭自动安装、开启通知；启用自动安装后，后台可完成下载、安装和重启，计费连接及网络成本未知时除外。应用、规则集、内置核心更新是不同流程。
 
-GitHub Releases 通道要求正式发布者签名；本机构建还可使用固定公钥验证的签名清单通道，不需要把开发证书加入系统信任。构建、发布本机更新及签名要求见[安装与发布](docs/installer-validation.md)。
+GitHub Releases 通道要求正式发布者签名；本机构建还可使用固定公钥验证的签名清单通道，不需要把开发证书加入系统信任。构建、更新通道及签名要求见[安装与发布](docs/installer-validation.md)。
 
-当前本机测试版本为 0.1.13，已完成本机签名清单通道的实际升级与重启验收，配置哈希保持不变；GitHub Release 与本机测试通道独立。没有可信发布者证书或固定清单公钥的包仍不能在应用内执行更新。GitHub 正式签名发布、全机安装/卸载及运行中 TUN 清理仍需另行验收。主程序、核心宿主与更新器的关系，以及验收脚本为何会操作设置页，见[项目架构](docs/architecture.md)。
+当前本机测试版本为 0.1.13，已完成本机签名清单通道的实际升级与重启验收，配置哈希保持不变；GitHub Release 与本机测试通道独立。没有可信发布者证书或固定清单公钥的包仍不能在应用内执行更新。GitHub 正式签名发布、全机安装/卸载及运行中 TUN 清理仍需另行验收。主程序、核心宿主与更新器的关系，以及更新后的启动行为，见[项目架构](docs/architecture.md)。
 
 ## 从源码构建
 
@@ -63,7 +61,7 @@ Set-Location fluent-sing-box
 & "./artifacts/publish/Debug/fluent sing-box.exe"
 ```
 
-两套固定输出为 `artifacts/publish/Debug` 和 `artifacts/publish/Release`。使用时保留整个目录；构建不生成应用 ZIP。脚本先发布到临时目录，成功后替换目标目录，失败保留旧版本。重新生成前关闭对应目录运行中的程序。`tools/Publish-Release.ps1` 是 Release 的兼容入口。
+两套固定输出为 `artifacts/publish/Debug` 和 `artifacts/publish/Release`。使用时保留整个目录；构建不生成应用 ZIP。脚本先发布到临时目录，成功后替换目标目录，失败保留旧版本。重新生成前关闭对应目录运行中的程序。
 
 输出目录直接包含可执行文件，没有 `current` 子目录。Visual Studio 构建和发布都会附带 `Defaults/settings.json`、`Defaults/user-config.json` 与模板说明；对应 Schema、SRS 和许可文件位于 `ThirdParty`。这些模板不含个人节点凭据，无节点时默认直连且不启用系统代理或 TUN。程序运行数据仍使用用户数据目录，模板不会覆盖已有配置。
 
@@ -107,16 +105,9 @@ DNS 和 TUN 页面显示 IPv6 连通性检测，支持手动重新检测，网�
 
 初始国内分流使用随包的本地 SRS 规则集，来源与校验值记录在[规则集清单](src/FluentSingBox.Client/ThirdParty/RuleSets/manifest.json)。更新版本保存在用户数据目录的 `sing-box/rule-sets/`，包含来源提交、SHA-256、可读规则和许可证。更新只替换运行配置中引用应用自带规则集的路径，不改写配置源，也不覆盖自定义规则集。文件缺失或损坏会报错，启动不要求在线下载。
 
-## 开发与测试
+## 开发与构建
 
-贡献流程、构建环境和测试命令见 [CONTRIBUTING.md](CONTRIBUTING.md)。
-
-```powershell
-dotnet run --project tests/ServerEditor.Regression -- "$PWD"
-dotnet run --project tests/Client.Regression -- "$PWD"
-```
-
-测试输出位于 `artifacts/`。配置检查、本地代理夹具与 UI 测试分别覆盖不同路径，不代表真实外部节点、TUN 路由或管理员权限下的网络清理均已验证。
+构建环境、修改约定与手动验证说明见 [CONTRIBUTING.md](CONTRIBUTING.md)。仓库仅保留必要构建脚本，不再附带自动化测试项目和辅助验收工具。
 
 ## 文档
 
@@ -126,8 +117,7 @@ dotnet run --project tests/Client.Regression -- "$PWD"
 - [国内默认路由、sniff 与 hijack-dns](docs/default-routing-china.md)
 - [真实网络验证与故障反馈](docs/manual-network-validation.md)
 - [本地化维护](docs/localization.md)
-- [Windows 测试虚拟机](docs/windows-test-vm-setup.md)
-- [开发工具与产物清理](docs/development-tools.md)
+- [构建工具与本地产物](docs/development-tools.md)
 
 ## 反馈与贡献
 

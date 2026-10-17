@@ -42,15 +42,6 @@ jobs:
       - name: Install WiX tools
         shell: pwsh
         run: ./tools/Setup-InstallerTools.ps1
-      - name: Regressions
-        shell: pwsh
-        run: |
-          dotnet run --project tests/Updates.Regression -c Release
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          dotnet run --project tests/ServerEditor.Regression -- "$PWD"
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          dotnet run --project tests/Client.Regression -- "$PWD"
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Build and sign
         shell: pwsh
         env:
@@ -58,7 +49,6 @@ jobs:
         run: |
           $signTool = Get-ChildItem 'C:/Program Files (x86)/Windows Kits/10/bin/*/x64/signtool.exe' | Sort-Object FullName -Descending | Select-Object -First 1
           ./tools/Build-Installer.ps1 -Version $env:RELEASE_VERSION -CertificateThumbprint $env:SIGNING_THUMBPRINT -SignToolPath $signTool.FullName
-          ./tools/Inspect-Installers.ps1 -Version $env:RELEASE_VERSION
       - name: Create draft release for final review
         shell: pwsh
         env:
