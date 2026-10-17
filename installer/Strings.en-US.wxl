@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-us" Language="1033" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+  <String Id="Caption" Value="fluent sing-box" />
+  <String Id="InstallVersion" Value="Version [WixBundleVersion]" />
+  <String Id="ConfirmCancelMessage" Value="Cancel this operation?" />
+  <String Id="ExecuteUpgradeRelatedBundleMessage" Value="Removing the previous version" />
+  <String Id="CheckingForUpdatesLabel" Value="Preparing installation…" />
+  <String Id="UpdateButton" Value="Update" />
+  <String Id="HelpHeader" Value="Installation options" />
+  <String Id="HelpText" Value="/install, /repair, /uninstall: select an operation.&#xA;/layout directory: extract installation files.&#xA;/passive: show progress without setup prompts.&#xA;/quiet: install without a window.&#xA;/norestart: prevent automatic system restart.&#xA;/log path: save diagnostic details." />
+  <String Id="HelpCloseButton" Value="Close" />
+  <String Id="InstallAcceptCheckbox" Value="I accept the license terms" />
+  <String Id="InstallOptionsButton" Value="Options" />
+  <String Id="InstallInstallButton" Value="Install" />
+  <String Id="InstallCancelButton" Value="Cancel" />
+  <String Id="OptionsHeader" Value="Choose where to install" />
+  <String Id="OptionsLocationLabel" Value="Installation folder" />
+  <String Id="OptionsBrowseButton" Value="Browse" />
+  <String Id="OptionsOkButton" Value="OK" />
+  <String Id="OptionsCancelButton" Value="Cancel" />
+  <String Id="ProgressHeader" Value="Applying changes" />
+  <String Id="ProgressHint" Value="Please wait while application files are prepared.&#xA;Your saved settings are kept." />
+  <String Id="OverallProgressPackageText" Value="Preparing…" />
+  <String Id="ProgressCancelButton" Value="Cancel" />
+  <String Id="ModifyHeader" Value="Manage this installation" />
+  <String Id="ModifyRepairButton" Value="Repair" />
+  <String Id="ModifyUninstallButton" Value="Uninstall" />
+  <String Id="ModifyCancelButton" Value="Close" />
+  <String Id="SuccessHeader" Value="All done" />
+  <String Id="SuccessUninstallHeader" Value="Application removed" />
+  <String Id="SuccessLaunchButton" Value="Open app" />
+  <String Id="SuccessRestartText" Value="Restart Windows to finish applying these changes." />
+  <String Id="SuccessRestartButton" Value="Restart" />
+  <String Id="SuccessCloseButton" Value="Close" />
+  <String Id="FailureHeader" Value="Changes could not be completed" />
+  <String Id="FailureHyperlinkLogText" Value="Please try again. For details, &lt;a href=&quot;#&quot;&gt;open the installation log&lt;/a&gt;." />
+  <String Id="FailureRestartText" Value="Restart Windows before trying again." />
+  <String Id="FailureRestartButton" Value="Restart" />
+  <String Id="FailureCloseButton" Value="Close" />
+  <String Id="FilesInUseTitle" Value="Application files are in use" />
+  <String Id="FilesInUseLabel" Value="Close the listed applications before continuing." />
+  <String Id="FilesInUseNetfxCloseRadioButton" Value="Close applications" />
+  <String Id="FilesInUseCloseRadioButton" Value="Close and restart applications" />
+  <String Id="FilesInUseDontCloseRadioButton" Value="Keep applications running; restart Windows later" />
+  <String Id="FilesInUseRetryButton" Value="Retry" />
+  <String Id="FilesInUseIgnoreButton" Value="Continue" />
+  <String Id="FilesInUseExitButton" Value="Cancel" />
+</WixLocalization>

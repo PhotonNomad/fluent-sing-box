@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Theme xmlns="http://wixtoolset.org/schemas/v4/thmutil">
+  <Font Id="0" Height="-14" Weight="400" Foreground="windowtext" Background="window">Segoe UI</Font>
+  <Font Id="1" Height="-24" Weight="600" Foreground="windowtext">Segoe UI</Font>
+  <Font Id="2" Height="-20" Weight="500" Foreground="windowtext">Segoe UI</Font>
+  <Font Id="3" Height="-13" Weight="400" Foreground="graytext" Background="window">Segoe UI</Font>
+  <Window Width="520" Height="360" HexStyle="100a0000" FontId="0" Caption="#(loc.Caption)" IconFile="fluent.ico">
+    <ImageControl X="24" Y="24" Width="48" Height="48" ImageFile="logo.png" Visible="yes" />
+    <Label X="88" Y="20" Width="-24" Height="32" FontId="1" Visible="yes" DisablePrefix="yes">[WixBundleName]</Label>
+    <Label X="88" Y="56" Width="-24" Height="22" FontId="3" Visible="yes" DisablePrefix="yes">#(loc.InstallVersion)</Label>
+    <Page Name="Loading">
+      <Label Name="CheckingForUpdatesLabel" X="24" Y="112" Width="-24" Height="32" FontId="2" Visible="no" />
+    </Page>
+    <Page Name="Help">
+      <Label X="24" Y="112" Width="-24" Height="30" FontId="2">#(loc.HelpHeader)</Label>
+      <Label X="24" Y="156" Width="-24" Height="140" FontId="0">#(loc.HelpText)</Label>
+      <Button Name="HelpCloseButton" X="-24" Y="-24" Width="96" Height="30" FontId="0" TabStop="yes"><Text>#(loc.HelpCloseButton)</Text><CloseWindowAction /></Button>
+    </Page>
+    <Page Name="Install">
+      <Richedit Name="EulaRichedit" X="24" Y="104" Width="-24" Height="142" FontId="0" TabStop="yes" HexStyle="800000" />
+      <Checkbox Name="EulaAcceptCheckbox" X="24" Y="260" Width="-24" Height="22" FontId="0" TabStop="yes" HideWhenDisabled="yes">#(loc.InstallAcceptCheckbox)</Checkbox>
+      <Button Name="InstallUpdateButton" X="24" Y="-24" Width="156" Height="30" FontId="0" TabStop="yes" EnableCondition="WixStdBAUpdateAvailable" HideWhenDisabled="yes">#(loc.UpdateButton)</Button>
+      <Button Name="OptionsButton" X="-232" Y="-24" Width="96" Height="30" FontId="0" TabStop="yes" VisibleCondition="NOT WixStdBASuppressOptionsUI"><Text>#(loc.InstallOptionsButton)</Text><ChangePageAction Page="Options" /></Button>
+      <Button Name="InstallButton" X="-128" Y="-24" Width="96" Height="30" FontId="0" TabStop="yes">#(loc.InstallInstallButton)</Button>
+      <Button Name="InstallCancelButton" X="-24" Y="-24" Width="96" Height="30" FontId="0" TabStop="yes"><Text>#(loc.InstallCancelButton)</Text><CloseWindowAction /></Button>
+    </Page>
+    <Page Name="Options">
+      <Label X="24" Y="112" Width="-24" Height="30" FontId="2">#(loc.OptionsHeader)</Label>
+      <Label X="24" Y="164" Width="-24" Height="22" FontId="0">#(loc.OptionsLocationLabel)</Label>
+      <Editbox Name="InstallFolder" X="24" Y="194" Width="-136" Height="30" FontId="0" TabStop="yes" FileSystemAutoComplete="yes" />
+      <Button Name="BrowseButton" X="-24" Y="194" Width="96" Height="30" FontId="0" TabStop="yes"><Text>#(loc.OptionsBrowseButton)</Text><BrowseDirectoryAction VariableName="InstallFolder" /></Button>
+      <Button Name="OptionsOkButton" X="-128" Y="-24" Width="96" Height="30" FontId="0" TabStop="yes"><Text>#(loc.OptionsOkButton)</Text><ChangePageAction Page="Install" /></Button>
+      <Button Name="OptionsCancelButton" X="-24" Y="-24" Width="96" Height="30" FontId="0" TabStop="yes"><Text>#(loc.OptionsCancelButton)</Text><ChangePageAction Page="Install" Cancel="yes" /></Button>
+    </Page>
+    <Page Name="Progress">
+      <Label X="24" Y="112" Width="-24" Height="32" FontId="2">#(loc.ProgressHeader)</Label>
+      <Label X="24" Y="158" Width="-24" Height="44" FontId="3">#(loc.ProgressHint)</Label>
+      <Progressbar Name="OverallCalculatedProgressbar" X="24" Y="218" Width="-24" Height="10" />
+      <Label Name="OverallProgressPackageText" X="24" Y="244" Width="-24" Height="24" FontId="3" DisablePrefix="yes">#(loc.OverallProgressPackageText)</Label>
+      <Button Name="ProgressCancelButton" X="-24" Y="-24" Width="96" Height="30" FontId="0" TabStop="yes">#(loc.ProgressCancelButton)</Button>
+    </Page>
+    <Page Name="Modify">
+      <Label X="24" Y="112" Width="-24" Height="32" FontId="2">#(loc.ModifyHeader)</Label>
+      <Button Name="ModifyUpdateButton" X="24" Y="-24" Width="156" Height="30" FontId="0" TabStop="yes" EnableCondition="WixStdBAUpdateAvailable" HideWhenDisabled="yes">#(loc.UpdateButton)</Button>
+      <Button Name="RepairButton" X="-232" Y="-24" Width="96" Height="30" FontId="0" TabStop="yes" HideWhenDisabled="yes">#(loc.ModifyRepairButton)</Button>
+      <Button Name="UninstallButton" X="-128" Y="-24" Width="96" Height="30" FontId="0" TabStop="yes">#(loc.ModifyUninstallButton)</Button>
+      <Button Name="ModifyCancelButton" X="-24" Y="-24" Width="96" Height="30" FontId="0" TabStop="yes"><Text>#(loc.ModifyCancelButton)</Text><CloseWindowAction /></Button>
+    </Page>
+    <Page Name="Success">
+      <Label X="24" Y="112" Width="-24" Height="32" FontId="2"><Text>#(loc.SuccessHeader)</Text><Text Condition="WixBundleAction = 4">#(loc.SuccessUninstallHeader)</Text></Label>
+      <Label X="24" Y="164" Width="-24" Height="44" FontId="3" VisibleCondition="WixStdBARestartRequired">#(loc.SuccessRestartText)</Label>
+      <Button Name="LaunchButton" X="-128" Y="-24" Width="96" Height="30" FontId="0" TabStop="yes" HideWhenDisabled="yes">#(loc.SuccessLaunchButton)</Button>
+      <Button Name="SuccessRestartButton" X="-128" Y="-24" Width="96" Height="30" FontId="0" TabStop="yes" HideWhenDisabled="yes">#(loc.SuccessRestartButton)</Button>
+      <Button Name="SuccessCloseButton" X="-24" Y="-24" Width="96" Height="30" FontId="0" TabStop="yes"><Text>#(loc.SuccessCloseButton)</Text><CloseWindowAction /></Button>
+    </Page>
+    <Page Name="Failure">
+      <Label X="24" Y="112" Width="-24" Height="32" FontId="2">#(loc.FailureHeader)</Label>
+      <Hypertext Name="FailureLogFileLink" X="24" Y="160" Width="-24" Height="42" FontId="0" TabStop="yes" HideWhenDisabled="yes">#(loc.FailureHyperlinkLogText)</Hypertext>
+      <Hypertext Name="FailureMessageText" X="24" Y="208" Width="-24" Height="62" FontId="3" TabStop="yes" HideWhenDisabled="yes" />
+      <Label X="24" Y="274" Width="-24" Height="24" FontId="3" VisibleCondition="WixStdBARestartRequired">#(loc.FailureRestartText)</Label>
+      <Button Name="FailureRestartButton" X="-128" Y="-24" Width="96" Height="30" FontId="0" TabStop="yes" HideWhenDisabled="yes">#(loc.FailureRestartButton)</Button>
+      <Button Name="FailureCloseButton" X="-24" Y="-24" Width="96" Height="30" FontId="0" TabStop="yes"><Text>#(loc.FailureCloseButton)</Text><CloseWindowAction /></Button>
+    </Page>
+  </Window>
+</Theme>

@@ -25,6 +25,30 @@ foreach($taskRelative in @('settings.json','sing-box/user-config.json')){
     }
 }
 $taskWinapp=(Get-Command winapp -ErrorAction Stop).Source
+if(!('InstalledUpdateWindow' -as [type])){
+    Add-Type @'
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+public static class InstalledUpdateWindow {
+    private delegate bool WindowCallback(IntPtr window, IntPtr state);
+    [DllImport("user32.dll")] private static extern bool EnumWindows(WindowCallback callback, IntPtr state);
+    [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
+    [DllImport("user32.dll", CharSet=CharSet.Unicode)] private static extern int GetClassName(IntPtr window, StringBuilder name, int count);
+    [DllImport("user32.dll")] private static extern bool ShowWindowAsync(IntPtr window, int command);
+    public static void RestoreWithoutFocus(int processId) {
+        EnumWindows((window, state) => {
+            GetWindowThreadProcessId(window, out uint owner);
+            if (owner != processId) return true;
+            var name = new StringBuilder(256);
+            GetClassName(window, name, name.Capacity);
+            if (name.ToString() == "WinUIDesktopWin32WindowClass") ShowWindowAsync(window, 4);
+            return true;
+        }, IntPtr.Zero);
+    }
+}
+'@
+}
 function Processes { @(Get-Process|Where-Object {$_.Path -and $_.Path.Equals($taskExe,[StringComparison]::OrdinalIgnoreCase)}) }
 function Nodes($Items){foreach($taskNode in $Items){$taskNode;if($taskNode.children){Nodes $taskNode.children}}}
 function Ui([string[]]$Arguments){
@@ -35,11 +59,19 @@ function Ui([string[]]$Arguments){
     $taskValue
 }
 function Attach([int]$ProcessId){
-    $taskReady=& $taskWinapp ui wait-for Navigation_Settings -a "$ProcessId" --timeout 20000 --json|ConvertFrom-Json
+    $taskVisible=@(& $taskWinapp ui list-windows -a "$ProcessId" --json|ConvertFrom-Json)
+    if(!$taskVisible.Count){[InstalledUpdateWindow]::RestoreWithoutFocus($ProcessId)}
+    $taskReady=& $taskWinapp ui wait-for RootNavigationView -a "$ProcessId" --timeout 20000 --json|ConvertFrom-Json
     if($LASTEXITCODE -or $taskReady.error -or $taskReady.timedOut){throw 'Installed application window unavailable.'}
     $taskWindows=@(& $taskWinapp ui list-windows -a "$ProcessId" --json|ConvertFrom-Json)
     if($taskWindows.Count -ne 1){throw 'Expected one installed application window.'}
     $script:taskWindow=$taskWindows[0].hwnd
+    # A narrow window can collapse the navigation pane and remove its items from UIA.
+    $taskNodes=@(Nodes (Ui @('inspect','RootNavigationView','--depth','12')).windows.elements)
+    if(!@($taskNodes|Where-Object automationId -eq 'Navigation_Settings').Count){
+        Ui @('invoke','NavigationPaneToggleButton')|Out-Null
+    }
+    Ui @('wait-for','Navigation_Settings','--timeout','10000')|Out-Null
 }
 function Wait-State([string]$Property,[bool]$Expected){
     $taskDeadline=[DateTime]::UtcNow.AddSeconds(5)

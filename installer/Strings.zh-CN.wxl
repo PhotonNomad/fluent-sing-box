@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="zh-cn" Language="2052" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+  <String Id="Caption" Value="fluent sing-box" />
+  <String Id="InstallVersion" Value="版本 [WixBundleVersion]" />
+  <String Id="ConfirmCancelMessage" Value="要取消当前操作吗？" />
+  <String Id="ExecuteUpgradeRelatedBundleMessage" Value="正在移除旧版本" />
+  <String Id="CheckingForUpdatesLabel" Value="正在准备安装…" />
+  <String Id="UpdateButton" Value="更新" />
+  <String Id="HelpHeader" Value="安装选项" />
+  <String Id="HelpText" Value="/install、/repair、/uninstall：安装、修复、卸载。&#xA;/layout 目录：提取安装文件。&#xA;/passive：仅显示进度，无需操作。&#xA;/quiet：不显示安装窗口。&#xA;/norestart：禁止自动重启系统。&#xA;/log 路径：保存诊断日志。" />
+  <String Id="HelpCloseButton" Value="关闭" />
+  <String Id="InstallAcceptCheckbox" Value="我同意许可条款" />
+  <String Id="InstallOptionsButton" Value="选项" />
+  <String Id="InstallInstallButton" Value="安装" />
+  <String Id="InstallCancelButton" Value="取消" />
+  <String Id="OptionsHeader" Value="选择安装位置" />
+  <String Id="OptionsLocationLabel" Value="安装文件夹" />
+  <String Id="OptionsBrowseButton" Value="浏览" />
+  <String Id="OptionsOkButton" Value="确定" />
+  <String Id="OptionsCancelButton" Value="取消" />
+  <String Id="ProgressHeader" Value="正在应用更改" />
+  <String Id="ProgressHint" Value="正在准备和安装应用文件，请稍候。&#xA;已保存的设置将会保留。" />
+  <String Id="OverallProgressPackageText" Value="正在准备…" />
+  <String Id="ProgressCancelButton" Value="取消" />
+  <String Id="ModifyHeader" Value="管理当前安装" />
+  <String Id="ModifyRepairButton" Value="修复" />
+  <String Id="ModifyUninstallButton" Value="卸载" />
+  <String Id="ModifyCancelButton" Value="关闭" />
+  <String Id="SuccessHeader" Value="操作已完成" />
+  <String Id="SuccessUninstallHeader" Value="应用已卸载" />
+  <String Id="SuccessLaunchButton" Value="打开应用" />
+  <String Id="SuccessRestartText" Value="请重启 Windows 以完成此次更改。" />
+  <String Id="SuccessRestartButton" Value="重启" />
+  <String Id="SuccessCloseButton" Value="关闭" />
+  <String Id="FailureHeader" Value="未能完成更改" />
+  <String Id="FailureHyperlinkLogText" Value="请稍后重试，也可&lt;a href=&quot;#&quot;&gt;查看安装日志&lt;/a&gt;了解原因。" />
+  <String Id="FailureRestartText" Value="请重启 Windows 后重试。" />
+  <String Id="FailureRestartButton" Value="重启" />
+  <String Id="FailureCloseButton" Value="关闭" />
+  <String Id="FilesInUseTitle" Value="应用文件正在使用中" />
+  <String Id="FilesInUseLabel" Value="请先关闭以下应用，再继续操作。" />
+  <String Id="FilesInUseNetfxCloseRadioButton" Value="关闭应用" />
+  <String Id="FilesInUseCloseRadioButton" Value="关闭应用并尝试重新打开" />
+  <String Id="FilesInUseDontCloseRadioButton" Value="保持应用运行，稍后重启 Windows" />
+  <String Id="FilesInUseRetryButton" Value="重试" />
+  <String Id="FilesInUseIgnoreButton" Value="继续" />
+  <String Id="FilesInUseExitButton" Value="取消" />
+</WixLocalization>

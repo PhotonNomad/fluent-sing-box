@@ -170,9 +170,14 @@ foreach ($taskScope in $taskScopes) {
     $taskBundle = @"
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
   <Bundle Name="fluent sing-box" Manufacturer="PhotonNomad" Version="$Version" UpgradeCode="$taskBundleUpgrade" IconSourceFile="$(Escape-Xml (Join-Path $taskPayload 'Assets/fluent-sing-box.ico'))">
-    <BootstrapperApplication><bal:WixStandardBootstrapperApplication Theme="rtfLicense" LicenseFile="$(Escape-Xml (Join-Path $taskRoot 'installer/License.rtf'))" SuppressOptionsUI="no" SuppressRepair="yes" /></BootstrapperApplication>
+    <BootstrapperApplication>
+      <bal:WixStandardBootstrapperApplication Theme="rtfLicense" ThemeFile="$(Escape-Xml (Join-Path $taskRoot 'installer/FluentTheme.xml'))" LocalizationFile="$(Escape-Xml (Join-Path $taskRoot 'installer/Strings.en-US.wxl'))" LogoFile="$(Escape-Xml (Join-Path $taskPayload 'Assets/fluent-sing-box.png'))" LicenseFile="$(Escape-Xml (Join-Path $taskRoot 'installer/License.rtf'))" SuppressOptionsUI="no" SuppressRepair="yes" />
+      <Payload Name="fluent.ico" SourceFile="$(Escape-Xml (Join-Path $taskPayload 'Assets/fluent-sing-box.ico'))" />
+      <Payload Name="1033\thm.wxl" SourceFile="$(Escape-Xml (Join-Path $taskRoot 'installer/Strings.en-US.wxl'))" />
+      <Payload Name="2052\thm.wxl" SourceFile="$(Escape-Xml (Join-Path $taskRoot 'installer/Strings.zh-CN.wxl'))" />
+    </BootstrapperApplication>
     <Variable Name="InstallFolder" Type="formatted" Value="$taskDefaultFolder" bal:Overridable="yes" />
-    <Chain><MsiPackage SourceFile="$(Escape-Xml $taskMsi)" Compressed="yes" Visible="no"><MsiProperty Name="BOOTSTRAPPERINSTALLFOLDER" Value="[InstallFolder]" /></MsiPackage></Chain>
+    <Chain><MsiPackage DisplayName="fluent sing-box" SourceFile="$(Escape-Xml $taskMsi)" Compressed="yes" Visible="no" bal:DisplayInternalUICondition="false"><MsiProperty Name="BOOTSTRAPPERINSTALLFOLDER" Value="[InstallFolder]" /></MsiPackage></Chain>
   </Bundle>
 </Wix>
 "@
