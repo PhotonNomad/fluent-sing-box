@@ -174,7 +174,7 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
             // Names survive Store updates and CLI bin/<hash> upgrades.
             mode.SelectedIndex = 0;
             names.Text = string.Join(Environment.NewLine, names.Text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Concat(processChoices.SelectedItems.Cast<RunningApplication>().Select(item => item.Name)).Distinct(StringComparer.OrdinalIgnoreCase));
+                .Concat(processChoices.SelectedItems.Cast<RunningApplication>().Select(item => item.Name)).Distinct(StringComparer.Ordinal));
             processSearch.Visibility = processChoices.Visibility = addProcesses.Visibility = Visibility.Collapsed;
         };
         void UpdateMode()
@@ -229,18 +229,17 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
                 try
                 {
                     var resolved = ApplicationMatching.RunningProcesses().Select(item => item.Name).ToList();
-                    // Covers entries that already carry an extension too: the Windows filesystem is
-                    // case-insensitive, so searching PATH by the typed name returns the on-disk casing
-                    // even when the process is not currently running, which NormalizeName then adopts.
+                    // Resolve extensionless entries from running processes or PATH. Explicit .exe
+                    // names retain their casing because sing-box uses case-sensitive matching.
                     foreach (var directory in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries))
-                        foreach (var entry in entries.Where(item => item.IndexOfAny(Path.GetInvalidFileNameChars()) < 0))
+                        foreach (var entry in entries.Where(item => !Path.HasExtension(item) && item.IndexOfAny(Path.GetInvalidFileNameChars()) < 0))
                         {
                             var fileName = Path.HasExtension(entry) ? entry : entry + ".exe";
                             try { resolved.AddRange(Directory.EnumerateFiles(directory, fileName).Select(Path.GetFileName).OfType<string>()); }
                             catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
                         }
                     entries = entries.Select(entry => ApplicationMatching.NormalizeName(entry, resolved)).ToArray();
-                    names.Text = string.Join(Environment.NewLine, entries.Distinct(StringComparer.OrdinalIgnoreCase));
+                    names.Text = string.Join(Environment.NewLine, entries.Distinct(StringComparer.Ordinal));
                 }
                 catch (Exception error) when (error is InvalidOperationException or ArgumentException)
                 { args.Cancel = true; editorError.Message = error.Message; editorError.IsOpen = true; return; }
@@ -261,7 +260,7 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
             .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
-        var processNames = names.Text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        var processNames = names.Text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct(StringComparer.Ordinal).ToArray();
         var matchMode = mode.SelectedIndex == 0 ? "name" : "path";
 
         if (serverComboBox.SelectedValue is not string serverId)

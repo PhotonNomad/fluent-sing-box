@@ -29,7 +29,7 @@ public sealed class SingBoxConfigBuilder
         var enabledApps = settings.GlobalTunEnabled ? [] : settings.Applications.Where(profile => profile.IsEnabled).ToArray();
         var hasTun = settings.GlobalTunEnabled || enabledApps.Length > 0;
         var claimedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var claimedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var claimedNames = new HashSet<string>(StringComparer.Ordinal);
         foreach (var profile in enabledApps)
         {
             if (profile.MatchMode is not ("path" or "name")) throw new InvalidOperationException(Localization.Get("ApplicationMatch_InvalidMode"));

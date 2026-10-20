@@ -30,16 +30,16 @@ public static class ApplicationMatching
 
     public static string NormalizeName(string name, IEnumerable<string> resolvedNames)
     {
-        // Windows filenames are case-insensitive, but sing-box matches process_name by exact
-        // lookup (processMap[filepath.Base(ProcessPath)]), so a casing mismatch never matches
-        // and the application silently falls through to the final outbound. Prefer the real
-        // on-disk casing whenever a candidate reveals it; keep the typed name when it does not.
-        if (IsValidName(name))
-            return resolvedNames.FirstOrDefault(candidate => IsValidName(candidate)
-                && candidate.Equals(name, StringComparison.OrdinalIgnoreCase)) ?? name;
+        // sing-box matches process_name case-sensitively. Preserve explicit names, since
+        // separate executables can differ only in casing (e.g. Claude.exe and claude.exe).
+        if (IsValidName(name)) return name;
         if (System.IO.Path.HasExtension(name)) throw new InvalidOperationException(Localization.Get("ApplicationMatch_NameHelp"));
-        var actual = resolvedNames.FirstOrDefault(candidate => IsValidName(candidate)
-            && System.IO.Path.GetFileNameWithoutExtension(candidate).Equals(name, StringComparison.OrdinalIgnoreCase));
+        var candidates = resolvedNames.Where(candidate => IsValidName(candidate)
+            && System.IO.Path.GetFileNameWithoutExtension(candidate).Equals(name, StringComparison.OrdinalIgnoreCase))
+            .Distinct(StringComparer.Ordinal).ToArray();
+        var actual = candidates.FirstOrDefault(candidate =>
+            System.IO.Path.GetFileNameWithoutExtension(candidate).Equals(name, StringComparison.Ordinal))
+            ?? (candidates.Length == 1 ? candidates[0] : null);
         return actual ?? throw new InvalidOperationException(Localization.Get("ApplicationMatch_NameHelp"));
     }
 
@@ -61,7 +61,7 @@ public static class ApplicationMatching
                 catch (InvalidOperationException) { } // Process exited during enumeration.
             }
         }
-        return result.DistinctBy(item => item.Display, StringComparer.OrdinalIgnoreCase).OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase).ToArray();
+        return result.DistinctBy(item => item.Display, StringComparer.Ordinal).OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
     public static IEnumerable<string> PathWarnings(AppSettingsData settings) => settings.Applications
