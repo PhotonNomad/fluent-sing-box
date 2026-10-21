@@ -128,11 +128,13 @@ public sealed class SingBoxCoreService : IDisposable
         var startInfo = new ProcessStartInfo
         {
             FileName = hostPath,
-            Arguments = $"--fluent-sing-box-core-host \"{executablePath}\" \"{configPath}\" \"{pipeName}\" {settings.SystemProxyPort}",
             UseShellExecute = requiresElevation,
             CreateNoWindow = true,
             WindowStyle = ProcessWindowStyle.Hidden
         };
+        // ArgumentList is also honored by ShellExecute ("runas") and quotes each value correctly.
+        foreach (var argument in new[] { "--fluent-sing-box-core-host", executablePath, configPath, pipeName, settings.SystemProxyPort.ToString(System.Globalization.CultureInfo.InvariantCulture) })
+            startInfo.ArgumentList.Add(argument);
         if (requiresElevation) startInfo.Verb = "runas";
 
         try
@@ -427,11 +429,13 @@ public static class SingBoxCoreHost
             var startInfo = new ProcessStartInfo
             {
                 FileName = executablePath,
-                Arguments = $"run -c \"{configPath}\"",
                 WorkingDirectory = Path.GetDirectoryName(configPath) ?? Environment.CurrentDirectory,
                 UseShellExecute = false,
                 CreateNoWindow = false
             };
+            startInfo.ArgumentList.Add("run");
+            startInfo.ArgumentList.Add("-c");
+            startInfo.ArgumentList.Add(configPath);
             core = Process.Start(startInfo) ?? throw new InvalidOperationException(Localization.Get("SingBoxCoreService_CannotCreateTheSingBoxProcess"));
             coreJob.Attach(core);
             CoreProcessLease.Register(core, executablePath, configPath);
