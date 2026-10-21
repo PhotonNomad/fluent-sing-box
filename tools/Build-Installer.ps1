@@ -163,7 +163,12 @@ foreach ($taskScope in $taskScopes) {
     <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
     <WixVariable Id="WixUILicenseRtf" Value="$(Escape-Xml (Join-Path $taskRoot 'installer/License.rtf'))" />
     <CustomAction Id="CleanupOwnedStartup" FileRef="$taskMainFileId" ExeCommand="--remove-startup-entry" Execute="immediate" Return="ignore" />
-    <InstallExecuteSequence><Custom Action="CleanupOwnedStartup" Before="RemoveFiles" Condition="Installed AND REMOVE=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" /></InstallExecuteSequence>
+    <InstallExecuteSequence>
+      <Custom Action="CleanupOwnedStartup" Before="RemoveFiles" Condition="Installed AND REMOVE=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
+      <!-- The util default (before InstallFiles) is too late: InstallValidate's files-in-use check
+           and the MajorUpgrade removal of the old version (after InstallInitialize) come first. -->
+      <Custom Action="override Wix4CloseApplications_X64" Before="InstallValidate" Condition="VersionNT &gt; 400" />
+    </InstallExecuteSequence>
   </Package>
   <Fragment>$taskDirectories</Fragment>
   <Fragment><ComponentGroup Id="Payload">$taskComponents</ComponentGroup></Fragment>
