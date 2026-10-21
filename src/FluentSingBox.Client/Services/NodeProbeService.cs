@@ -37,7 +37,7 @@ public static class NodeProbeService
             var executable = await SingBoxCoreBundle.ResolveExecutablePathAsync(settings.SingBoxExecutablePath);
             var config = Path.Combine(directory, "config.json");
             var log = Path.Combine(directory, "core.log");
-            await File.WriteAllTextAsync(config, new SingBoxConfigBuilder().Build(settings, log), cancellation);
+            await File.WriteAllTextAsync(config, new SingBoxConfigBuilder().BuildGenerated(settings, log), cancellation);
             await CoreCommand.CheckAsync(executable, config, cancellation);
             var start = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = directory };
             start.ArgumentList.Add("run"); start.ArgumentList.Add("-c"); start.ArgumentList.Add(config);

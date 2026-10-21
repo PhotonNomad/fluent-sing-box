@@ -11,7 +11,6 @@ public enum CoreStatus { Stopped, Starting, Running, Stopping, Faulted }
 
 public sealed class SingBoxCoreService : IDisposable
 {
-    private readonly SingBoxConfigBuilder _configBuilder = new();
     private Process? _coreProcess;
     private ProcessJob? _coreJob;
     private Process? _hostProcess;
@@ -58,7 +57,7 @@ public sealed class SingBoxCoreService : IDisposable
         var candidate = Path.Combine(directory, "config.validation-" + Guid.NewGuid().ToString("N") + ".json");
         try
         {
-            var configuration = _configBuilder.Build(settings, Path.Combine(directory, "sing-box.log"));
+            var configuration = ConfigurationCompiler.Build(settings, Path.Combine(directory, "sing-box.log"));
             ConfigurationReferences.Validate(configuration);
             await File.WriteAllTextAsync(candidate, configuration);
             await CoreCommand.CheckAsync(executable, candidate);
@@ -96,7 +95,7 @@ public sealed class SingBoxCoreService : IDisposable
         Directory.CreateDirectory(directory);
         var configPath = Path.Combine(directory, "config.json");
         var logPath = Path.Combine(directory, "sing-box.log");
-        var configText = _configBuilder.Build(settings, logPath);
+        var configText = ConfigurationCompiler.Build(settings, logPath);
         var candidatePath = Path.Combine(directory, "config.candidate.json");
         await File.WriteAllTextAsync(candidatePath, configText);
         await CoreCommand.CheckAsync(executablePath, candidatePath);

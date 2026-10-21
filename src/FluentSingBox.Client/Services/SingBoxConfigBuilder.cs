@@ -7,11 +7,12 @@ namespace FluentSingBox.Client.Services;
 
 public sealed class SingBoxConfigBuilder
 {
-    public string Build(AppSettingsData settings, string logPath, bool validateApplicationPaths = false, bool useUpdatedRuleSets = true)
+    // Generates the configuration from settings alone; ConfigurationCompiler decides
+    // when a user configuration file is composed instead.
+    public string BuildGenerated(AppSettingsData settings, string logPath, bool validateApplicationPaths = false, bool useUpdatedRuleSets = true)
     {
         var options = settings.Configuration ?? new ConfigurationOptions();
-        if (options.UsesFileConfiguration) return ConfigurationComposer.BuildNative(settings, logPath, useUpdatedRuleSets);
-        ConfigurationComposer.ValidateOptions(options);
+        ConfigurationParts.ValidateOptions(options);
         if (settings.SystemProxyPort is < 1 or > 65535) throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_TheLocalProxyPortMustBeBetween1"));
         var defaultServer = settings.Servers.FirstOrDefault(server => server.Id == settings.DefaultServerId);
         if (defaultServer is null && settings.Servers.Count > 0 && settings.DefaultServerId != "direct")
@@ -95,9 +96,9 @@ public sealed class SingBoxConfigBuilder
                 ["strict_route"] = options.TunStrictRoute,
                 ["stack"] = options.TunStack,
                 ["mtu"] = options.TunMtu,
-                ["route_exclude_address"] = ConfigurationComposer.Cidrs(options.TunExcludedRoutes)
+                ["route_exclude_address"] = ConfigurationParts.Cidrs(options.TunExcludedRoutes)
             });
-            inbounds[^1]!["address"] = ConfigurationComposer.Cidrs(options.TunAddresses, required: true);
+            inbounds[^1]!["address"] = ConfigurationParts.Cidrs(options.TunAddresses, required: true);
         }
 
         var routeRules = new JsonArray();
@@ -231,11 +232,11 @@ public sealed class SingBoxConfigBuilder
 
         var dnsServers = new JsonArray
         {
-            ConfigurationComposer.Resolver(options.DirectDns, "local"),
+            ConfigurationParts.Resolver(options.DirectDns, "local"),
             new JsonObject { ["type"] = "local", ["tag"] = "system-dns" }
         };
 
-        if (defaultServer is not null) dnsServers.Insert(1, ConfigurationComposer.Resolver(options.ProxyDns, "proxy-dns", "proxy"));
+        if (defaultServer is not null) dnsServers.Insert(1, ConfigurationParts.Resolver(options.ProxyDns, "proxy-dns", "proxy"));
         var dnsFinal = defaultServer is null ? "local" : "proxy-dns";
         var dnsRules = new JsonArray
         {
@@ -288,7 +289,7 @@ public sealed class SingBoxConfigBuilder
             var identity = string.Join("\n", selectors.Select(item => item.ToJsonString()));
             config["experimental"]!["cache_file"]!["cache_id"] = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(identity)));
         }
-        ConfigurationComposer.ApplySections(config, options);
+        ConfigurationParts.ApplySections(config, options);
         config["log"]!["output"] = logPath;
         if (useUpdatedRuleSets) BundledRuleSets.ApplyUpdates(config);
         return config.ToJsonString(new JsonSerializerOptions { WriteIndented = true });

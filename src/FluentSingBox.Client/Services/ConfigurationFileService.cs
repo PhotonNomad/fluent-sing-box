@@ -30,13 +30,8 @@ public static class ConfigurationFileService
         return current.ToJsonString(JsonOptions);
     }
 
-    private static string? Generated(AppSettingsData source)
-    {
-        var settings = Snapshot(source);
-        settings.Configuration.ExternalFilePath = "";
-        settings.Configuration.NativeEnabled = false;
-        return new SingBoxConfigBuilder().Build(settings, Path.Combine(AppPaths.DataDirectory, "sing-box", "sing-box.log"), validateApplicationPaths: false, useUpdatedRuleSets: false);
-    }
+    private static string? Generated(AppSettingsData settings) =>
+        new SingBoxConfigBuilder().BuildGenerated(settings, Path.Combine(AppPaths.DataDirectory, "sing-box", "sing-box.log"), validateApplicationPaths: false, useUpdatedRuleSets: false);
 
     public static async Task<string> EnsureAsync(AppSettingsData settings, bool validateWithCore = true)
     {
