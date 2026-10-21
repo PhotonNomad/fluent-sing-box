@@ -2274,11 +2274,11 @@ Windows: {0}
     <comment>Source: Views\SettingsPage.xaml</comment>
   </data>
   <data name="SystemProxySettingsControl_SettingsCard3.Header" xml:space="preserve">
-    <value>Enable system proxy</value>
+    <value>Set as Windows system proxy</value>
     <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
   </data>
   <data name="SystemProxySettingsControl_SystemProxySwitch.AutomationProperties.Name" xml:space="preserve">
-    <value>Enable system proxy</value>
+    <value>Set as Windows system proxy</value>
     <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
   </data>
   <data name="SystemProxySettingsControl_SettingsCard7.Header" xml:space="preserve">
@@ -2927,5 +2927,47 @@ Windows: {0}
   </data>
   <data name="Updates_TokenSaved" xml:space="preserve">
     <value>An access token is saved. Enter a new token to replace it, or remove access below.</value>
+  </data>
+  <data name="ProxyCoordinator_SystemProxyNeedsInbound" xml:space="preserve"><value>Turn on the local inbound first; the Windows system proxy points at it.</value></data>
+  <data name="TunInbound_Title" xml:space="preserve"><value>TUN inbound</value></data>
+  <data name="TunInbound_Help" xml:space="preserve"><value>Adds a TUN adapter to the sing-box configuration. Requires administrator permission. Restart the core to apply.</value></data>
+  <data name="TunAutoRoute_Title" xml:space="preserve"><value>Take over system routes (auto_route)</value></data>
+  <data name="TunAutoRoute_Help" xml:space="preserve"><value>Points the Windows routing table at the TUN adapter. When off, the adapter exists but receives no traffic unless routed manually. Restart the core to apply.</value></data>
+  <data name="TunStrictRoute_Title" xml:space="preserve"><value>Strict route (strict_route)</value></data>
+  <data name="TunStrictRoute_Help" xml:space="preserve"><value>Blocks traffic that tries to bypass the TUN routes to prevent leaks.</value></data>
+  <data name="TunAdvanced_Title" xml:space="preserve"><value>Advanced</value></data>
+  <data name="TunAdvanced_Help" xml:space="preserve"><value>Adapter name, addresses, MTU and DNS</value></data>
+  <data name="SystemProxySettingsControl_RestartToApply" xml:space="preserve">
+    <value>Saved. Restart the core to apply.</value>
+  </data>
+  <data name="SystemProxySettingsControl_CannotSwitchInbound" xml:space="preserve">
+    <value>Cannot switch the local inbound</value>
+  </data>
+  <data name="ProxyPage_OutletSection.Header" xml:space="preserve">
+    <value>Outbound</value>
+  </data>
+  <data name="ProxyPage_OutletSection.Description" xml:space="preserve">
+    <value>The server that proxied traffic uses by default. New application groups start with it.</value>
+  </data>
+  <data name="ProxyPage_SystemProxyExpander.Description" xml:space="preserve">
+    <value>sing-box listens on the local inbound; the Windows system proxy points system traffic at it.</value>
+  </data>
+  <data name="SystemProxySettingsControl_InboundCard.Header" xml:space="preserve">
+    <value>Local inbound</value>
+  </data>
+  <data name="SystemProxySettingsControl_InboundCard.Description" xml:space="preserve">
+    <value>A mixed (HTTP/SOCKS5) inbound that sing-box listens on at 127.0.0.1. Restart the core to apply.</value>
+  </data>
+  <data name="SystemProxySettingsControl_InboundSwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>Enable local inbound</value>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard3.Description" xml:space="preserve">
+    <value>Points the Windows proxy setting at the local inbound. Takes effect immediately.</value>
+  </data>
+  <data name="SystemProxySettingsControl_InboundSwitch.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="SystemProxySettingsControl_InboundSwitch.OffContent" xml:space="preserve">
+    <value>Off</value>
   </data>
 </root>

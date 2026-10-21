@@ -2274,11 +2274,11 @@ Windows: {0}
     <comment>Source: Views\SettingsPage.xaml</comment>
   </data>
   <data name="SystemProxySettingsControl_SettingsCard3.Header" xml:space="preserve">
-    <value>启用系统代理</value>
+    <value>设为 Windows 系统代理</value>
     <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
   </data>
   <data name="SystemProxySettingsControl_SystemProxySwitch.AutomationProperties.Name" xml:space="preserve">
-    <value>启用系统代理</value>
+    <value>设为 Windows 系统代理</value>
     <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
   </data>
   <data name="SystemProxySettingsControl_SettingsCard7.Header" xml:space="preserve">
@@ -2927,5 +2927,47 @@ Windows: {0}
   </data>
   <data name="Updates_TokenSaved" xml:space="preserve">
     <value>已保存访问令牌。输入新令牌可替换，也可以移除访问。</value>
+  </data>
+  <data name="ProxyCoordinator_SystemProxyNeedsInbound" xml:space="preserve"><value>请先开启本地入口，Windows 系统代理指向的就是它。</value></data>
+  <data name="TunInbound_Title" xml:space="preserve"><value>TUN 入站</value></data>
+  <data name="TunInbound_Help" xml:space="preserve"><value>在 sing-box 配置中加入 TUN 网卡。需要管理员权限，重启核心后生效。</value></data>
+  <data name="TunAutoRoute_Title" xml:space="preserve"><value>接管系统路由 (auto_route)</value></data>
+  <data name="TunAutoRoute_Help" xml:space="preserve"><value>把 Windows 路由表指向 TUN 网卡。关闭时网卡仍会创建，但除非手动配置路由，不会有流量进入。重启核心后生效。</value></data>
+  <data name="TunStrictRoute_Title" xml:space="preserve"><value>严格路由 (strict_route)</value></data>
+  <data name="TunStrictRoute_Help" xml:space="preserve"><value>阻止绕过 TUN 路由的流量，防止泄漏。</value></data>
+  <data name="TunAdvanced_Title" xml:space="preserve"><value>高级</value></data>
+  <data name="TunAdvanced_Help" xml:space="preserve"><value>网卡名称、地址、MTU 与 DNS</value></data>
+  <data name="SystemProxySettingsControl_RestartToApply" xml:space="preserve">
+    <value>已保存。重启核心后生效。</value>
+  </data>
+  <data name="SystemProxySettingsControl_CannotSwitchInbound" xml:space="preserve">
+    <value>无法切换本地入口</value>
+  </data>
+  <data name="ProxyPage_OutletSection.Header" xml:space="preserve">
+    <value>出口</value>
+  </data>
+  <data name="ProxyPage_OutletSection.Description" xml:space="preserve">
+    <value>代理流量默认使用的服务器，新建应用组也以它为初始选择。</value>
+  </data>
+  <data name="ProxyPage_SystemProxyExpander.Description" xml:space="preserve">
+    <value>sing-box 监听本地入口；Windows 系统代理把系统流量指向它。</value>
+  </data>
+  <data name="SystemProxySettingsControl_InboundCard.Header" xml:space="preserve">
+    <value>本地入口</value>
+  </data>
+  <data name="SystemProxySettingsControl_InboundCard.Description" xml:space="preserve">
+    <value>sing-box 在 127.0.0.1 上监听的 mixed（HTTP/SOCKS5）入站。重启核心后生效。</value>
+  </data>
+  <data name="SystemProxySettingsControl_InboundSwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>启用本地入口</value>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard3.Description" xml:space="preserve">
+    <value>修改 Windows 代理设置，指向本地入口。即时生效。</value>
+  </data>
+  <data name="SystemProxySettingsControl_InboundSwitch.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="SystemProxySettingsControl_InboundSwitch.OffContent" xml:space="preserve">
+    <value>关</value>
   </data>
 </root>

@@ -374,6 +374,8 @@ public sealed class AppSettingsData
     public string LanguageChoice { get; set; } = "system";
     public bool LaunchAtStartup { get; set; }
     public bool SystemProxyEnabled { get; set; }
+    // The managed mixed inbound (system-http); the Windows proxy switch points at it.
+    public bool SystemProxyInboundEnabled { get; set; } = true;
     public bool GlobalTunEnabled { get; set; }
     public int SystemProxyPort { get; set; } = 10809;
     public bool SystemProxyAuthEnabled { get; set; }

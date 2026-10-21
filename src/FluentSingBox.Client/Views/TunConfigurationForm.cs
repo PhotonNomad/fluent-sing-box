@@ -12,7 +12,7 @@ internal sealed class TunConfigurationForm
     private readonly Page _page;
     private readonly StackPanel _view;
     private readonly InfoBar _status = new() { IsClosable = true };
-    private readonly List<(JsonObject Value, SchemaObjectForm Form, ToggleSwitch Prefer, string Key)> _forms = [];
+    private readonly List<(JsonObject Value, SchemaObjectForm Form, ToggleSwitch AutoRoute, ToggleSwitch StrictRoute, ToggleSwitch Prefer, string Key)> _forms = [];
     private JsonObject _document = new();
     private string _source = "";
     private ToggleSwitch _enabled = null!;
@@ -46,10 +46,10 @@ internal sealed class TunConfigurationForm
         var catalog = new ConfigurationSchema(ConfigurationSchema.LocalPath);
         var inbounds = _document["inbounds"] as JsonArray ?? new JsonArray();
         var active = inbounds.OfType<JsonObject>().Where(value => value["type"]?.ToString() == "tun").ToArray();
-        _enabled = new ToggleSwitch { IsOn = active.Length > 0, OnContent = Localization.Get("Common_On"), OffContent = Localization.Get("Common_Off") };
-        AutomationProperties.SetAutomationId(_enabled, "Proxy_Tun_Enabled");
-        _enabled.Toggled += (_, _) => ScheduleSave();
-        _view.Children.Add(new SettingsCard { Header = Localization.Get("Schema_Enabled"), Content = _enabled });
+        _enabled = Toggle(active.Length > 0, "Proxy_Tun_Enabled");
+        _view.Children.Add(new SettingsCard { Header = Localization.Get("TunInbound_Title"), Description = Localization.Get("TunInbound_Help"), HeaderIcon = new FontIcon { Glyph = "\uE839" }, Content = _enabled });
+        var dependents = new List<Action>();
+        _enabled.Toggled += (_, _) => { foreach (var update in dependents) update(); ScheduleSave(); };
         var tun = active.Length > 0 ? active : App.State.Settings.Configuration.DisabledTunInbounds.Select(json => JsonNode.Parse(json)!.AsObject()).ToArray();
         if (tun.Length == 0)
         {
@@ -59,26 +59,43 @@ internal sealed class TunConfigurationForm
         {
             var properties = catalog.Properties(catalog.Definition("Inbound"), value);
             var fields = new JsonObject();
-            foreach (var key in new[] { "interface_name", "address", "mtu", "dns_mode", "dns_address", "auto_route", "strict_route" })
+            // auto_route and strict_route are toggles below; the rest goes into the advanced fold.
+            foreach (var key in new[] { "interface_name", "address", "mtu", "dns_mode", "dns_address" })
                 if (properties.TryGetValue(key, out var property)) fields[key] = property.DeepClone();
-            var form = new SchemaObjectForm(catalog, new JsonObject { ["properties"] = fields }, value, new SchemaFormContext("Proxy_Tun_" + _forms.Count, SchemaFormRole.Tun, false, _document));
+            var id = "Proxy_Tun_" + _forms.Count;
+            var form = new SchemaObjectForm(catalog, new JsonObject { ["properties"] = fields }, value, new SchemaFormContext(id, SchemaFormRole.Tun, false, _document));
             var preferenceKey = value["tag"]?.ToString() ?? "untagged-" + _forms.Count;
-            var prefer = new ToggleSwitch { IsOn = App.State.Settings.Configuration.TunPreferredRouteBackups.ContainsKey(preferenceKey), OnContent = Localization.Get("Common_On"), OffContent = Localization.Get("Common_Off") };
-            AutomationProperties.SetAutomationId(prefer, "Proxy_Tun_" + _forms.Count + "_PreferRoute");
-            ComboBox? autoRoute = null;
-            prefer.Toggled += (_, _) => { if (prefer.IsOn && autoRoute is not null) autoRoute.SelectedValue = "true"; ScheduleSave(); };
-            _forms.Add((value, form, prefer, preferenceKey));
+            var suffix = tun.Length > 1 ? " · " + preferenceKey : "";
+            var autoRoute = Toggle(Flag(value, "auto_route"), id + "_AutoRoute");
+            var strictRoute = Toggle(Flag(value, "strict_route"), id + "_StrictRoute");
+            var prefer = Toggle(App.State.Settings.Configuration.TunPreferredRouteBackups.ContainsKey(preferenceKey), id + "_PreferRoute");
+            void UpdateDependents()
+            {
+                autoRoute.IsEnabled = prefer.IsEnabled = _enabled.IsOn;
+                strictRoute.IsEnabled = _enabled.IsOn && autoRoute.IsOn;
+            }
+            // The /1 preference only works through auto_route.
+            autoRoute.Toggled += (_, _) => { if (!autoRoute.IsOn) prefer.IsOn = false; UpdateDependents(); ScheduleSave(); };
+            strictRoute.Toggled += (_, _) => ScheduleSave();
+            prefer.Toggled += (_, _) => { if (prefer.IsOn) autoRoute.IsOn = true; ScheduleSave(); };
+            dependents.Add(UpdateDependents);
+            UpdateDependents();
+            _forms.Add((value, form, autoRoute, strictRoute, prefer, preferenceKey));
+            var nested = new Thickness(32, 0, 0, 0);
+            _view.Children.Add(new SettingsCard { Header = Localization.Get("TunAutoRoute_Title") + suffix, Description = Localization.Get("TunAutoRoute_Help"), HeaderIcon = new FontIcon { Glyph = "\uE8AB" }, Content = autoRoute });
+            _view.Children.Add(new SettingsCard { Header = Localization.Get("TunStrictRoute_Title"), Description = Localization.Get("TunStrictRoute_Help"), Content = strictRoute, Margin = nested });
+            _view.Children.Add(new SettingsCard { Header = Localization.Get("TunPreference_Title"), Description = Localization.Get("TunPreference_Help"), Content = prefer, Margin = nested });
+            var advanced = new SettingsExpander { Header = Localization.Get("TunAdvanced_Title") + suffix, Description = Localization.Get("TunAdvanced_Help"), HeaderIcon = new FontIcon { Glyph = "\uE713" }, IsExpanded = false };
+            AutomationProperties.SetAutomationId(advanced, id + "_Advanced");
             foreach (var row in form.View.Children.ToArray())
             {
-                form.View.Children.Remove(row); _view.Children.Add(row);
+                form.View.Children.Remove(row);
+                // The form's error bar stays outside the fold so it is visible while collapsed.
+                if (row is InfoBar) _view.Children.Add(row); else advanced.Items.Add(row);
                 if (row is SettingsCard { Content: TextBox text }) text.TextChanged += (_, _) => ScheduleSave();
-                if (row is SettingsCard { Content: ComboBox combo })
-                {
-                    if (AutomationProperties.GetAutomationId(combo).EndsWith("_auto_route", StringComparison.Ordinal)) autoRoute = combo;
-                    combo.SelectionChanged += (_, _) => { if (ReferenceEquals(combo, autoRoute) && combo.SelectedValue?.ToString() != "true") prefer.IsOn = false; ScheduleSave(); };
-                }
+                if (row is SettingsCard { Content: ComboBox combo }) combo.SelectionChanged += (_, _) => ScheduleSave();
             }
-            _view.Children.Add(new SettingsCard { Header = Localization.Get("TunPreference_Title"), Description = Localization.Get("TunPreference_Help"), Content = prefer });
+            _view.Children.Add(advanced);
         }
         var cleanup = new Button { Content = Localization.Get("TunCleanup_Button") };
         AutomationProperties.SetAutomationId(cleanup, "Proxy_Tun_Cleanup");
@@ -111,6 +128,21 @@ internal sealed class TunConfigurationForm
         await App.CoreService.RunStoppedMaintenanceAsync(() => TunAdapterCleanup.RemoveAsync(targets));
         _status.Message = Localization.Get("TunCleanup_Done"); _status.Severity = InfoBarSeverity.Success; _status.IsOpen = true;
     }
+    private static ToggleSwitch Toggle(bool on, string automationId)
+    {
+        var toggle = new ToggleSwitch { IsOn = on, OnContent = Localization.Get("Common_On"), OffContent = Localization.Get("Common_Off") };
+        AutomationProperties.SetAutomationId(toggle, automationId);
+        return toggle;
+    }
+    private static JsonArray TunEntries(JsonObject document)
+        => new((document["inbounds"] as JsonArray ?? []).OfType<JsonObject>().Where(item => item["type"]?.ToString() == "tun").Select(item => (JsonNode?)item.DeepClone()).ToArray());
+    private static bool Flag(JsonObject inbound, string key) => inbound[key] is JsonValue value && value.TryGetValue<bool>(out var on) && on;
+    // Leaves an unset flag unset when switched off, so sing-box keeps its default.
+    private static void SetFlag(JsonObject inbound, string key, bool on)
+    {
+        if (on) inbound[key] = true;
+        else if (inbound.ContainsKey(key)) inbound[key] = false;
+    }
     private void ScheduleSave() => _autoSave.Schedule();
     public async Task<bool> FlushPendingChangesAsync()
     {
@@ -124,12 +156,24 @@ internal sealed class TunConfigurationForm
         try
         {
             _page.IsEnabled = false;
+            // Other settings on this page rewrite the file too; rebase when they left the TUN entries alone.
+            var latestSource = File.Exists(ConfigurationFileService.FilePath) ? await File.ReadAllTextAsync(ConfigurationFileService.FilePath) : _source;
+            if (latestSource != _source && JsonNode.Parse(latestSource) is JsonObject latest && JsonNode.DeepEquals(TunEntries(latest), TunEntries(_document)))
+            {
+                _document = latest;
+                _source = latestSource;
+            }
             var candidate = (JsonObject)_document.DeepClone();
             candidate["inbounds"] ??= new JsonArray();
             var values = candidate["inbounds"]!.AsArray();
             var edits = _forms.Select(item => item.Form.Read()).ToArray();
             var routeBackups = new Dictionary<string, string>(App.State.Settings.Configuration.TunPreferredRouteBackups, StringComparer.Ordinal);
-            for (var index = 0; index < edits.Length; index++) TunRoutePreference.Apply(edits[index], _forms[index].Prefer.IsOn, _forms[index].Key, routeBackups);
+            for (var index = 0; index < edits.Length; index++)
+            {
+                SetFlag(edits[index], "auto_route", _forms[index].AutoRoute.IsOn);
+                SetFlag(edits[index], "strict_route", _forms[index].StrictRoute.IsOn);
+                TunRoutePreference.Apply(edits[index], _forms[index].Prefer.IsOn, _forms[index].Key, routeBackups);
+            }
             foreach (var entry in values.OfType<JsonObject>().Where(item => item["type"]?.ToString() == "tun").ToArray()) values.Remove(entry);
             if (_enabled.IsOn) foreach (var edit in edits) values.Add(edit.DeepClone());
             else
@@ -168,7 +212,7 @@ internal sealed class TunConfigurationForm
                 throw;
             }
             _document = candidate;
-            for (var index = 0; index < edits.Length; index++) _forms[index] = (edits[index], _forms[index].Form, _forms[index].Prefer, _forms[index].Key);
+            for (var index = 0; index < edits.Length; index++) _forms[index] = _forms[index] with { Value = edits[index] };
             for (var index = 0; index < edits.Length; index++) _forms[index].Form.UpdatePreservedFields(edits[index]);
             _source = await File.ReadAllTextAsync(ConfigurationFileService.FilePath);
             await App.State.SavePreferencesAsync(configurationCommitted: true);

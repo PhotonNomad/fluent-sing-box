@@ -59,8 +59,7 @@ public static class SingBoxCoreHost
             try
             {
                 var logPath = Path.Combine(Path.GetDirectoryName(configPath) ?? string.Empty, "sing-box.log");
-            var quietLogs = ConfigurationComposer.NeedsListenerReadiness(await File.ReadAllTextAsync(configPath));
-            await CoreReadinessProbe.WaitForCoreStartedAsync(core, logPath, TimeSpan.FromSeconds(10), quietLogs ? proxyPort : null);
+            await CoreReadinessProbe.WaitForCoreStartedAsync(core, logPath, TimeSpan.FromSeconds(10), await File.ReadAllTextAsync(configPath));
             }
             catch (Exception exception)
             {

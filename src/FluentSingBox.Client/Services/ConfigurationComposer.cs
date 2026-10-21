@@ -28,7 +28,7 @@ public static class ConfigurationComposer
         if (inbounds is null) { inbounds = new JsonArray(); config["inbounds"] = inbounds; }
         var reserved = inbounds.OfType<JsonObject>().Where(item => item["tag"]?.ToString() == "system-http").ToArray();
         foreach (var inbound in reserved) inbounds.Remove(inbound);
-        inbounds.Add(SingBoxConfigBuilder.BuildManagedInbound(settings));
+        if (settings.SystemProxyInboundEnabled) inbounds.Add(SingBoxConfigBuilder.BuildManagedInbound(settings));
         if (config["outbounds"] is null) config["outbounds"] = new JsonArray(new JsonObject { ["type"] = "direct", ["tag"] = "direct" });
         if (config["log"] is not null and not JsonObject) throw new InvalidOperationException(Localization.Get("ConfigurationComposer_LogMustBeAnObject"));
         if (config["log"] is null) config["log"] = new JsonObject { ["level"] = "info", ["timestamp"] = true };
@@ -48,6 +48,11 @@ public static class ConfigurationComposer
 
     public static bool NeedsListenerReadiness(string json) => JsonNode.Parse(json)?["log"]?["level"]?.ToString()
         is "warn" or "error" or "fatal" or "panic";
+
+    // Port of the managed mixed inbound, or null when it is switched off.
+    public static int? ManagedListenerPort(string json)
+        => (JsonNode.Parse(json)?["inbounds"] as JsonArray)?.OfType<JsonObject>()
+            .FirstOrDefault(item => item["tag"]?.ToString() == "system-http")?["listen_port"]?.GetValue<int>();
 
     public static IReadOnlyList<string> FindReferences(AppSettingsData settings, ServerProfile server)
     {

@@ -5,9 +5,18 @@ namespace FluentSingBox.Client.Services;
 // Waits until a started sing-box process reports that it is serving.
 internal static class CoreReadinessProbe
 {
-    public static async Task WaitForCoreStartedAsync(Process core, string logPath, TimeSpan timeout, int? proxyPort = null)
+    // Quiet log levels print no startup line: probe the managed listener when it exists.
+    public static Task WaitForCoreStartedAsync(Process core, string logPath, TimeSpan timeout, string configText)
     {
-        var deadline = DateTime.UtcNow + timeout;
+        if (!ConfigurationComposer.NeedsListenerReadiness(configText)) return WaitForCoreStartedAsync(core, logPath, timeout);
+        var port = ConfigurationComposer.ManagedListenerPort(configText);
+        return WaitForCoreStartedAsync(core, logPath, timeout, port, quietWithoutListener: port is null);
+    }
+
+    public static async Task WaitForCoreStartedAsync(Process core, string logPath, TimeSpan timeout, int? proxyPort = null, bool quietWithoutListener = false)
+    {
+        var started = DateTime.UtcNow;
+        var deadline = started + timeout;
         while (DateTime.UtcNow < deadline)
         {
             if (core.HasExited)
@@ -45,6 +54,8 @@ internal static class CoreReadinessProbe
                 }
                 catch (Exception exception) when (exception is System.Net.Sockets.SocketException or IOException or TimeoutException) { }
             }
+            // Without a listener and without INFO logs, a core that survives start-up is the only signal left.
+            if (quietWithoutListener && DateTime.UtcNow - started > TimeSpan.FromSeconds(2) && !core.HasExited) return;
             await Task.Delay(100);
         }
 

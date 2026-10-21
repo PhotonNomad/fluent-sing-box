@@ -15,6 +15,7 @@ public sealed class ProxyCoordinator(AppState state)
     {
         if (enabled)
         {
+            if (!state.Settings.SystemProxyInboundEnabled) throw new InvalidOperationException(Localization.Get("ProxyCoordinator_SystemProxyNeedsInbound"));
             try
             {
                 if (_shuttingDown) throw new OperationCanceledException(Localization.Get("ProxyCoordinator_TheClientIsExiting"));
@@ -38,6 +39,16 @@ public sealed class ProxyCoordinator(AppState state)
             state.Settings.SystemProxyEnabled = false;
         }
         await state.SaveAsync();
+    }
+
+    // Windows must not keep pointing at a listener the next core start will not open.
+    public async Task SetSystemProxyInboundEnabledAsync(bool enabled)
+    {
+        if (!enabled && state.Settings.SystemProxyEnabled) await SetSystemProxyEnabledAsync(false);
+        var previous = state.Settings.SystemProxyInboundEnabled;
+        state.Settings.SystemProxyInboundEnabled = enabled;
+        try { await state.SaveAsync(); }
+        catch { state.Settings.SystemProxyInboundEnabled = previous; throw; }
     }
 
     public async Task ApplySystemProxySettingsAsync()

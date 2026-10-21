@@ -32,6 +32,8 @@ public static class NodeProbeService
             settings.Configuration.LogTimestamp = true;
             settings.SystemProxyAuthEnabled = false;
             settings.SystemProxyEnabled = false;
+            // The probe sends its request through the managed listener.
+            settings.SystemProxyInboundEnabled = true;
             var listener = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
             listener.Start(); settings.SystemProxyPort = ((IPEndPoint)listener.LocalEndpoint).Port; listener.Stop();
             var executable = await SingBoxCoreBundle.ResolveExecutablePathAsync(settings.SingBoxExecutablePath);
@@ -43,8 +45,7 @@ public static class NodeProbeService
             start.ArgumentList.Add("run"); start.ArgumentList.Add("-c"); start.ArgumentList.Add(config);
             process = Process.Start(start) ?? throw new InvalidOperationException(Localization.Get("NodeProbeService_CannotStartTheConnectionTest"));
             job.Attach(process);
-            await CoreReadinessProbe.WaitForCoreStartedAsync(process, log, TimeSpan.FromSeconds(10),
-                ConfigurationComposer.NeedsListenerReadiness(await File.ReadAllTextAsync(config, cancellation)) ? settings.SystemProxyPort : null).WaitAsync(cancellation);
+            await CoreReadinessProbe.WaitForCoreStartedAsync(process, log, TimeSpan.FromSeconds(10), await File.ReadAllTextAsync(config, cancellation)).WaitAsync(cancellation);
             using var handler = new HttpClientHandler { UseProxy = true, Proxy = new WebProxy($"http://127.0.0.1:{settings.SystemProxyPort}"), AllowAutoRedirect = false };
             using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
             var clock = Stopwatch.StartNew();

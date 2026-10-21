@@ -65,7 +65,7 @@ public static class ConfigurationFileService
         var schema = Path.Combine(AppContext.BaseDirectory, "ThirdParty", "Schemas", "sing-box-1.14.2.schema.json");
         if (File.Exists(schema)) config["$schema"] = schema;
         else config.Remove("$schema");
-        config["inbounds"] = new JsonArray(SingBoxConfigBuilder.BuildManagedInbound(settings));
+        config["inbounds"] = settings.SystemProxyInboundEnabled ? new JsonArray(SingBoxConfigBuilder.BuildManagedInbound(settings)) : new JsonArray();
         return config.ToJsonString(JsonOptions);
     }
 
@@ -221,7 +221,7 @@ public static class ConfigurationFileService
                     var inbounds = document["inbounds"] as JsonArray ?? new JsonArray();
                     if (document["inbounds"] is null) document["inbounds"] = inbounds;
                     foreach (var inbound in inbounds.OfType<JsonObject>().Where(item => item["tag"]?.ToString() == "system-http").ToArray()) inbounds.Remove(inbound);
-                    inbounds.Add(SingBoxConfigBuilder.BuildManagedInbound(settings));
+                    if (settings.SystemProxyInboundEnabled) inbounds.Add(SingBoxConfigBuilder.BuildManagedInbound(settings));
                     var content = document.ToJsonString(JsonOptions);
                     await CommitValidatedAsync(settings, settings.Configuration.ExternalFilePath, content,
                         File.Exists(BaselinePath) ? await File.ReadAllTextAsync(BaselinePath) : "{}");

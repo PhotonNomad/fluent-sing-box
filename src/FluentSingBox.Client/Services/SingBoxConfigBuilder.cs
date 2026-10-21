@@ -80,9 +80,8 @@ public sealed class SingBoxConfigBuilder
             ["default"] = defaultServer is null ? "direct" : OutboundTag(defaultServer.Id)
         });
 
-        var systemHttpInbound = BuildManagedInbound(settings);
-
-        var inbounds = new JsonArray { systemHttpInbound };
+        var inbounds = new JsonArray();
+        if (settings.SystemProxyInboundEnabled) inbounds.Add(BuildManagedInbound(settings));
 
         if (hasTun)
         {
@@ -289,7 +288,7 @@ public sealed class SingBoxConfigBuilder
             var identity = string.Join("\n", selectors.Select(item => item.ToJsonString()));
             config["experimental"]!["cache_file"]!["cache_id"] = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(identity)));
         }
-        ConfigurationParts.ApplySections(config, options);
+        ConfigurationParts.ApplySections(config, options, settings.SystemProxyInboundEnabled);
         config["log"]!["output"] = logPath;
         if (useUpdatedRuleSets) BundledRuleSets.ApplyUpdates(config);
         return config.ToJsonString(new JsonSerializerOptions { WriteIndented = true });

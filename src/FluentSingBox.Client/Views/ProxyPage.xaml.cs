@@ -26,6 +26,7 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
         _loading = true;
         ApplicationList.ItemsSource = App.State.Settings.Applications;
         ApplicationDnsHelp.Text = Localization.Get("Dns_DefaultNodeHelp");
+        LoadDefaultServer();
 
         UpdateEmptyApplicationsMessage();
         _loading = false;
@@ -47,6 +48,28 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
         if (!_observingApplications) return;
         App.State.Settings.Applications.CollectionChanged -= Applications_CollectionChanged;
         _observingApplications = false;
+    }
+
+    private void LoadDefaultServer()
+    {
+        var settings = App.State.Settings;
+        DefaultServerComboBox.ItemsSource = new[] { new ServerProfile { Id = "direct", Name = Localization.Get(settings.Servers.Count == 0 ? "DefaultOutlet_DirectEmpty" : "DefaultOutlet_Direct") } }.Concat(settings.Servers).ToArray();
+        DefaultServerComboBox.SelectedValue = settings.DefaultServerId ?? "direct";
+    }
+
+    private async void DefaultServer_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || DefaultServerComboBox.SelectedItem is not ServerProfile server
+            || App.State.Settings.DefaultServerId == server.Id) return;
+        App.State.SetDefaultServer(server);
+        try { await App.ProxyCoordinator.ApplyConfigurationChangesAsync(); }
+        catch (Exception exception)
+        {
+            _loading = true;
+            LoadDefaultServer();
+            _loading = false;
+            await ShowMessageAsync(Localization.Get("ProxyPage_CannotApplyServer"), exception.Message);
+        }
     }
 
     private void UpdateEmptyApplicationsMessage()

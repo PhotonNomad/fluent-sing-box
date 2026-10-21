@@ -1,5 +1,4 @@
 using FluentSingBox.Client.Services;
-using FluentSingBox.Client.Models;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -24,8 +23,18 @@ public sealed partial class SystemProxySettingsControl : UserControl
 
     private void ScheduleSave()
     {
-        if (_loading) return;
+        // TextChanged from LoadFromSettings arrives after _loading is reset.
+        if (_loading || !HasChanges()) return;
         _autoSave.Schedule();
+    }
+
+    private bool HasChanges()
+    {
+        var settings = App.State.Settings;
+        return PortTextBox.Text != settings.SystemProxyPort.ToString()
+            || AuthenticationSwitch.IsOn != settings.SystemProxyAuthEnabled
+            || UsernameTextBox.Text.Trim() != settings.SystemProxyUsername
+            || PasswordInput.Password != settings.SystemProxyPassword;
     }
 
     private async Task<bool> AutoSaveAsync()
@@ -55,30 +64,47 @@ public sealed partial class SystemProxySettingsControl : UserControl
     {
         _loading = true;
         var settings = App.State.Settings;
-        DefaultServerComboBox.ItemsSource = new[] { new ServerProfile { Id = "direct", Name = Localization.Get(settings.Servers.Count == 0 ? "DefaultOutlet_DirectEmpty" : "DefaultOutlet_Direct") } }.Concat(settings.Servers).ToArray();
-        DefaultServerComboBox.SelectedValue = settings.DefaultServerId ?? "direct";
+        InboundSwitch.IsOn = settings.SystemProxyInboundEnabled;
         SystemProxySwitch.IsOn = settings.SystemProxyEnabled;
         PortTextBox.Text = settings.SystemProxyPort.ToString();
         AuthenticationSwitch.IsOn = settings.SystemProxyAuthEnabled;
         UsernameTextBox.Text = settings.SystemProxyUsername;
         PasswordInput.Password = settings.SystemProxyPassword;
         UpdateAuthenticationVisibility();
+        UpdateInboundDependents();
         StatusMessage.IsOpen = false;
 
         _loading = false;
     }
 
-    private async void DefaultServer_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private async void InboundSwitch_Toggled(object sender, RoutedEventArgs e)
     {
-        if (_loading || DefaultServerComboBox.SelectedItem is not ServerProfile server
-            || App.State.Settings.DefaultServerId == server.Id) return;
-        App.State.SetDefaultServer(server);
-        try { await App.ProxyCoordinator.ApplyConfigurationChangesAsync(); }
+        if (_loading || InboundSwitch.IsOn == App.State.Settings.SystemProxyInboundEnabled) return;
+        try
+        {
+            if (InboundSwitch.IsOn) await _autoSave.FlushAsync();
+            await App.ProxyCoordinator.SetSystemProxyInboundEnabledAsync(InboundSwitch.IsOn);
+            LoadFromSettings();
+            StatusMessage.Message = Localization.Get(App.CoreService.IsRunning ? "SystemProxySettingsControl_RestartToApply" : "Schema_Saved");
+            StatusMessage.Severity = App.CoreService.IsRunning ? InfoBarSeverity.Informational : InfoBarSeverity.Success;
+            StatusMessage.IsOpen = true;
+        }
         catch (Exception exception)
         {
             LoadFromSettings();
-            await ShowMessageAsync(Localization.Get("ProxyPage_CannotApplyServer"), exception.Message);
+            await ShowMessageAsync(Localization.Get("SystemProxySettingsControl_CannotSwitchInbound"), exception.Message);
         }
+    }
+
+    // The Windows switch, port and credentials all describe the inbound.
+    private void UpdateInboundDependents()
+    {
+        var on = InboundSwitch.IsOn;
+        SystemProxySwitch.IsEnabled = on;
+        PortCard.IsEnabled = on;
+        AuthenticationCard.IsEnabled = on;
+        UsernameCard.IsEnabled = on;
+        PasswordCard.IsEnabled = on;
     }
 
     private void AuthenticationSwitch_Toggled(object sender, RoutedEventArgs e)

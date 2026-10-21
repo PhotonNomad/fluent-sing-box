@@ -1,30 +1,33 @@
-<UserControl x:Class="FluentSingBox.Client.Views.SystemProxySettingsControl" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="using:CommunityToolkit.WinUI.Controls">
-    <controls:SettingsExpander x:Uid="ProxyPage_SystemProxyExpander" IsExpanded="False" AutomationProperties.AutomationId="Proxy_SystemSettings">
-        <controls:SettingsExpander.HeaderIcon>
-            <FontIcon Glyph="&#xE968;" />
-        </controls:SettingsExpander.HeaderIcon>
-        <controls:SettingsExpander.Items>
-            <controls:SettingsCard x:Uid="SystemProxySettingsControl_SettingsCard3">
-                <ToggleSwitch x:Name="SystemProxySwitch" AutomationProperties.AutomationId="Proxy_SystemToggle" Toggled="SystemProxySwitch_Toggled" x:Uid="SystemProxySettingsControl_SystemProxySwitch" />
-            </controls:SettingsCard>
-            <controls:SettingsCard x:Uid="ProxyPage_SettingsCard13">
-                <ComboBox x:Name="DefaultServerComboBox" AutomationProperties.AutomationId="Proxy_DefaultOutlet" MinWidth="{StaticResource SettingActionControlMinWidth}" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="DefaultServer_SelectionChanged" x:Uid="ProxyPage_DefaultServerComboBox" />
-            </controls:SettingsCard>
-            <controls:SettingsCard x:Uid="SystemProxySettingsControl_SettingsCard7">
-                <TextBox x:Name="PortTextBox" AutomationProperties.AutomationId="Proxy_PortTextBox" MinWidth="{StaticResource SettingActionControlMinWidth}" PlaceholderText="10809" InputScope="Number" />
-            </controls:SettingsCard>
-            <controls:SettingsCard x:Uid="SystemProxySettingsControl_SettingsCard9">
-                <ToggleSwitch x:Name="AuthenticationSwitch" AutomationProperties.AutomationId="Proxy_AuthenticationSwitch" Toggled="AuthenticationSwitch_Toggled" x:Uid="SystemProxySettingsControl_AuthenticationSwitch" />
-            </controls:SettingsCard>
-            <controls:SettingsCard x:Name="UsernameCard" Visibility="Collapsed" x:Uid="SystemProxySettingsControl_UsernameCard">
-                <TextBox x:Name="UsernameTextBox" AutomationProperties.AutomationId="Proxy_UsernameTextBox" MinWidth="{StaticResource SettingActionControlMinWidth}" x:Uid="SystemProxySettingsControl_UsernameTextBox" />
-            </controls:SettingsCard>
-            <controls:SettingsCard x:Name="PasswordCard" Visibility="Collapsed" x:Uid="SystemProxySettingsControl_PasswordCard">
-                <PasswordBox x:Name="PasswordInput" AutomationProperties.AutomationId="Proxy_PasswordInput" MinWidth="{StaticResource SettingActionControlMinWidth}" x:Uid="SystemProxySettingsControl_PasswordInput" />
-            </controls:SettingsCard>
-        </controls:SettingsExpander.Items>
-        <controls:SettingsExpander.ItemsFooter>
-            <InfoBar x:Name="StatusMessage" IsOpen="False" IsClosable="True" Severity="Success" AutomationProperties.AutomationId="Proxy_SettingsStatus" />
-        </controls:SettingsExpander.ItemsFooter>
-    </controls:SettingsExpander>
+<UserControl x:Class="FluentSingBox.Client.Views.SystemProxySettingsControl" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="using:CommunityToolkit.WinUI.Controls" xmlns:local="using:FluentSingBox.Client.Views">
+    <local:SettingsSection x:Uid="ProxyPage_SystemProxyExpander" AutomationProperties.AutomationId="Proxy_SystemSettings">
+        <local:SettingsSection.SectionContent>
+            <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
+                <InfoBar x:Name="StatusMessage" IsOpen="False" IsClosable="True" Severity="Success" AutomationProperties.AutomationId="Proxy_SettingsStatus" />
+                <controls:SettingsCard x:Uid="SystemProxySettingsControl_InboundCard">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE968;" />
+                    </controls:SettingsCard.HeaderIcon>
+                    <ToggleSwitch x:Name="InboundSwitch" AutomationProperties.AutomationId="Proxy_InboundToggle" Toggled="InboundSwitch_Toggled" x:Uid="SystemProxySettingsControl_InboundSwitch" />
+                </controls:SettingsCard>
+                <controls:SettingsCard x:Uid="SystemProxySettingsControl_SettingsCard3">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE774;" />
+                    </controls:SettingsCard.HeaderIcon>
+                    <ToggleSwitch x:Name="SystemProxySwitch" AutomationProperties.AutomationId="Proxy_SystemToggle" Toggled="SystemProxySwitch_Toggled" x:Uid="SystemProxySettingsControl_SystemProxySwitch" />
+                </controls:SettingsCard>
+                <controls:SettingsCard x:Name="PortCard" x:Uid="SystemProxySettingsControl_SettingsCard7">
+                    <TextBox x:Name="PortTextBox" AutomationProperties.AutomationId="Proxy_PortTextBox" MinWidth="{StaticResource SettingActionControlMinWidth}" PlaceholderText="10809" InputScope="Number" />
+                </controls:SettingsCard>
+                <controls:SettingsCard x:Name="AuthenticationCard" x:Uid="SystemProxySettingsControl_SettingsCard9">
+                    <ToggleSwitch x:Name="AuthenticationSwitch" AutomationProperties.AutomationId="Proxy_AuthenticationSwitch" Toggled="AuthenticationSwitch_Toggled" x:Uid="SystemProxySettingsControl_AuthenticationSwitch" />
+                </controls:SettingsCard>
+                <controls:SettingsCard x:Name="UsernameCard" Visibility="Collapsed" x:Uid="SystemProxySettingsControl_UsernameCard">
+                    <TextBox x:Name="UsernameTextBox" AutomationProperties.AutomationId="Proxy_UsernameTextBox" MinWidth="{StaticResource SettingActionControlMinWidth}" x:Uid="SystemProxySettingsControl_UsernameTextBox" />
+                </controls:SettingsCard>
+                <controls:SettingsCard x:Name="PasswordCard" Visibility="Collapsed" x:Uid="SystemProxySettingsControl_PasswordCard">
+                    <PasswordBox x:Name="PasswordInput" AutomationProperties.AutomationId="Proxy_PasswordInput" MinWidth="{StaticResource SettingActionControlMinWidth}" x:Uid="SystemProxySettingsControl_PasswordInput" />
+                </controls:SettingsCard>
+            </StackPanel>
+        </local:SettingsSection.SectionContent>
+    </local:SettingsSection>
 </UserControl>

@@ -83,7 +83,7 @@ public sealed class SingBoxCoreService : IDisposable
         await File.WriteAllTextAsync(candidatePath, configText);
         await CoreCommand.CheckAsync(executablePath, candidatePath);
         await Task.Run(CoreProcessLease.Recover);
-        StartupPreflight.CheckResources(configText, settings.SystemProxyPort);
+        StartupPreflight.CheckResources(configText, ConfigurationComposer.ManagedListenerPort(configText));
         StartupPreflight.WriteReport("passed");
         if (File.Exists(configPath)) File.Copy(configPath, configPath + ".previous", overwrite: true);
         File.Move(candidatePath, configPath, overwrite: true);
@@ -97,7 +97,7 @@ public sealed class SingBoxCoreService : IDisposable
         var requiresElevation = ConfigurationComposer.RequiresElevation(configText);
         if (!requiresElevation)
         {
-            await StartCoreDirectlyAsync(executablePath, directory, logPath, settings.SystemProxyPort, ConfigurationComposer.NeedsListenerReadiness(configText));
+            await StartCoreDirectlyAsync(executablePath, directory, logPath, settings.SystemProxyPort, configText);
             return;
         }
 
@@ -178,7 +178,7 @@ public sealed class SingBoxCoreService : IDisposable
         catch { _status = CoreStatus.Faulted; throw; }
     }
 
-    private async Task StartCoreDirectlyAsync(string executablePath, string workingDirectory, string logPath, int proxyPort, bool quietLogs)
+    private async Task StartCoreDirectlyAsync(string executablePath, string workingDirectory, string logPath, int proxyPort, string configText)
     {
         var startInfo = new ProcessStartInfo
         {
@@ -199,7 +199,7 @@ public sealed class SingBoxCoreService : IDisposable
             _coreJob = new ProcessJob();
             _coreJob.Attach(_coreProcess);
             CoreProcessLease.Register(_coreProcess, executablePath, Path.Combine(workingDirectory, "config.json"));
-            await CoreReadinessProbe.WaitForCoreStartedAsync(_coreProcess, logPath, TimeSpan.FromSeconds(10), quietLogs ? proxyPort : null);
+            await CoreReadinessProbe.WaitForCoreStartedAsync(_coreProcess, logPath, TimeSpan.FromSeconds(10), configText);
         }
         catch (Exception exception)
         {

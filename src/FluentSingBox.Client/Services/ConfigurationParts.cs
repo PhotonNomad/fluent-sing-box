@@ -76,7 +76,7 @@ public static class ConfigurationParts
         catch (JsonException) { throw new InvalidOperationException(name + Localization.Get("ConfigurationComposer_ContainsInvalidJSON")); }
     }
 
-    public static void ApplySections(JsonObject config, ConfigurationOptions options)
+    public static void ApplySections(JsonObject config, ConfigurationOptions options, bool managedInbound = true)
     {
         foreach (var (name, text) in options.Sections)
         {
@@ -91,9 +91,9 @@ public static class ConfigurationParts
             else if (config[name] is JsonObject target) Merge(target, (JsonObject)node);
             else config[name] = node.DeepClone();
         }
-        // Lifecycle readiness and Windows proxy ownership require this listener.
+        // The tag is reserved for the managed listener, which may be switched off.
         var inbounds = config["inbounds"]!.AsArray();
-        if (inbounds.OfType<JsonObject>().Count(item => item["tag"]?.ToString() == "system-http") != 1)
+        if (inbounds.OfType<JsonObject>().Count(item => item["tag"]?.ToString() == "system-http") != (managedInbound ? 1 : 0))
             throw new InvalidOperationException(Localization.Get("ConfigurationComposer_AdditionalInboundsCannotUseTheReservedTagSystem"));
         foreach (var section in new[] { "inbounds", "outbounds", "endpoints" })
         {

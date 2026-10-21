@@ -8,7 +8,7 @@ namespace FluentSingBox.Client.Services;
 public static class StartupPreflight
 {
     // Do not remove an interface by name: a name cannot prove who created it.
-    public static void CheckResources(string configText, int port, IEnumerable<string>? interfaceNames = null)
+    public static void CheckResources(string configText, int? port, IEnumerable<string>? interfaceNames = null)
     {
         var config = JsonNode.Parse(configText)!.AsObject();
         var tuns = (config["inbounds"] as JsonArray)?.OfType<JsonObject>()
@@ -26,7 +26,8 @@ public static class StartupPreflight
             var tags = string.Join(", ", tuns.Where(tun => string.Equals(tun["interface_name"]?.ToString(), conflict, StringComparison.OrdinalIgnoreCase)).Select(tun => tun["tag"]?.ToString() ?? "(no tag)"));
             throw new InvalidOperationException("[TUN_NAME_CONFLICT] " + Localization.Format("Diagnostics_TunConflict", conflict, tags, Environment.NewLine, details));
         }
-        var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, port);
+        if (port is null) return;
+        var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, port.Value);
         try { listener.Start(); }
         catch (SocketException exception)
         {

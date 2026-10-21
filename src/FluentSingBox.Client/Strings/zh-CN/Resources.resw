@@ -541,11 +541,11 @@
     <comment>Source: Views\SettingsPage.xaml</comment>
   </data>
   <data name="SystemProxySettingsControl_SettingsCard3.Header" xml:space="preserve">
-    <value>启用系统代理</value>
+    <value>设为 Windows 系统代理</value>
     <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
   </data>
   <data name="SystemProxySettingsControl_SystemProxySwitch.AutomationProperties.Name" xml:space="preserve">
-    <value>启用系统代理</value>
+    <value>设为 Windows 系统代理</value>
     <comment>Source: Views\SystemProxySettingsControl.xaml</comment>
   </data>
   <data name="SystemProxySettingsControl_SettingsCard7.Header" xml:space="preserve">
@@ -728,5 +728,32 @@
   <data name="Updates_LastChecked" xml:space="preserve"><value>上次检查时间：{0}</value></data>
   <data name="Updates_GitHubAccess.Content" xml:space="preserve">
     <value>GitHub 访问</value>
+  </data>
+  <data name="ProxyPage_OutletSection.Header" xml:space="preserve">
+    <value>出口</value>
+  </data>
+  <data name="ProxyPage_OutletSection.Description" xml:space="preserve">
+    <value>代理流量默认使用的服务器，新建应用组也以它为初始选择。</value>
+  </data>
+  <data name="ProxyPage_SystemProxyExpander.Description" xml:space="preserve">
+    <value>sing-box 监听本地入口；Windows 系统代理把系统流量指向它。</value>
+  </data>
+  <data name="SystemProxySettingsControl_InboundCard.Header" xml:space="preserve">
+    <value>本地入口</value>
+  </data>
+  <data name="SystemProxySettingsControl_InboundCard.Description" xml:space="preserve">
+    <value>sing-box 在 127.0.0.1 上监听的 mixed（HTTP/SOCKS5）入站。重启核心后生效。</value>
+  </data>
+  <data name="SystemProxySettingsControl_InboundSwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>启用本地入口</value>
+  </data>
+  <data name="SystemProxySettingsControl_SettingsCard3.Description" xml:space="preserve">
+    <value>修改 Windows 代理设置，指向本地入口。即时生效。</value>
+  </data>
+  <data name="SystemProxySettingsControl_InboundSwitch.OnContent" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="SystemProxySettingsControl_InboundSwitch.OffContent" xml:space="preserve">
+    <value>关</value>
   </data>
 </root>
