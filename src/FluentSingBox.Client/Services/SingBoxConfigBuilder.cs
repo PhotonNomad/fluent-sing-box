@@ -7,7 +7,7 @@ namespace FluentSingBox.Client.Services;
 
 public sealed class SingBoxConfigBuilder
 {
-    public string Build(AppSettingsData settings, string logPath, bool supportsHttpClient, bool validateApplicationPaths = false, bool useUpdatedRuleSets = true)
+    public string Build(AppSettingsData settings, string logPath, bool validateApplicationPaths = false, bool useUpdatedRuleSets = true)
     {
         var options = settings.Configuration ?? new ConfigurationOptions();
         if (options.UsesFileConfiguration) return ConfigurationComposer.BuildNative(settings, logPath, useUpdatedRuleSets);

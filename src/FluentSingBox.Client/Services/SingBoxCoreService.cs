@@ -2,7 +2,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Text.Json;
 using FluentSingBox.Client.Models;
 
@@ -57,10 +56,9 @@ public sealed class SingBoxCoreService : IDisposable
         var directory = Path.Combine(AppPaths.DataDirectory, "sing-box");
         Directory.CreateDirectory(directory);
         var candidate = Path.Combine(directory, "config.validation-" + Guid.NewGuid().ToString("N") + ".json");
-        var supportsHttpClient = await DetectHttpClientSupportAsync(executable);
         try
         {
-            var configuration = _configBuilder.Build(settings, Path.Combine(directory, "sing-box.log"), supportsHttpClient);
+            var configuration = _configBuilder.Build(settings, Path.Combine(directory, "sing-box.log"));
             ConfigurationReferences.Validate(configuration);
             await File.WriteAllTextAsync(candidate, configuration);
             await CoreCommand.CheckAsync(executable, candidate);
@@ -98,8 +96,7 @@ public sealed class SingBoxCoreService : IDisposable
         Directory.CreateDirectory(directory);
         var configPath = Path.Combine(directory, "config.json");
         var logPath = Path.Combine(directory, "sing-box.log");
-        var supportsHttpClient = await DetectHttpClientSupportAsync(executablePath);
-        var configText = _configBuilder.Build(settings, logPath, supportsHttpClient);
+        var configText = _configBuilder.Build(settings, logPath);
         var candidatePath = Path.Combine(directory, "config.candidate.json");
         await File.WriteAllTextAsync(candidatePath, configText);
         await CoreCommand.CheckAsync(executablePath, candidatePath);
@@ -361,33 +358,6 @@ public sealed class SingBoxCoreService : IDisposable
     }
 
     public void Dispose() => Stop();
-
-    internal static async Task<bool> DetectHttpClientSupportAsync(string executablePath)
-    {
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = executablePath,
-            Arguments = "version",
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true
-        };
-        using var process = Process.Start(startInfo) ?? throw new InvalidOperationException(Localization.Get("SingBoxCoreService_CannotReadTheSingBoxVersion"));
-        var outputTask = process.StandardOutput.ReadToEndAsync();
-        var errorTask = process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(8));
-        var versionText = (await outputTask) + "\n" + await errorTask;
-        var match = Regex.Match(versionText, @"\b(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)\b");
-        if (!match.Success || process.ExitCode != 0)
-        {
-            throw new InvalidOperationException(Localization.Format("SingBoxCoreService_UnrecognizedSingBoxVersionOutput0", versionText.Trim()));
-        }
-
-        var major = int.Parse(match.Groups["major"].Value);
-        var minor = int.Parse(match.Groups["minor"].Value);
-        return major > 1 || major == 1 && minor >= 14;
-    }
 }
 
 public static class SingBoxCoreHost
