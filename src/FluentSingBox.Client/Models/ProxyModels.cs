@@ -24,8 +24,8 @@ public sealed class ServerProfile : ObservableModel
     public string Id { get => _id; set => Set(ref _id, value); }
     public string ConfigSection { get; set; } = "outbounds";
     public string Name { get => _name; set => Set(ref _name, value); }
-    public string Address { get => _address; set => Set(ref _address, value); }
-    public int Port { get => _port; set => Set(ref _port, value); }
+    public string Address { get => _address; set { if (Set(ref _address, value)) NotifyPropertyChanged(nameof(Endpoint)); } }
+    public int Port { get => _port; set { if (Set(ref _port, value)) NotifyPropertyChanged(nameof(Endpoint)); } }
     public string UserId { get => _userId; set => Set(ref _userId, value); }
     public string Security
     {
@@ -202,9 +202,13 @@ public sealed class RouteRuleProfile : ObservableModel
         get => _isEnabled;
         set { if (Set(ref _isEnabled, value)) NotifyPropertyChanged(nameof(RowDescription)); }
     }
-    public bool IsBuiltIn { get => _isBuiltIn; set => Set(ref _isBuiltIn, value); }
+    public bool IsBuiltIn { get => _isBuiltIn; set { if (Set(ref _isBuiltIn, value)) NotifyPropertyChanged(nameof(IsCustom)); } }
     public bool MatchPrivateAddresses { get => _matchPrivateAddresses; set => Set(ref _matchPrivateAddresses, value); }
-    public string BuiltInKind { get => _builtInKind; set => Set(ref _builtInKind, value); }
+    public string BuiltInKind
+    {
+        get => _builtInKind;
+        set { if (Set(ref _builtInKind, value)) { NotifyPropertyChanged(nameof(RuleDescription)); NotifyPropertyChanged(nameof(RowDescription)); NotifyPropertyChanged(nameof(DetailsUri)); } }
+    }
     public string Scope { get => _scope; set { if (Set(ref _scope, value)) NotifyPropertyChanged(nameof(ScopeLabel)); } }
 
     [JsonIgnore]
@@ -256,7 +260,7 @@ public sealed class ApplicationProxyProfile : ObservableModel
     public string MatchMode
     {
         get => _matchMode;
-        set { if (Set(ref _matchMode, value)) { NotifyPropertyChanged(nameof(MatchEntries)); NotifyPropertyChanged(nameof(ExecutableName)); NotifyPropertyChanged(nameof(RowDescription)); } }
+        set { if (Set(ref _matchMode, value)) { NotifyPropertyChanged(nameof(MatchEntries)); NotifyPropertyChanged(nameof(MatchField)); NotifyPropertyChanged(nameof(ExecutableName)); NotifyPropertyChanged(nameof(RowDescription)); } }
     }
     public ObservableCollection<string> ProcessNames
     {
@@ -276,6 +280,8 @@ public sealed class ApplicationProxyProfile : ObservableModel
     {
         _executablePaths.CollectionChanged += ExecutablePaths_CollectionChanged;
         _processNames.CollectionChanged += ExecutablePaths_CollectionChanged;
+        // RowDescription shows the selected server's name, which resolves through this list.
+        AvailableServers.CollectionChanged += (_, _) => NotifyPropertyChanged(nameof(RowDescription));
     }
 
     public string Id { get => _id; set => Set(ref _id, value); }
@@ -305,6 +311,7 @@ public sealed class ApplicationProxyProfile : ObservableModel
             NotifyPropertyChanged();
             NotifyPropertyChanged(nameof(ExecutableName));
             NotifyPropertyChanged(nameof(MatchEntries));
+            NotifyPropertyChanged(nameof(RowDescription));
         }
     }
 
