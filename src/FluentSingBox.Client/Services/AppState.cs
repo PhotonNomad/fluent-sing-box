@@ -101,12 +101,6 @@ public sealed class AppState
         ScheduleSave();
     }
 
-    public void AddRule(RouteRuleProfile rule)
-    {
-        Settings.RoutingRules.Insert(0, rule);
-        ScheduleSave();
-    }
-
     public void RemoveServer(ServerProfile server)
     {
         Settings.Servers.Remove(server);
@@ -124,12 +118,6 @@ public sealed class AppState
         {
             if (rule.ServerId == server.Id) rule.ServerId = Settings.DefaultServerId;
         }
-        ScheduleSave();
-    }
-
-    public void RemoveRule(RouteRuleProfile rule)
-    {
-        if (!rule.IsBuiltIn) Settings.RoutingRules.Remove(rule);
         ScheduleSave();
     }
 

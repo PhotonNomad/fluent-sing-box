@@ -19,7 +19,6 @@ public sealed class SingBoxCoreService : IDisposable
     private NamedPipeServerStream? _controlPipe;
     private StreamReader? _pipeReader;
     private StreamWriter? _pipeWriter;
-    private AppSettingsData? _runningSettings;
     private string[] _runningTunNames = [];
     private CoreStatus _status;
     private readonly SemaphoreSlim _operationGate = new(1, 1);
@@ -39,26 +38,6 @@ public sealed class SingBoxCoreService : IDisposable
         finally { _operationGate.Release(); }
     }
 
-    public async Task RestartAsync(AppSettingsData settings)
-    {
-        await _operationGate.WaitAsync();
-        try
-        {
-            await ValidateAsync(settings);
-            var previous = _runningSettings;
-            Stop();
-            try { await StartGuardedAsync(settings); }
-            catch (Exception applyError)
-            {
-                if (previous is null) throw;
-                try { await StartGuardedAsync(previous); }
-                catch (Exception rollbackError) { throw new InvalidOperationException(Localization.Format("SingBoxCoreService_TheNewConfigurationFailedToStartAndThe", applyError.Message, rollbackError.Message), applyError); }
-                throw new InvalidOperationException(Localization.Get("SingBoxCoreService_TheNewConfigurationFailedToStartTheCore") + applyError.Message, applyError);
-            }
-        }
-        finally { _operationGate.Release(); }
-    }
-
     public async Task ShutdownAsync()
     {
         await _operationGate.WaitAsync();
@@ -67,7 +46,7 @@ public sealed class SingBoxCoreService : IDisposable
     }
 
     public async Task ValidateAsync(AppSettingsData settings)
-        => _ = await BuildValidatedConfigurationAsync(settings);
+        => await BuildValidatedConfigurationAsync(settings);
 
     // Prepare the exact next-start configuration without changing the running core.
     public async Task<string> BuildValidatedConfigurationAsync(AppSettingsData settings)
@@ -96,34 +75,6 @@ public sealed class SingBoxCoreService : IDisposable
         settings = JsonSerializer.Deserialize<AppSettingsData>(JsonSerializer.Serialize(settings))!;
         await _operationGate.WaitAsync();
         try { await StartGuardedAsync(settings); }
-        finally { _operationGate.Release(); }
-    }
-
-    public async Task CheckStartupAsync(AppSettingsData settings)
-    {
-        settings = JsonSerializer.Deserialize<AppSettingsData>(JsonSerializer.Serialize(settings))!;
-        await _operationGate.WaitAsync();
-        try
-        {
-            if (!string.IsNullOrWhiteSpace(settings.Configuration.ExternalFilePath) && !File.Exists(settings.Configuration.ExternalFilePath))
-                await ConfigurationFileService.EnsureAsync(settings);
-            var executable = await SingBoxCoreBundle.ResolveExecutablePathAsync(settings.SingBoxExecutablePath);
-            var directory = Path.Combine(AppPaths.DataDirectory, "sing-box");
-            Directory.CreateDirectory(directory);
-            var candidate = Path.Combine(directory, "config.preflight.json");
-            var supportsHttpClient = await DetectHttpClientSupportAsync(executable);
-            var configText = _configBuilder.Build(settings, Path.Combine(directory, "sing-box.log"), supportsHttpClient);
-            await File.WriteAllTextAsync(candidate, configText);
-            await CoreCommand.CheckAsync(executable, candidate);
-            await Task.Run(CoreProcessLease.Recover);
-            StartupPreflight.CheckResources(configText, settings.SystemProxyPort);
-            StartupPreflight.WriteReport("passed");
-        }
-        catch (Exception exception)
-        {
-            StartupPreflight.WriteReport("failed", LogReader.Redact(exception.Message, settings));
-            throw;
-        }
         finally { _operationGate.Release(); }
     }
 
@@ -168,7 +119,6 @@ public sealed class SingBoxCoreService : IDisposable
         if (!requiresElevation)
         {
             await StartCoreDirectlyAsync(executablePath, directory, logPath, settings.SystemProxyPort, ConfigurationComposer.NeedsListenerReadiness(configText));
-            _runningSettings = JsonSerializer.Deserialize<AppSettingsData>(JsonSerializer.Serialize(settings));
             return;
         }
 
@@ -205,11 +155,7 @@ public sealed class SingBoxCoreService : IDisposable
             _pipeReader = new StreamReader(_controlPipe, Encoding.UTF8, leaveOpen: true);
             _pipeWriter = new StreamWriter(_controlPipe, new UTF8Encoding(false), leaveOpen: true) { AutoFlush = true };
             var readiness = await _pipeReader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(15));
-            if (readiness == "READY")
-            {
-                _runningSettings = JsonSerializer.Deserialize<AppSettingsData>(JsonSerializer.Serialize(settings));
-                return;
-            }
+            if (readiness == "READY") return;
 
             var details = readiness?.StartsWith("ERROR ", StringComparison.Ordinal) == true
                 ? Encoding.UTF8.GetString(Convert.FromBase64String(readiness[6..]))

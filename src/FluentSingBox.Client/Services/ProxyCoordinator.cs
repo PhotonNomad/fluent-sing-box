@@ -55,16 +55,6 @@ public sealed class ProxyCoordinator(AppState state)
 
     public Task ApplyConfigurationChangesAsync() => state.SaveAsync();
 
-    public async Task SetGlobalTunEnabledAsync(bool enabled)
-    {
-        if (enabled && state.Settings.Configuration.NativeEnabled)
-            throw new InvalidOperationException(Localization.Get("ProxyCoordinator_TUNIsManagedByTheLegacyJSONConfiguration"));
-        var previous = state.Settings.GlobalTunEnabled;
-        state.Settings.GlobalTunEnabled = enabled;
-        try { await state.SaveAsync(); }
-        catch { state.Settings.GlobalTunEnabled = previous; throw; }
-    }
-
     public async Task SetApplicationProxyEnabledAsync(ApplicationProxyProfile profile, bool enabled)
     {
         if (enabled && state.Settings.Configuration.NativeEnabled)
@@ -81,10 +71,4 @@ public sealed class ProxyCoordinator(AppState state)
     }
 
     public Task RefreshApplicationProfileAsync(ApplicationProxyProfile profile) => state.SaveAsync();
-
-    public async Task SetApplicationServerAsync(ApplicationProxyProfile profile, string serverId)
-    {
-        profile.ServerId = serverId;
-        await state.SaveAsync();
-    }
 }

@@ -20,7 +20,6 @@ public sealed class ConfigurationOptions
     public string LogLevel { get; set; } = "info";
     public bool LogTimestamp { get; set; } = true;
     public bool CacheFileEnabled { get; set; } = true;
-    public bool StoreDns { get; set; }
     public bool SniffEnabled { get; set; } = true;
     public string TunStack { get; set; } = "mixed";
     public int TunMtu { get; set; } = 1500;
