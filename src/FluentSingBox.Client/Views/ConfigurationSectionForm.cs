@@ -58,13 +58,13 @@ internal sealed class ConfigurationSectionForm
             _document["dns"] ??= new JsonObject();
             var dns = _document["dns"]!.AsObject();
             _view.Children.Add(new TextBlock { Text = Localization.Get("Dns_DefaultNodeHelp"), TextWrapping = TextWrapping.Wrap });
-            AddCollection(Localization.Get("Schema_DnsServers"), dns, "servers", "DNSServer", "DNS_Servers", false);
-            AddCollection(Localization.Get("Schema_DnsRules"), dns, "rules", "DNSRule", "DNS_Rules", true);
+            AddCollection(Localization.Get("Schema_DnsServers"), dns, "servers", "DNSServer", "DNS_Servers", SchemaFormRole.DnsServer, false);
+            AddCollection(Localization.Get("Schema_DnsRules"), dns, "rules", "DNSRule", "DNS_Rules", SchemaFormRole.DnsRule, true);
             var properties = _schema.Properties(_schema.Definition("DNS"), dns);
             var ordered = new JsonObject();
             foreach (var key in new[] { "final", "strategy" })
                 if (properties.TryGetValue(key, out var property)) ordered[key] = property.DeepClone();
-            _options = new SchemaObjectForm(_schema, new JsonObject { ["properties"] = ordered }, dns, _document, "DNS");
+            _options = new SchemaObjectForm(_schema, new JsonObject { ["properties"] = ordered }, dns, new SchemaFormContext("DNS", SchemaFormRole.DnsGlobal, false, _document));
             _options.Changed += () => { ScheduleSave(); UpdateIpv6Hint(); };
             _view.Children.Add(_options.View);
             _view.Children.Add(_ipv6Hint!);
@@ -81,15 +81,15 @@ internal sealed class ConfigurationSectionForm
             }
             _document["route"] ??= new JsonObject();
             var route = _document["route"]!.AsObject();
-            AddCollection(Localization.Get("Schema_RouteRules"), route, "rules", "Rule", "Routing_Rules", true);
+            AddCollection(Localization.Get("Schema_RouteRules"), route, "rules", "Rule", "Routing_Rules", SchemaFormRole.RoutingRule, true);
             var properties = _schema.Properties(_schema.Definition("RouteOptions"), route);
             var objectProperties = new JsonObject();
             objectProperties["final"] = properties["final"].DeepClone();
             objectProperties["default_domain_resolver"] = properties["default_domain_resolver"].DeepClone();
-            _options = new SchemaObjectForm(_schema, new JsonObject { ["properties"] = objectProperties }, route, _document, "Routing");
+            _options = new SchemaObjectForm(_schema, new JsonObject { ["properties"] = objectProperties }, route, new SchemaFormContext("Routing", SchemaFormRole.RoutingGlobal, false, _document));
             _options.Changed += ScheduleSave;
             _view.Children.Add(_options.View);
-            AddCollection("rule_set", route, "rule_set", "RuleSet", "Routing_RuleSets", false);
+            AddCollection("rule_set", route, "rule_set", "RuleSet", "Routing_RuleSets", SchemaFormRole.RuleSet, false);
         }
     }
     private void ScheduleSave()
@@ -103,10 +103,10 @@ internal sealed class ConfigurationSectionForm
         try { _ipv6Hint!.Update(_options?.Read()["strategy"]?.ToString()); }
         catch (InvalidOperationException) { } // The save path reports invalid draft values.
     }
-    private void AddCollection(string title, JsonObject parent, string key, string definition, string id, bool rules)
+    private void AddCollection(string title, JsonObject parent, string key, string definition, string id, SchemaFormRole role, bool rules)
     {
         parent[key] ??= new JsonArray();
-        var form = new CollectionForm(this, title, parent, key, definition, id, rules);
+        var form = new CollectionForm(this, title, parent, key, definition, id, role, rules);
         _collections.Add(form); _view.Children.Add(form.View);
     }
     private void RefreshDnsServerReferences()
@@ -173,15 +173,16 @@ internal sealed class ConfigurationSectionForm
         private readonly JsonObject _parent;
         private readonly string _definition;
         private readonly string _id;
+        private readonly SchemaFormRole _role;
         private readonly bool _rules;
         private readonly List<Entry> _entries = [];
         private readonly StackPanel _rows = new() { Spacing = 2 };
         public string Key { get; }
         public StackPanel View { get; } = new() { Spacing = 2 };
         private sealed class Entry(JsonObject value, bool enabled) { public JsonObject Value = value; public bool Enabled = enabled; }
-        public CollectionForm(ConfigurationSectionForm owner, string title, JsonObject parent, string key, string definition, string id, bool rules)
+        public CollectionForm(ConfigurationSectionForm owner, string title, JsonObject parent, string key, string definition, string id, SchemaFormRole role, bool rules)
         {
-            _owner = owner; _parent = parent; Key = key; _definition = definition; _id = id; _rules = rules;
+            _owner = owner; _parent = parent; Key = key; _definition = definition; _id = id; _role = role; _rules = rules;
             foreach (var value in parent[key]!.AsArray().OfType<JsonObject>()) _entries.Add(new((JsonObject)value.DeepClone(), true));
             if (rules && App.State.Settings.Configuration.DisabledRules.TryGetValue(id, out var disabled))
                 foreach (var rule in disabled.OrderBy(item => item.Index)) _entries.Insert(Math.Min(rule.Index, _entries.Count), new(JsonNode.Parse(rule.Json)!.AsObject(), false));
@@ -241,8 +242,8 @@ internal sealed class ConfigurationSectionForm
                 foreach (var pair in _owner._schema.Properties(schema, value)) fields[pair.Key] = pair.Value.DeepClone();
                 schema = new JsonObject { ["properties"] = fields };
             }
-            var entryEditor = _rules || _id == "DNS_Servers";
-            var form = new SchemaObjectForm(_owner._schema, schema, value, _owner._document, _id + "_Editor", sparse: entryEditor);
+            var entryEditor = _rules || _role == SchemaFormRole.DnsServer;
+            var form = new SchemaObjectForm(_owner._schema, schema, value, new SchemaFormContext(_id + "_Editor", _role, entryEditor, _owner._document));
             var error = new InfoBar { Severity = InfoBarSeverity.Error, IsClosable = true };
             var panel = new StackPanel { Spacing = 8 }; panel.Children.Add(error); panel.Children.Add(form.View);
             var dialog = new ContentDialog { Title = Localization.Get("Schema_Edit"), Content = new ScrollViewer { Content = panel, MaxHeight = 550, VerticalScrollBarVisibility = ScrollBarVisibility.Auto }, PrimaryButtonText = Localization.Get("ProxyPage_Save"), CloseButtonText = Localization.Get("ProxyPage_Cancel"), XamlRoot = _owner._page.XamlRoot };

@@ -61,7 +61,7 @@ internal sealed class TunConfigurationForm
             var fields = new JsonObject();
             foreach (var key in new[] { "interface_name", "address", "mtu", "dns_mode", "dns_address", "auto_route", "strict_route" })
                 if (properties.TryGetValue(key, out var property)) fields[key] = property.DeepClone();
-            var form = new SchemaObjectForm(catalog, new JsonObject { ["properties"] = fields }, value, _document, "Proxy_Tun_" + _forms.Count);
+            var form = new SchemaObjectForm(catalog, new JsonObject { ["properties"] = fields }, value, new SchemaFormContext("Proxy_Tun_" + _forms.Count, SchemaFormRole.Tun, false, _document));
             var preferenceKey = value["tag"]?.ToString() ?? "untagged-" + _forms.Count;
             var prefer = new ToggleSwitch { IsOn = App.State.Settings.Configuration.TunPreferredRouteBackups.ContainsKey(preferenceKey), OnContent = Localization.Get("Common_On"), OffContent = Localization.Get("Common_Off") };
             AutomationProperties.SetAutomationId(prefer, "Proxy_Tun_" + _forms.Count + "_PreferRoute");

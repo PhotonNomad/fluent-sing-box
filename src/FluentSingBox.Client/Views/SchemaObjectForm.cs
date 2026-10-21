@@ -13,6 +13,7 @@ internal sealed class SchemaObjectForm
 {
     private readonly ConfigurationSchema _catalog;
     private readonly JsonObject _schema;
+    private readonly SchemaFormContext _context;
     private readonly JsonObject _document;
     private readonly string _id;
     private readonly int _depth;
@@ -24,10 +25,10 @@ internal sealed class SchemaObjectForm
     public event Action? Changed;
     public StackPanel View { get; } = new() { Spacing = 2 };
     private readonly InfoBar _error = new() { Severity = InfoBarSeverity.Error, IsClosable = true };
-    public SchemaObjectForm(ConfigurationSchema catalog, JsonObject schema, JsonObject value, JsonObject document, string id, int depth = 0, bool sparse = false)
+    public SchemaObjectForm(ConfigurationSchema catalog, JsonObject schema, JsonObject value, SchemaFormContext context, int depth = 0)
     {
-        _catalog = catalog; _schema = schema; _value = (JsonObject)value.DeepClone(); _document = document; _id = id; _depth = depth;
-        _sparse = sparse; _visible = value.Select(pair => pair.Key).ToHashSet(StringComparer.Ordinal);
+        _catalog = catalog; _schema = schema; _value = (JsonObject)value.DeepClone(); _context = context; _document = context.Document; _id = context.Id; _depth = depth;
+        _sparse = context.Sparse; _visible = value.Select(pair => pair.Key).ToHashSet(StringComparer.Ordinal);
         Render();
     }
     public JsonObject Read()
@@ -54,13 +55,13 @@ internal sealed class SchemaObjectForm
         _readers.Clear(); View.Children.Clear(); View.Children.Add(_error);
         var fields = _catalog.Properties(_schema, _value);
         var required = _catalog.Required(_schema, _value);
-        if (_id == "Routing_RuleSets_Editor")
+        if (_context.Role == SchemaFormRole.RuleSet)
         {
             required.Add("tag");
             if (_value["type"]?.ToString() is "local" or "remote") required.Add(_value["type"]!.ToString() == "local" ? "path" : "url");
         }
         if (fields.ContainsKey("outbound")) required.Add("outbound");
-        if (_id.StartsWith("DNS_Rules_", StringComparison.Ordinal) && fields.ContainsKey("server")) required.Add("server");
+        if (_context.Role == SchemaFormRole.DnsRule && fields.ContainsKey("server")) required.Add("server");
         foreach (var selector in new[] { "type", "action" })
         {
             var values = _catalog.Choices(_schema, selector).Where(item => item.Length > 0).ToArray();
@@ -134,7 +135,7 @@ internal sealed class SchemaObjectForm
     private FrameworkElement Field(string key, JsonObject schema)
     {
         var current = _value[key];
-        if (_id == "Routing" && key == "default_domain_resolver")
+        if (_context.Role == SchemaFormRole.RoutingGlobal && key == "default_domain_resolver")
         {
             var directTags = (_document["dns"]?["servers"] as JsonArray)?.OfType<JsonObject>()
                 .Where(server => server["detour"] is null || server["detour"]?.ToString() == "direct")
@@ -155,7 +156,7 @@ internal sealed class SchemaObjectForm
             });
             return Card(key, combo);
         }
-        if (_id == "DNS" && key == "optimistic")
+        if (_context.Role == SchemaFormRole.DnsGlobal && key == "optimistic")
         {
             var enabled = (current is JsonObject optimistic ? optimistic["enabled"] : current)?.ToString().Equals("true", StringComparison.OrdinalIgnoreCase) == true;
             var toggle = new ToggleSwitch { IsOn = enabled, OnContent = Localization.Get("Common_On"), OffContent = Localization.Get("Common_Off") };
@@ -179,7 +180,7 @@ internal sealed class SchemaObjectForm
             AutomationProperties.SetAutomationId(expander, _id + "_" + key + "_Options");
             var enable = new ToggleSwitch { IsOn = current is JsonObject || current?.ToString() == "true", OnContent = Localization.Get("Common_On"), OffContent = Localization.Get("Common_Off") };
             AutomationProperties.SetAutomationId(enable, _id + "_" + key + "_Enabled");
-            var nested = new SchemaObjectForm(_catalog, objectSchema, current as JsonObject ?? new(), _document, _id + "_" + key, _depth + 1);
+            var nested = new SchemaObjectForm(_catalog, objectSchema, current as JsonObject ?? new(), _context.Nested(key), _depth + 1);
             var acceptsReference = variants.Any(item => item["type"]?.ToString() == "string");
             TextBox? referenceBox = null;
             if (acceptsReference)
@@ -206,8 +207,8 @@ internal sealed class SchemaObjectForm
         var enums = variants.SelectMany(item => (item["enum"] as JsonArray)?.Select(node => node!.ToString()) ?? []).Distinct().ToArray();
         var reference = schema["x-tag-reference"]?.ToString();
         if (reference is not null) enums = Tags(reference).ToArray();
-        var routeFinal = _id == "Routing" && key == "final";
-        var dnsFinal = _id == "DNS" && key == "final";
+        var routeFinal = _context.Role == SchemaFormRole.RoutingGlobal && key == "final";
+        var dnsFinal = _context.Role == SchemaFormRole.DnsGlobal && key == "final";
         var requiredFinal = routeFinal || dnsFinal;
         if ((enums.Length > 0 || requiredFinal) && !variants.Any(item => item["type"]?.ToString() == "array"))
         {
@@ -253,7 +254,7 @@ internal sealed class SchemaObjectForm
             if (simpleArray)
             {
                 var values = text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                if (_id == "Routing_RuleSets_Editor" && key == "tag" && values.Length == 1) { result[key] = values[0]; return; }
+                if (_context.Role == SchemaFormRole.RuleSet && key == "tag" && values.Length == 1) { result[key] = values[0]; return; }
                 result[key] = new JsonArray(values.Select(value => arrayItems!["type"]!.ToString() == "string" ? (JsonNode?)JsonValue.Create(value) : JsonValue.Create(long.Parse(value, CultureInfo.InvariantCulture))).ToArray());
             }
             else if (complex) result[key] = JsonNode.Parse(text);
