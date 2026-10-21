@@ -16,21 +16,15 @@ internal sealed class TunConfigurationForm
     private JsonObject _document = new();
     private string _source = "";
     private ToggleSwitch _enabled = null!;
-    private readonly Microsoft.UI.Dispatching.DispatcherQueueTimer _saveTimer;
-    private readonly SemaphoreSlim _saveGate = new(1, 1);
-    private int _revision;
-    private int _savedRevision;
+    private readonly AutoSaveController _autoSave;
     private Task _loadTask = Task.CompletedTask;
     public TunConfigurationForm(Page page, StackPanel view)
     {
         _page = page; _view = view;
-        _saveTimer = page.DispatcherQueue.CreateTimer();
-        _saveTimer.Interval = TimeSpan.FromMilliseconds(500);
-        _saveTimer.IsRepeating = false;
-        _saveTimer.Tick += async (_, _) => await SaveAsync();
+        _autoSave = new AutoSaveController(page.DispatcherQueue, TimeSpan.FromMilliseconds(500), SaveAsync);
         AutomationProperties.SetAutomationId(_status, "Proxy_Tun_Status");
         page.Loaded += async (_, _) => await (_loadTask = LoadAsync());
-        page.Unloaded += (_, _) => _saveTimer.Stop();
+        page.Unloaded += (_, _) => _autoSave.Stop();
     }
     public async Task LoadAsync()
     {
@@ -117,24 +111,16 @@ internal sealed class TunConfigurationForm
         await App.CoreService.RunStoppedMaintenanceAsync(() => TunAdapterCleanup.RemoveAsync(targets));
         _status.Message = Localization.Get("TunCleanup_Done"); _status.Severity = InfoBarSeverity.Success; _status.IsOpen = true;
     }
-    private void ScheduleSave()
-    {
-        _revision++;
-        _saveTimer.Stop(); _saveTimer.Start();
-    }
+    private void ScheduleSave() => _autoSave.Schedule();
     public async Task<bool> FlushPendingChangesAsync()
     {
-        _saveTimer.Stop();
+        _autoSave.Stop();
         await _loadTask;
-        _saveTimer.Stop();
-        return await SaveAsync();
+        return await _autoSave.FlushAsync();
     }
 
     private async Task<bool> SaveAsync()
     {
-        await _saveGate.WaitAsync();
-        var revision = _revision;
-        if (revision == _savedRevision) { _saveGate.Release(); return true; }
         try
         {
             _page.IsEnabled = false;
@@ -186,19 +172,17 @@ internal sealed class TunConfigurationForm
             for (var index = 0; index < edits.Length; index++) _forms[index].Form.UpdatePreservedFields(edits[index]);
             _source = await File.ReadAllTextAsync(ConfigurationFileService.FilePath);
             await App.State.SavePreferencesAsync(configurationCommitted: true);
-            _savedRevision = revision;
             _status.Message = Localization.Get("Schema_Saved"); _status.Severity = InfoBarSeverity.Success; _status.IsOpen = true;
             return true;
         }
         catch (Exception exception)
         {
             _document = JsonNode.Parse(_source)!.AsObject();
-            _savedRevision = _revision;
             Render();
             Error(exception);
             return false;
         }
-        finally { _page.IsEnabled = true; _saveGate.Release(); }
+        finally { _page.IsEnabled = true; }
     }
     private void Error(Exception exception) { _status.Message = LogReader.Redact(exception.Message, App.State.Settings); _status.Severity = InfoBarSeverity.Error; _status.IsOpen = true; }
 }

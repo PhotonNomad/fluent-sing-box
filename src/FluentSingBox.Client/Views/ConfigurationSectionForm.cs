@@ -20,9 +20,7 @@ internal sealed class ConfigurationSectionForm
     private string _source = "";
     private SchemaObjectForm? _options;
     private readonly List<CollectionForm> _collections = [];
-    private readonly Microsoft.UI.Dispatching.DispatcherQueueTimer _saveTimer;
-    private readonly SemaphoreSlim _saveGate = new(1, 1);
-    private bool _pendingSave;
+    private readonly AutoSaveController _autoSave;
     private Task _loadTask = Task.CompletedTask;
     private readonly Ipv6ConnectivityHint? _ipv6Hint;
     private string Prefix => _dns ? "DNS" : "Routing";
@@ -30,11 +28,8 @@ internal sealed class ConfigurationSectionForm
     {
         _page = page; _view = view; _dns = dns;
         if (dns) _ipv6Hint = new Ipv6ConnectivityHint("DNS_IPv6");
-        _saveTimer = page.DispatcherQueue.CreateTimer();
-        _saveTimer.Interval = TimeSpan.FromMilliseconds(500);
-        _saveTimer.IsRepeating = false;
-        _saveTimer.Tick += async (_, _) => await SaveAsync();
-        page.Unloaded += (_, _) => _saveTimer.Stop();
+        _autoSave = new AutoSaveController(page.DispatcherQueue, TimeSpan.FromMilliseconds(500), SaveAsync);
+        page.Unloaded += (_, _) => _autoSave.Stop();
         AutomationProperties.SetAutomationId(_status, Prefix + "_Status");
         page.Loaded += async (_, _) => await (_loadTask = LoadAsync());
     }
@@ -99,9 +94,8 @@ internal sealed class ConfigurationSectionForm
     }
     private void ScheduleSave()
     {
-        _pendingSave = true;
         _status.IsOpen = false;
-        _saveTimer.Stop(); _saveTimer.Start();
+        _autoSave.Schedule();
     }
     private void UpdateIpv6Hint()
     {
@@ -123,17 +117,13 @@ internal sealed class ConfigurationSectionForm
     }
     public async Task<bool> FlushPendingChangesAsync()
     {
-        _saveTimer.Stop();
+        _autoSave.Stop();
         await _loadTask;
-        _saveTimer.Stop();
-        return await SaveAsync();
+        return await _autoSave.FlushAsync();
     }
 
     private async Task<bool> SaveAsync()
     {
-        await _saveGate.WaitAsync();
-        if (!_pendingSave) { _saveGate.Release(); return true; }
-        _pendingSave = false;
         try
         {
             _page.IsEnabled = false;
@@ -161,14 +151,13 @@ internal sealed class ConfigurationSectionForm
         }
         catch (Exception exception)
         {
-            _pendingSave = false;
             _document = JsonNode.Parse(_source)!.AsObject();
             Render();
             UpdateIpv6Hint();
             ShowError(exception);
             return false;
         }
-        finally { _page.IsEnabled = true; _saveGate.Release(); }
+        finally { _page.IsEnabled = true; }
     }
     private void ShowError(Exception exception) { _status.Message = LogReader.Redact(exception.Message, App.State.Settings); _status.Severity = InfoBarSeverity.Error; _status.IsOpen = true; }
     private SettingsCard Action(string title, string id, Func<Task> action)

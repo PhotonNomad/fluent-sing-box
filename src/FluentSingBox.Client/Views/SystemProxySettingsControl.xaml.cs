@@ -8,42 +8,28 @@ namespace FluentSingBox.Client.Views;
 public sealed partial class SystemProxySettingsControl : UserControl
 {
     private bool _loading;
-    private readonly Microsoft.UI.Dispatching.DispatcherQueueTimer _saveTimer;
-    private bool _pendingSave;
-    private readonly SemaphoreSlim _saveGate = new(1, 1);
-    public async Task<bool> FlushPendingChangesAsync()
-    {
-        _saveTimer.Stop();
-        return await AutoSaveAsync();
-    }
+    private readonly AutoSaveController _autoSave;
+    public Task<bool> FlushPendingChangesAsync() => _autoSave.FlushAsync();
 
     public SystemProxySettingsControl()
     {
         InitializeComponent();
-        _saveTimer = DispatcherQueue.CreateTimer();
-        _saveTimer.Interval = TimeSpan.FromMilliseconds(800);
-        _saveTimer.IsRepeating = false;
-        _saveTimer.Tick += async (_, _) => await AutoSaveAsync();
+        _autoSave = new AutoSaveController(DispatcherQueue, TimeSpan.FromMilliseconds(800), AutoSaveAsync);
         PortTextBox.TextChanged += (_, _) => ScheduleSave();
         UsernameTextBox.TextChanged += (_, _) => ScheduleSave();
         PasswordInput.PasswordChanged += (_, _) => ScheduleSave();
         Loaded += (_, _) => LoadFromSettings();
-        Unloaded += async (_, _) => { _saveTimer.Stop(); await AutoSaveAsync(); };
+        Unloaded += async (_, _) => await _autoSave.FlushAsync();
     }
 
     private void ScheduleSave()
     {
         if (_loading) return;
-        _pendingSave = true;
-        _saveTimer.Stop();
-        _saveTimer.Start();
+        _autoSave.Schedule();
     }
 
     private async Task<bool> AutoSaveAsync()
     {
-        await _saveGate.WaitAsync();
-        if (_loading || !_pendingSave) { _saveGate.Release(); return true; }
-        _pendingSave = false;
         _loading = true;
         IsEnabled = false;
         try
@@ -62,7 +48,7 @@ public sealed partial class SystemProxySettingsControl : UserControl
             StatusMessage.IsOpen = true;
             return false;
         }
-        finally { _loading = false; IsEnabled = true; _saveGate.Release(); }
+        finally { _loading = false; IsEnabled = true; }
     }
 
     private void LoadFromSettings()
