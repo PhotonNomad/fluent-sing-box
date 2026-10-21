@@ -12,6 +12,12 @@ public sealed class AppState
     private string _settingsPath = string.Empty;
     private AppSettingsData? _committedSettings;
     private bool _restoring;
+    private static readonly TimeSpan SaveDebounce = TimeSpan.FromMilliseconds(400);
+    private readonly object _scheduleLock = new();
+    private CancellationTokenSource? _debounce;
+    private Task _drain = Task.CompletedTask;
+    private bool _draining;
+    private bool _dirty;
 
     public static AppState Current { get; } = new();
     public AppSettingsData Settings { get; private set; } = new();
@@ -81,7 +87,7 @@ public sealed class AppState
         }
         Settings.DefaultServerId ??= server.Id;
         server.IsDefault = server.Id == Settings.DefaultServerId;
-        _ = SaveObservedAsync();
+        ScheduleSave();
     }
 
     public void AddApplication(ApplicationProxyProfile profile)
@@ -92,13 +98,13 @@ public sealed class AppState
             profile.ServerId = Settings.DefaultServerId ?? Settings.Servers.FirstOrDefault()?.Id ?? string.Empty;
         }
         Settings.Applications.Add(profile);
-        _ = SaveObservedAsync();
+        ScheduleSave();
     }
 
     public void AddRule(RouteRuleProfile rule)
     {
         Settings.RoutingRules.Insert(0, rule);
-        _ = SaveObservedAsync();
+        ScheduleSave();
     }
 
     public void RemoveServer(ServerProfile server)
@@ -118,19 +124,19 @@ public sealed class AppState
         {
             if (rule.ServerId == server.Id) rule.ServerId = Settings.DefaultServerId;
         }
-        _ = SaveObservedAsync();
+        ScheduleSave();
     }
 
     public void RemoveRule(RouteRuleProfile rule)
     {
         if (!rule.IsBuiltIn) Settings.RoutingRules.Remove(rule);
-        _ = SaveObservedAsync();
+        ScheduleSave();
     }
 
     public void RemoveApplication(ApplicationProxyProfile profile)
     {
         Settings.Applications.Remove(profile);
-        _ = SaveObservedAsync();
+        ScheduleSave();
     }
 
     public ServerProfile? FindServer(string? id) => Settings.Servers.FirstOrDefault(server => server.Id == id);
@@ -143,7 +149,7 @@ public sealed class AppState
         {
             if (string.IsNullOrWhiteSpace(app.ServerId)) app.ServerId = server.Id;
         }
-        _ = SaveObservedAsync();
+        ScheduleSave();
     }
 
     public async Task SaveAsync()
@@ -219,7 +225,7 @@ public sealed class AppState
             {
                 foreach (INotifyPropertyChanged item in args.NewItems) Observe(item);
             }
-            _ = SaveObservedAsync();
+            ScheduleSave();
         }
         collection.CollectionChanged += Changed;
         _removeCollectionObservers.Add(() => collection.CollectionChanged -= Changed);
@@ -235,14 +241,82 @@ public sealed class AppState
         if (_observed.Remove(item)) item.PropertyChanged -= ObservedPropertyChanged;
     }
 
-    private void ObservedPropertyChanged(object? sender, PropertyChangedEventArgs args) => _ = SaveObservedAsync();
+    private void ObservedPropertyChanged(object? sender, PropertyChangedEventArgs args) => ScheduleSave();
 
-    // Model notifications cannot await persistence; report failures instead of dropping tasks.
-    private async Task SaveObservedAsync()
+    // Model notifications cannot await persistence. Changes are debounced so one UI edit
+    // (or a loop of property writes) triggers a single configuration commit, and only one
+    // commit runs at a time; edits made during a commit schedule at most one more.
+    private void ScheduleSave()
     {
         if (_restoring) return;
-        // Coalesce the multiple property notifications belonging to one UI edit.
+        CancellationToken token;
+        lock (_scheduleLock)
+        {
+            _dirty = true;
+            _debounce?.Cancel();
+            _debounce = new CancellationTokenSource();
+            token = _debounce.Token;
+        }
+        _ = DebouncedSaveAsync(token);
+    }
+
+    private async Task DebouncedSaveAsync(CancellationToken token)
+    {
+        try { await Task.Delay(SaveDebounce, token); }
+        catch (OperationCanceledException) { return; }
+        await DrainSavesAsync();
+    }
+
+    // Cancels the debounce and waits until every pending change has been committed.
+    // Failures are reported through BackgroundSaveFailed, never thrown.
+    public Task FlushPendingConfigurationAsync()
+    {
+        lock (_scheduleLock) { _debounce?.Cancel(); }
+        return DrainSavesAsync();
+    }
+
+    private Task DrainSavesAsync()
+    {
+        lock (_scheduleLock)
+        {
+            if (!_draining)
+            {
+                _draining = true;
+                _drain = DrainLoopAsync();
+            }
+            return _drain;
+        }
+    }
+
+    private async Task DrainLoopAsync()
+    {
+        // Started under _scheduleLock; leave it before running any save code.
         await Task.Yield();
+        try
+        {
+            while (true)
+            {
+                lock (_scheduleLock)
+                {
+                    if (!_dirty)
+                    {
+                        _draining = false;
+                        return;
+                    }
+                    _dirty = false;
+                }
+                await SaveObservedAsync();
+            }
+        }
+        catch
+        {
+            // Only failure reporting itself can reach here; never leave later saves stuck.
+            lock (_scheduleLock) { _draining = false; }
+        }
+    }
+
+    private async Task SaveObservedAsync()
+    {
         try { await SaveAsync(); }
         catch (Exception exception)
         {
@@ -254,7 +328,8 @@ public sealed class AppState
                     $"[{DateTimeOffset.Now:O}] {message}\n");
             }
             catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
-            BackgroundSaveFailed?.Invoke(message);
+            try { BackgroundSaveFailed?.Invoke(message); }
+            catch { }
         }
     }
 }
