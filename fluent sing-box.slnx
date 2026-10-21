@@ -1,14 +1,16 @@
 <Solution>
   <Configurations>
-    <BuildType Name="Debug" />
-    <BuildType Name="Release" />
     <Platform Name="x64" />
   </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/FluentSingBox.Configuration/FluentSingBox.Configuration.csproj" />
+    <Project Path="src/FluentSingBox.Updater/FluentSingBox.Updater.csproj" />
+    <Project Path="src/FluentSingBox.Updates/FluentSingBox.Updates.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FluentSingBox.Tests/FluentSingBox.Tests.csproj" />
+  </Folder>
   <Project Path="src/FluentSingBox.Client/fluent sing-box.csproj">
-    <BuildType Solution="Debug|x64" Project="Debug" />
-    <BuildType Solution="Release|x64" Project="Release" />
-    <Platform Solution="*|x64" Project="x64" />
+    <Platform Project="x64" />
   </Project>
-  <Project Path="src/FluentSingBox.Configuration/FluentSingBox.Configuration.csproj" />
-  <Project Path="tests/FluentSingBox.Tests/FluentSingBox.Tests.csproj" />
 </Solution>
