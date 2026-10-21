@@ -48,6 +48,27 @@ internal static class ShutdownCoordinator
         catch (Exception exception) { RecordExitFailure("settings-save", exception); }
     }
 
+    // Session end (logoff, shutdown, Restart Manager): the same release order as a normal
+    // exit, but synchronous, because the process may be ended as soon as this returns.
+    // Pending configuration is not regenerated here (that runs sing-box check); the model
+    // itself is persisted by the preference save, with a bounded wait.
+    public static void EndSession()
+    {
+        try { WindowsProxyService.Restore(App.State.Settings); }
+        catch (Exception exception) { RecordExitFailure("session-end-proxy-restore", exception); }
+        try { App.CoreService.Stop(); }
+        catch (Exception exception) { RecordExitFailure("session-end-core-stop", exception); }
+        App.State.Settings.CoreOnlyEnabled = false;
+        App.State.Settings.SystemProxyEnabled = false;
+        try
+        {
+            // Off the UI thread so the save does not wait on this blocked dispatcher.
+            if (!Task.Run(() => App.State.SavePreferencesAsync()).Wait(TimeSpan.FromSeconds(3)))
+                RecordExitFailure("session-end-settings-save", new TimeoutException("Saving settings did not finish within 3 seconds."));
+        }
+        catch (Exception exception) { RecordExitFailure("session-end-settings-save", exception); }
+    }
+
     public static void RecordExitFailure(string stage, Exception exception) =>
         DiagnosticsLog.Write(DiagnosticsCategory.ExitCleanup, $"{stage}: {LogReader.Redact(exception.ToString(), App.State.Settings)}");
 

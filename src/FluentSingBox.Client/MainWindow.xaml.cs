@@ -19,6 +19,7 @@ public sealed partial class MainWindow : Window
     private readonly TaskCompletionSource<XamlRoot> _xamlRootReady = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly CoreHealthMonitor _healthMonitor;
     private readonly UpdateNotificationPresenter _updateNotifications;
+    private readonly SessionEndHandler? _sessionEnd;
     private WindowLifecycle _lifecycle;
     private bool _coreSwitchBusy;
     private TrayIcon? _trayIcon;
@@ -51,6 +52,22 @@ public sealed partial class MainWindow : Window
         _updateNotifications = new UpdateNotificationPresenter(AvailableUpdate, () => _trayIcon);
         _healthMonitor = new CoreHealthMonitor(() => _coreSwitchBusy, UpdateCoreSwitch, ShowRecoveryMessage);
         _healthMonitor.Start();
+        try { _sessionEnd = new SessionEndHandler(WinRT.Interop.WindowNative.GetWindowHandle(this), EndSession); }
+        catch (Exception exception) { ShutdownCoordinator.RecordExitFailure("session-end-hook", exception); }
+    }
+
+    // Logoff, shutdown or a Restart Manager close: release the proxy and core before the
+    // process is ended. A normal exit already in progress does its own cleanup.
+    private void EndSession()
+    {
+        if (_lifecycle != WindowLifecycle.Running) return;
+        _lifecycle = WindowLifecycle.ShuttingDown;
+        App.ProxyCoordinator.BeginShutdown();
+        _healthMonitor.Stop();
+        ShutdownCoordinator.EndSession();
+        _lifecycle = WindowLifecycle.ShutDown;
+        // A Restart Manager close expects the app to exit; at logoff the process ends anyway.
+        DispatcherQueue.TryEnqueue(Close);
     }
 
     private void ShowRecoveryMessage(string message)
@@ -380,6 +397,7 @@ public sealed partial class MainWindow : Window
         App.State.BackgroundSaveFailed -= BackgroundSaveFailed;
         _trayIcon?.Dispose();
         _trayIcon = null;
+        _sessionEnd?.Dispose();
         _xamlRootReady.TrySetCanceled();
         _healthMonitor.Stop();
         if (_lifecycle != WindowLifecycle.ShutDown)
