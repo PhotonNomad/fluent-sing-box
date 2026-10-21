@@ -41,14 +41,13 @@ public static class DnsCachePolicy
         var cache = Path.Combine(DirectoryPath, "cache.db");
         if (File.Exists(cache)) File.Delete(cache);
         File.Delete(PendingPath);
-        File.AppendAllText(Path.Combine(DirectoryPath, "dns-policy.log"), $"{DateTimeOffset.Now:O} DNS cache cleared before core start.\n");
+        DiagnosticsLog.Write(DiagnosticsCategory.DnsPolicy, "DNS cache cleared before core start.");
     }
 
     public static void LogStrategy(AppSettingsData settings, string json)
     {
         var effective = JsonNode.Parse(json)?["dns"]?["strategy"]?.ToString();
         if (effective is null) return;
-        File.AppendAllText(Path.Combine(DirectoryPath, "dns-policy.log"),
-            $"{DateTimeOffset.Now:O} DNS strategy={effective}.\n");
+        DiagnosticsLog.Write(DiagnosticsCategory.DnsPolicy, $"DNS strategy={effective}.");
     }
 }

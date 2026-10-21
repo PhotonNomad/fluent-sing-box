@@ -193,12 +193,7 @@ public static class ConfigurationFileService
         catch (Exception cleanupError) when (cleanupError is IOException or UnauthorizedAccessException)
         {
             // Cleanup must not mask the import outcome or keep the shared gate locked.
-            try
-            {
-                File.AppendAllText(Path.Combine(AppPaths.DataDirectory, "configuration-cleanup.log"),
-                    $"[{DateTimeOffset.Now:O}] {LogReader.Redact(cleanupError.Message, settings)}\n");
-            }
-            catch (Exception logError) when (logError is IOException or UnauthorizedAccessException) { }
+            DiagnosticsLog.Write(DiagnosticsCategory.ConfigurationCleanup, LogReader.Redact(cleanupError.Message, settings));
         }
     }
 

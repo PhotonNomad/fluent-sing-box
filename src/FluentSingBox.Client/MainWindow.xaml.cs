@@ -376,11 +376,7 @@ public sealed partial class MainWindow : Window
         await ShutdownAndCloseAsync();
     }
 
-    private static void RecordUpdateTransition(string stage)
-    {
-        Directory.CreateDirectory(Path.Combine(AppPaths.DataDirectory, "updates"));
-        File.AppendAllText(Path.Combine(AppPaths.DataDirectory, "updates", "handoff.log"), $"{DateTimeOffset.UtcNow:O} {stage}\n");
-    }
+    private static void RecordUpdateTransition(string stage) => DiagnosticsLog.Write(DiagnosticsCategory.UpdateHandoff, stage);
 
     private void ApplicationUpdateChanged() => DispatcherQueue.TryEnqueue(() =>
     {
@@ -425,17 +421,8 @@ public sealed partial class MainWindow : Window
         RootNavigationView.SelectedItem = SettingsNavigationItem;
     }
 
-    private static void RecordExitFailure(string stage, Exception exception)
-    {
-        try
-        {
-            Directory.CreateDirectory(AppPaths.DataDirectory);
-            File.AppendAllText(Path.Combine(AppPaths.DataDirectory, "exit-cleanup.log"),
-                $"[{DateTimeOffset.Now:O}] {stage}: {LogReader.Redact(exception.ToString(), App.State.Settings)}\n");
-        }
-        catch (IOException) { }
-        catch (UnauthorizedAccessException) { }
-    }
+    private static void RecordExitFailure(string stage, Exception exception) =>
+        DiagnosticsLog.Write(DiagnosticsCategory.ExitCleanup, $"{stage}: {LogReader.Redact(exception.ToString(), App.State.Settings)}");
 
     private void MainWindow_Closed(object sender, WindowEventArgs args)
     {

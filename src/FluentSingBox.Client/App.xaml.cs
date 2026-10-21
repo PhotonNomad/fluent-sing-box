@@ -16,15 +16,7 @@ public sealed partial class App : Application
     {
         InitializeComponent();
         UnhandledException += (_, eventArgs) =>
-        {
-            try
-            {
-                Directory.CreateDirectory(AppPaths.DataDirectory);
-                File.AppendAllText(Path.Combine(AppPaths.DataDirectory, "client-errors.log"), $"[{DateTimeOffset.Now:O}] {LogReader.Redact(eventArgs.Exception.ToString(), State.Settings)}\n");
-            }
-            catch (IOException) { }
-            catch (UnauthorizedAccessException) { }
-        };
+            DiagnosticsLog.Write(DiagnosticsCategory.ClientErrors, LogReader.Redact(eventArgs.Exception.ToString(), State.Settings));
     }
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
@@ -64,7 +56,7 @@ public sealed partial class App : Application
             try { await AppUpdateService.Current.InitializeAsync(); }
             catch (Exception error)
             {
-                File.AppendAllText(Path.Combine(AppPaths.DataDirectory, "update-startup.log"), LogReader.Redact(error.Message, State.Settings) + "\n");
+                DiagnosticsLog.Write(DiagnosticsCategory.UpdateStartup, LogReader.Redact(error.Message, State.Settings));
             }
         }
         catch (Exception exception)

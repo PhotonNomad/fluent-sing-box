@@ -272,14 +272,6 @@ public sealed class AppUpdateService
         using var process = Process.Start(start) ?? throw new InvalidOperationException("Cannot launch updater.");
     }
 
-    private void Log(Exception error)
-    {
-        try
-        {
-            Directory.CreateDirectory(Root);
-            File.AppendAllText(Path.Combine(Root, "update.log"), $"{DateTimeOffset.UtcNow:O} {LogReader.Redact(error.Message, App.State.Settings)}\n");
-        }
-        catch (IOException) { }
-        catch (UnauthorizedAccessException) { }
-    }
+    private static void Log(Exception error) =>
+        DiagnosticsLog.Write(DiagnosticsCategory.Update, LogReader.Redact(error.Message, App.State.Settings));
 }

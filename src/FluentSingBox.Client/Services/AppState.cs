@@ -309,13 +309,7 @@ public sealed class AppState
         catch (Exception exception)
         {
             var message = LogReader.Redact(exception.Message, Settings);
-            try
-            {
-                Directory.CreateDirectory(AppPaths.DataDirectory);
-                await File.AppendAllTextAsync(Path.Combine(AppPaths.DataDirectory, "settings-save.log"),
-                    $"[{DateTimeOffset.Now:O}] {message}\n");
-            }
-            catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
+            DiagnosticsLog.Write(DiagnosticsCategory.SettingsSave, message);
             try { BackgroundSaveFailed?.Invoke(message); }
             catch { }
         }
