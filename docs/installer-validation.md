@@ -9,9 +9,11 @@
 
 输出 `artifacts/installers/<版本>/FluentSingBoxUserSetup-<版本>-x64.exe/.msi` 与 `FluentSingBoxSetup-<版本>-x64.exe/.msi`。默认推荐 UserSetup EXE；MSI 提供给需要直接部署的用户。两个范围不能共存，切换范围前卸载旧包，数据保留。EXE 包含 MSI，两者都携带 .NET/WinUI，不要求另装 .NET。自包含运行时通过发布新版应用更新。
 
+安装、升级或卸载时，如果 fluent sing-box 仍在运行（包括只在托盘中），安装程序会提示从托盘图标选择“退出”，再点“重试”；点“中止”取消安装。Restart Manager 只用于按路径检测文件占用，不会自动关闭应用，以免跳过系统代理恢复和核心停止。注销、关机等会话结束时，应用会同步完成同样的清理。
+
 EXE 首页的“Options / 选项”提供安装位置文本框与“Browse / 浏览”；可以输入或选择目录，确定后回到安装首页。MSI 使用独立的目录选择页。用户包默认 LocalAppData/Programs/fluent sing-box，全机包默认 Program Files/fluent sing-box。EXE 的 InstallFolder 映射到 MSI 的 BOOTSTRAPPERINSTALLFOLDER；没有明确更改默认位置的升级会复用既有安装路径，明确选择新位置时优先采用该位置。这是程序文件目录，节点配置仍使用现有用户数据目录。实际位置迁移需要客体验收。
 
-当前版本以 `release.json` 为准；源码已准备 `0.1.15`，不代表该版本已经发布至 GitHub。`-Version` 同时设置程序集、MSI、Burn、安装包内 release.json 和资产名。固定 GUID 属于产品身份，不可随发布更改。打包从固定 Release 目录复制到独立 staging，不收集本机用户数据或 portable.txt。
+当前版本以 `release.json` 为准；源码已准备 `0.1.16`，不代表该版本已经发布至 GitHub。`-Version` 同时设置程序集、MSI、Burn、安装包内 release.json 和资产名。固定 GUID 属于产品身份，不可随发布更改。打包从固定 Release 目录复制到独立 staging，不收集本机用户数据或 portable.txt。
 
 ## 正式签名
 
