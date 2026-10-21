@@ -11,7 +11,7 @@
 
 EXE 首页的“Options / 选项”提供安装位置文本框与“Browse / 浏览”；可以输入或选择目录，确定后回到安装首页。MSI 使用独立的目录选择页。用户包默认 LocalAppData/Programs/fluent sing-box，全机包默认 Program Files/fluent sing-box。EXE 的 InstallFolder 映射到 MSI 的 BOOTSTRAPPERINSTALLFOLDER；没有明确更改默认位置的升级会复用既有安装路径，明确选择新位置时优先采用该位置。这是程序文件目录，节点配置仍使用现有用户数据目录。实际位置迁移需要客体验收。
 
-当前版本以 `release.json` 为准；源码已准备 `0.1.14`，不代表该版本已经发布至 GitHub。`-Version` 同时设置程序集、MSI、Burn、安装包内 release.json 和资产名。固定 GUID 属于产品身份，不可随发布更改。打包从固定 Release 目录复制到独立 staging，不收集本机用户数据或 portable.txt。
+当前版本以 `release.json` 为准；源码已准备 `0.1.15`，不代表该版本已经发布至 GitHub。`-Version` 同时设置程序集、MSI、Burn、安装包内 release.json 和资产名。固定 GUID 属于产品身份，不可随发布更改。打包从固定 Release 目录复制到独立 staging，不收集本机用户数据或 portable.txt。
 
 ## 正式签名
 
