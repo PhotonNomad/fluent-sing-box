@@ -45,4 +45,6 @@
   <String Id="FilesInUseRetryButton" Value="Retry" />
   <String Id="FilesInUseIgnoreButton" Value="Continue" />
   <String Id="FilesInUseExitButton" Value="Cancel" />
+  <!-- Read by tools/Build-Installer.ps1 and passed to the MSI; not a theme string. -->
+  <String Id="AppRunningMessage" Value="fluent sing-box is running. Right-click the fluent sing-box icon in the notification area and choose Exit (this restores the system proxy and stops the core), then click Retry. Click Abort to cancel setup." />
 </WixLocalization>

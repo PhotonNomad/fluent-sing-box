@@ -35,6 +35,16 @@ function Sign-Artifact([string]$Path) {
     if ($taskCertificateHash -ne $taskSettings.publisherCertificateSha256) { throw "Signing certificate does not match release.json: $Path" }
 }
 function Escape-Xml([string]$Value) { [Security.SecurityElement]::Escape($Value) }
+function Get-InstallerString([string]$Culture, [string]$Id) {
+    $taskLoc = [xml](Get-Content -LiteralPath (Join-Path $taskRoot "installer/Strings.$Culture.wxl") -Raw -Encoding utf8)
+    $taskValue = ($taskLoc.WixLocalization.String | Where-Object Id -eq $Id).Value
+    if (!$taskValue) { throw "Missing installer string $Id in $Culture." }
+    $taskValue
+}
+# Shown by the MSI while fluent sing-box is running. The MSI database is single-byte
+# (1033), so it carries English; the bundle passes the Chinese text when its UI is Chinese.
+$taskAppRunningEnglish = Get-InstallerString 'en-US' 'AppRunningMessage'
+$taskAppRunningChinese = Get-InstallerString 'zh-CN' 'AppRunningMessage'
 function Get-Id([string]$Value) {
     $taskBytes = [Text.Encoding]::UTF8.GetBytes($Value.ToLowerInvariant())
     $taskHash = [Security.Cryptography.SHA256]::Create()
@@ -115,11 +125,17 @@ foreach ($taskScope in $taskScopes) {
     $taskDefaultFolder = if ($taskUser) { '[LocalAppDataFolder]Programs\fluent sing-box' } else { '[ProgramFiles64Folder]fluent sing-box' }
     $taskMainFileId = 'F' + (Get-Id 'file/fluent sing-box.exe')
     $taskWxs = @"
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Package Name="fluent sing-box" Manufacturer="PhotonNomad" Version="$Version" Language="1033" Scope="$taskInstallScope" UpgradeCode="$taskMsiUpgrade">
     <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." Schedule="afterInstallInitialize" />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
-    <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
+    <!-- Restart Manager detects files in use by path, but never shuts the app down:
+         closing it without its own exit cleanup would leave the system proxy and core behind. -->
+    <Property Id="MSIRESTARTMANAGERCONTROL" Value="DisableShutdown" />
+    <Property Id="FSBAPPRUNNINGMESSAGE" Value="$(Escape-Xml $taskAppRunningEnglish)" Secure="yes" />
+    <!-- The tray-hidden window is invisible to the FilesInUse dialog, so ask by process name
+         and wait until the user exits from the tray (Retry rechecks; Abort cancels setup). -->
+    <util:CloseApplication Id="RunningClient" Target="fluent sing-box.exe" Description="[FSBAPPRUNNINGMESSAGE]" PromptToContinue="yes" CloseMessage="no" EndSessionMessage="no" RebootPrompt="no" />
     <Property Id="ARPPRODUCTICON" Value="AppIcon" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/PhotonNomad/fluent-sing-box" />
     <Property Id="INSTALLFOLDER"><RegistrySearch Id="ExistingInstallPath" Root="$taskRegistry" Key="Software\PhotonNomad\FluentSingBox\Install" Name="Path" Type="raw" /></Property>
@@ -156,7 +172,7 @@ foreach ($taskScope in $taskScopes) {
     $taskSource = Join-Path $taskStage 'Product.wxs'
     Set-Content $taskSource $taskWxs -Encoding utf8
     $taskMsi = Join-Path $taskOutput "$taskBaseName.msi"
-    Invoke-Wix @('build',$taskSource,'-arch','x64','-ext','WixToolset.UI.wixext','-o',$taskMsi)
+    Invoke-Wix @('build',$taskSource,'-arch','x64','-ext','WixToolset.UI.wixext','-ext','WixToolset.Util.wixext','-o',$taskMsi)
     Sign-Artifact $taskMsi
     $taskBundleSource = Join-Path $taskStage 'Bundle.wxs'
     $taskBundle = @"
@@ -169,7 +185,7 @@ foreach ($taskScope in $taskScopes) {
       <Payload Name="2052\thm.wxl" SourceFile="$(Escape-Xml (Join-Path $taskRoot 'installer/Strings.zh-CN.wxl'))" />
     </BootstrapperApplication>
     <Variable Name="InstallFolder" Type="formatted" Value="$taskDefaultFolder" bal:Overridable="yes" />
-    <Chain><MsiPackage DisplayName="fluent sing-box" SourceFile="$(Escape-Xml $taskMsi)" Compressed="yes" Visible="no" bal:DisplayInternalUICondition="false"><MsiProperty Name="BOOTSTRAPPERINSTALLFOLDER" Value="[InstallFolder]" /></MsiPackage></Chain>
+    <Chain><MsiPackage DisplayName="fluent sing-box" SourceFile="$(Escape-Xml $taskMsi)" Compressed="yes" Visible="no" bal:DisplayInternalUICondition="false"><MsiProperty Name="BOOTSTRAPPERINSTALLFOLDER" Value="[InstallFolder]" /><MsiProperty Name="FSBAPPRUNNINGMESSAGE" Value="$(Escape-Xml $taskAppRunningChinese)" Condition="WixStdBALanguageId = 2052" /></MsiPackage></Chain>
   </Bundle>
 </Wix>
 "@

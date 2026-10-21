@@ -45,4 +45,6 @@
   <String Id="FilesInUseRetryButton" Value="重试" />
   <String Id="FilesInUseIgnoreButton" Value="继续" />
   <String Id="FilesInUseExitButton" Value="取消" />
+  <!-- Read by tools/Build-Installer.ps1 and passed to the MSI; not a theme string. -->
+  <String Id="AppRunningMessage" Value="fluent sing-box 正在运行。请右键单击通知区域中的 fluent sing-box 图标并选择“退出”（这会恢复系统代理并停止核心），然后单击“重试”。单击“中止”可取消安装。" />
 </WixLocalization>
