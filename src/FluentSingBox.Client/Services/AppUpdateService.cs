@@ -1,10 +1,7 @@
 using System.Diagnostics;
-using System.Net;
-using System.Net.Http;
 using System.Text.Json;
 using FluentSingBox.Updates;
 using Microsoft.Win32;
-using Windows.Networking.Connectivity;
 
 namespace FluentSingBox.Client.Services;
 
@@ -12,7 +9,7 @@ public sealed class AppUpdateService
 {
     public static AppUpdateService Current { get; } = new();
     private readonly SemaphoreSlim _gate = new(1, 1);
-    private readonly HttpClient _client = new() { Timeout = TimeSpan.FromMinutes(15) };
+    private readonly ReleaseClient _releases = new();
     private readonly CancellationTokenSource _lifetime = new();
     private ReleaseSettings? _settings;
     public UpdateState State { get; private set; } = new();
@@ -24,12 +21,11 @@ public sealed class AppUpdateService
     public bool Busy { get; private set; }
     public double Progress { get; private set; }
     public bool SigningConfigured => _settings?.PublisherCertificateSha256 is { Length: 64 } hash && hash.All(Uri.IsHexDigit);
-    public bool CheckAllowed => !PolicyDisabled("DisableUpdateChecks");
-    public bool DownloadAllowed => CheckAllowed && !PolicyDisabled("DisableAutomaticUpdateDownload");
-    public bool NotificationPolicyAllows => !PolicyDisabled("DisableNewUpdateNotification");
+    public bool CheckAllowed => !UpdatePolicy.IsDisabled("DisableUpdateChecks");
+    public bool DownloadAllowed => CheckAllowed && !UpdatePolicy.IsDisabled("DisableAutomaticUpdateDownload");
+    public bool NotificationPolicyAllows => !UpdatePolicy.IsDisabled("DisableNewUpdateNotification");
     public bool NotificationsAllowed => State.ShowNotifications && NotificationPolicyAllows;
-    private string Root => Path.Combine(AppPaths.DataDirectory, "updates");
-    private string StatePath => Path.Combine(Root, "state.json");
+    private static string Root => UpdateStateStore.Root;
     public string? InstallerPath => State.Release is { } r ? Path.Combine(Root, r.AssetName) : null;
 
     public async Task InitializeAsync()
@@ -37,7 +33,7 @@ public sealed class AppUpdateService
         _settings = JsonSerializer.Deserialize<ReleaseSettings>(await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "release.json")), UpdateProtocol.Json)
             ?? throw new InvalidDataException("Missing release settings.");
         UpdateProtocol.ParseVersion(_settings.Version);
-        _client.DefaultRequestHeaders.UserAgent.ParseAdd($"FluentSingBox/{_settings.Version}");
+        _releases.SetUserAgent(_settings.Version);
         if (!AppPaths.HasDataOverride && !File.Exists(Path.Combine(AppContext.BaseDirectory, "portable.txt")))
         {
             var marker = Path.Combine(AppContext.BaseDirectory, "install-scope.txt");
@@ -52,11 +48,7 @@ public sealed class AppUpdateService
                 }
             }
         }
-        if (File.Exists(StatePath))
-        {
-            try { State = JsonSerializer.Deserialize<UpdateState>(await File.ReadAllTextAsync(StatePath), UpdateProtocol.Json) ?? new(); }
-            catch (JsonException) { File.Copy(StatePath, StatePath + ".invalid-" + DateTimeOffset.UtcNow.ToUnixTimeSeconds(), true); State = new(); }
-        }
+        State = await UpdateStateStore.LoadAsync();
         try
         {
             if (State.Release is { } cached)
@@ -83,25 +75,6 @@ public sealed class AppUpdateService
         if (Scope is not null) _ = RunWorkerAsync();
     }
 
-    private static bool PolicyDisabled(string name)
-    {
-        foreach (var hive in new[] { RegistryHive.LocalMachine, RegistryHive.CurrentUser })
-        {
-            using var root = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
-            using var key = root.OpenSubKey(@"Software\Policies\PhotonNomad\FluentSingBox");
-            if (key?.GetValue(name) is int value && value == 1) return true;
-        }
-        return false;
-    }
-
-    private static bool CanDownloadOnNetwork(bool allowMetered)
-    {
-        if (allowMetered) return true;
-        var cost = NetworkInformation.GetInternetConnectionProfile()?.GetConnectionCost();
-        return cost is not null && cost.NetworkCostType == NetworkCostType.Unrestricted
-            && !cost.Roaming && !cost.OverDataLimit;
-    }
-
     private async Task RunWorkerAsync()
     {
         try
@@ -112,10 +85,10 @@ public sealed class AppUpdateService
             {
                 if (_manualUpdateGate.CurrentCount != 0 && State.AutoCheck && CheckAllowed && (State.LastCheckUtc is null || DateTimeOffset.UtcNow - State.LastCheckUtc >= TimeSpan.FromDays(1)))
                     await CheckAsync();
-                if (_manualUpdateGate.CurrentCount != 0 && State.AutoDownload && DownloadAllowed && State.Status == "readyToDownload" && CanDownloadOnNetwork(State.AllowMetered))
+                if (_manualUpdateGate.CurrentCount != 0 && State.AutoDownload && DownloadAllowed && State.Status == "readyToDownload" && UpdatePolicy.CanDownloadOnNetwork(State.AllowMetered))
                     await DownloadAsync();
                 if (_manualUpdateGate.CurrentCount != 0 && State.AutoInstall && DownloadAllowed && State.Status == "readyToInstall"
-                    && CanDownloadOnNetwork(false) && AutomaticInstallRequested is { } install)
+                    && UpdatePolicy.CanDownloadOnNetwork(false) && AutomaticInstallRequested is { } install)
                     await install();
             } while (await timer.WaitForNextTickAsync(_lifetime.Token));
         }
@@ -134,7 +107,7 @@ public sealed class AppUpdateService
             if (token is null) GitHubCredentialStore.Delete(Repository);
             else GitHubCredentialStore.Save(Repository, token);
             State.Release = null; State.Status = "idle"; State.Error = null; State.LastCheckUtc = null;
-            await UpdateProtocol.SaveAsync(StatePath, State);
+            await UpdateStateStore.SaveAsync(State);
         }
         finally { _gate.Release(); Changed?.Invoke(); }
     }
@@ -146,7 +119,7 @@ public sealed class AppUpdateService
         {
             var old = (State.AutoInstall, State.ShowNotifications, State.AutoDownload);
             State.AutoInstall = autoInstall; State.ShowNotifications = showNotifications; State.AutoDownload = autoInstall;
-            try { await UpdateProtocol.SaveAsync(StatePath, State); }
+            try { await UpdateStateStore.SaveAsync(State); }
             catch { (State.AutoInstall, State.ShowNotifications, State.AutoDownload) = old; throw; }
         }
         finally { _gate.Release(); Changed?.Invoke(); }
@@ -161,32 +134,13 @@ public sealed class AppUpdateService
         {
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
             timeout.CancelAfter(TimeSpan.FromSeconds(30));
-            var token = GitHubCredentialStore.Read(Repository);
-            using var request = UpdateProtocol.CreateApiRequest(Repository, $"https://api.github.com/repos/{Repository}/releases/latest", token);
-            using var response = await _client.SendAsync(request, timeout.Token);
-            if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
-                throw new InvalidDataException(Localization.Get("Updates_AccessDenied"));
-            State.LastCheckUtc = DateTimeOffset.UtcNow;
-            if (response.StatusCode == HttpStatusCode.NotFound)
-            {
-                // GitHub also returns 404 for private repositories to unauthenticated clients.
-                using var repositoryRequest = UpdateProtocol.CreateApiRequest(Repository, $"https://api.github.com/repos/{Repository}", token);
-                using var repository = await _client.SendAsync(repositoryRequest, timeout.Token);
-                if (repository.StatusCode == HttpStatusCode.NotFound)
-                    throw new InvalidDataException(Localization.Get("Updates_RepositoryUnavailable"));
-                repository.EnsureSuccessStatusCode();
-                State.Release = null; State.Status = "noRelease";
-            }
-            else
-            {
-                response.EnsureSuccessStatusCode();
-                var release = UpdateProtocol.SelectRelease(await response.Content.ReadAsStringAsync(timeout.Token), Version, Scope ?? "user", Repository);
-                await ApplyReleaseAsync(release, timeout.Token);
-            }
+            var (hasRelease, release) = await _releases.GetLatestAsync(Repository, Version, Scope ?? "user", GitHubCredentialStore.Read(Repository), timeout.Token);
+            if (!hasRelease) { State.Release = null; State.Status = "noRelease"; }
+            else await ApplyReleaseAsync(release, timeout.Token);
             State.LastCheckUtc = DateTimeOffset.UtcNow;
         }
         catch (Exception error) { State.LastCheckUtc = DateTimeOffset.UtcNow; State.Status = "networkError"; State.Error = error.Message; Log(error); }
-        finally { try { await UpdateProtocol.SaveAsync(StatePath, State); } finally { Busy = false; _gate.Release(); Changed?.Invoke(); } }
+        finally { try { await UpdateStateStore.SaveAsync(State); } finally { Busy = false; _gate.Release(); Changed?.Invoke(); } }
     }
 
     private async Task ApplyReleaseAsync(FluentSingBox.Updates.UpdateRelease? release, CancellationToken cancellation)
@@ -228,7 +182,7 @@ public sealed class AppUpdateService
             var release = State.Release ?? throw new InvalidOperationException("Check for updates first.");
             State.Status = "downloading"; State.Error = null; Changed?.Invoke();
             var progress = new Progress<double>(value => { Progress = value; Changed?.Invoke(); });
-            await UpdateProtocol.DownloadAsync(_client, release, _settings!.Repository, InstallerPath!, progress, _lifetime.Token,
+            await _releases.DownloadAsync(release, _settings!.Repository, InstallerPath!, progress, _lifetime.Token,
                 GitHubCredentialStore.Read(Repository));
             State.Status = "readyToInstall";
             // Clean only matching application installer cache files after a successful download.
@@ -236,7 +190,7 @@ public sealed class AppUpdateService
                 if (!string.Equals(file, InstallerPath, StringComparison.OrdinalIgnoreCase)) File.Delete(file);
         }
         catch (Exception error) { State.Status = "downloadError"; State.Error = error.Message; Log(error); }
-        finally { try { await UpdateProtocol.SaveAsync(StatePath, State); } finally { Busy = false; _gate.Release(); Changed?.Invoke(); } }
+        finally { try { await UpdateStateStore.SaveAsync(State); } finally { Busy = false; _gate.Release(); Changed?.Invoke(); } }
     }
 
     public async Task ValidateInstallAsync()
