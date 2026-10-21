@@ -112,6 +112,7 @@ DNS 和 TUN 页面显示 IPv6 连通性检测，支持手动重新检测，网�
 ## 文档
 
 - [项目架构、进程与更新流程](docs/architecture.md)
+- [安装器是怎么工作的（EXE 与 MSI）](docs/installer-overview.md)
 - [安装包、签名与版本发布](docs/installer-validation.md)
 - [配置文件、DNS 与路由表单](docs/schema-driven-configuration.md)
 - [国内默认路由、sniff 与 hijack-dns](docs/default-routing-china.md)
