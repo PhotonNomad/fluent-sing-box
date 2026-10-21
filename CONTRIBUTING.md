@@ -36,7 +36,7 @@
 
 ## 验证
 
-仓库不再附带自动化测试项目和辅助验收脚本。提交前完成受影响项目的构建，并手动核对修改涉及的行为；构建通过不能替代功能或真实网络验证。
+`tests/FluentSingBox.Tests` 覆盖配置三方合并（`ConfigurationMerger`）和更新协议的离线校验规则，提交前运行 `dotnet test tests/FluentSingBox.Tests`。测试不访问网络、不写用户目录、不启动核心。其余行为仍需在构建后手动核对；构建或单元测试通过不能替代功能或真实网络验证。仓库不附带界面自动验收脚本。
 
 手动验证界面时使用独立 `FLUENTSINGBOX_DATA_DIR`，只清理本次创建的进程，不改变宿主机既有代理或 TUN。真实节点、系统代理、TUN、UAC、DNS 和 UDP/QUIC 的验收按[网络验证指南](docs/manual-network-validation.md)在隔离 Windows 环境执行。记录实际操作和未覆盖范围。
 
