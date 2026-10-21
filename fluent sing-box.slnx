@@ -9,4 +9,6 @@
     <BuildType Solution="Release|x64" Project="Release" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
+  <Project Path="src/FluentSingBox.Configuration/FluentSingBox.Configuration.csproj" />
+  <Project Path="tests/FluentSingBox.Tests/FluentSingBox.Tests.csproj" />
 </Solution>

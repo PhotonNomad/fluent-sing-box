@@ -25,6 +25,7 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../FluentSingBox.Configuration/FluentSingBox.Configuration.csproj" />
     <ProjectReference Include="../FluentSingBox.Updates/FluentSingBox.Updates.csproj" />
     <None Include="../../release.json" Link="release.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="2.2.1" />
