@@ -43,7 +43,7 @@ public static class NodeProbeService
             start.ArgumentList.Add("run"); start.ArgumentList.Add("-c"); start.ArgumentList.Add(config);
             process = Process.Start(start) ?? throw new InvalidOperationException(Localization.Get("NodeProbeService_CannotStartTheConnectionTest"));
             job.Attach(process);
-            await SingBoxCoreHost.WaitForCoreStartedAsync(process, log, TimeSpan.FromSeconds(10),
+            await CoreReadinessProbe.WaitForCoreStartedAsync(process, log, TimeSpan.FromSeconds(10),
                 ConfigurationComposer.NeedsListenerReadiness(await File.ReadAllTextAsync(config, cancellation)) ? settings.SystemProxyPort : null).WaitAsync(cancellation);
             using var handler = new HttpClientHandler { UseProxy = true, Proxy = new WebProxy($"http://127.0.0.1:{settings.SystemProxyPort}"), AllowAutoRedirect = false };
             using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
