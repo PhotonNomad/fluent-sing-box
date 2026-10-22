@@ -296,6 +296,10 @@ public sealed class SingBoxConfigBuilder
 
     public static string OutboundTag(string serverId) => $"proxy-{serverId}";
 
+    // The tag is an internal key; the server name in settings is the only display name.
+    public static string OutboundDisplayName(string tag, IEnumerable<ServerProfile> servers)
+        => servers.FirstOrDefault(server => OutboundTag(server.Id) == tag) is { } server && !string.IsNullOrWhiteSpace(server.Name) ? server.Name : tag;
+
     public static JsonObject BuildManagedInbound(AppSettingsData settings)
     {
         if (settings.SystemProxyPort is < 1 or > 65535) throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_TheLocalProxyPortMustBeBetween1"));

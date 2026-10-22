@@ -276,7 +276,7 @@ internal sealed class SchemaObjectForm
         AutomationProperties.SetAutomationId(combo, _id + "_" + key);
         foreach (var value in values)
         {
-            var item = new ComboBoxItem { Tag = value, Content = value == "" ? Localization.Get("Schema_Default") : value == "true" ? Localization.Get("Common_On") : value == "false" ? Localization.Get("Common_Off") : value };
+            var item = new ComboBoxItem { Tag = value, Content = value == "" ? Localization.Get("Schema_Default") : value == "true" ? Localization.Get("Common_On") : value == "false" ? Localization.Get("Common_Off") : SingBoxConfigBuilder.OutboundDisplayName(value, App.State.Settings.Servers) };
             AutomationProperties.SetAutomationId(item, _id + "_" + key + "_" + value);
             combo.Items.Add(item);
         }
