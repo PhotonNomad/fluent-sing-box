@@ -377,6 +377,10 @@ public sealed class AppSettingsData
     // The managed mixed inbound (system-http); the Windows proxy switch points at it.
     public bool SystemProxyInboundEnabled { get; set; } = true;
     public bool GlobalTunEnabled { get; set; }
+    // The user's last core and system proxy choices. Exit cleanup clears the runtime flags
+    // above but not these, so the next launch can bring the same session back.
+    public bool ResumeCoreOnLaunch { get; set; }
+    public bool ResumeSystemProxyOnLaunch { get; set; }
     public int SystemProxyPort { get; set; } = 10809;
     public bool SystemProxyAuthEnabled { get; set; }
     public string SystemProxyUsername { get; set; } = string.Empty;

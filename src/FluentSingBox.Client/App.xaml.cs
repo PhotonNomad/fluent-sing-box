@@ -58,6 +58,7 @@ public sealed partial class App : Application
             {
                 DiagnosticsLog.Write(DiagnosticsCategory.UpdateStartup, LogReader.Redact(error.Message, State.Settings));
             }
+            await MainWindow.ResumeLastSessionAsync();
         }
         catch (Exception exception)
         {

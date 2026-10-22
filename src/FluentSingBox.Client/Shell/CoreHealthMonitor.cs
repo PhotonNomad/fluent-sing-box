@@ -35,6 +35,9 @@ internal sealed class CoreHealthMonitor
             var restored = WindowsProxyService.Restore(App.State.Settings);
             App.State.Settings.SystemProxyEnabled = false;
             App.State.Settings.CoreOnlyEnabled = false;
+            // A crashed core is not resumed on the next launch.
+            App.State.Settings.ResumeCoreOnLaunch = false;
+            App.State.Settings.ResumeSystemProxyOnLaunch = false;
             _coreStateChanged();
             await App.State.SaveAsync();
             _report(restored ? Localization.Get("MainWindow_TheCoreStoppedUnexpectedlyPreviousSystemProxySettings") : Localization.Get("MainWindow_TheCoreStoppedUnexpectedlyAnotherProgramChangedThe"));

@@ -84,12 +84,32 @@ public sealed partial class MainWindow : Window
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(CoreSwitch, CoreActionText.Text);
     }
 
-    private async void CoreSwitch_Click(object sender, RoutedEventArgs args)
+    private async void CoreSwitch_Click(object sender, RoutedEventArgs args) => await SwitchCoreAsync(!App.CoreService.IsRunning);
+
+    // Brings back the core (and with it any TUN inbound in the configuration) and the
+    // Windows system proxy as the user last left them. The system proxy is only restored
+    // on top of a running core, so Windows never points at a dead local listener.
+    public async Task ResumeLastSessionAsync()
+    {
+        var settings = App.State.Settings;
+        if (settings.ResumeCoreOnLaunch && !App.CoreService.IsRunning) await SwitchCoreAsync(starting: true);
+        if (!settings.ResumeSystemProxyOnLaunch || settings.SystemProxyEnabled) return;
+        if (!App.CoreService.IsRunning || !settings.SystemProxyInboundEnabled)
+        {
+            settings.ResumeSystemProxyOnLaunch = false;
+            try { await App.State.SavePreferencesAsync(); }
+            catch (Exception exception) { BackgroundSaveFailed(exception.Message); }
+            return;
+        }
+        try { await App.ProxyCoordinator.SetSystemProxyEnabledAsync(true); }
+        catch (Exception exception) { ShowRecoveryMessage(Localization.Get("SystemProxySettingsControl_CannotSwitchSystemProxy") + ": " + LogReader.Redact(exception.Message, settings)); }
+    }
+
+    private async Task SwitchCoreAsync(bool starting)
     {
         if (_coreSwitchBusy || _lifecycle != WindowLifecycle.Running) return;
         _coreSwitchBusy = true;
         CoreSwitch.IsEnabled = false;
-        var starting = !App.CoreService.IsRunning;
         CoreActionText.Text = Localization.Get(starting ? "CoreButton_Starting" : "CoreButton_Stopping");
         try
         {
@@ -119,6 +139,9 @@ public sealed partial class MainWindow : Window
             CoreSwitch.IsEnabled = true;
             _coreSwitchBusy = false;
         }
+        App.State.Settings.ResumeCoreOnLaunch = App.State.Settings.CoreOnlyEnabled;
+        try { await App.State.SavePreferencesAsync(); }
+        catch (Exception exception) { BackgroundSaveFailed(exception.Message); }
     }
 
     public Task<XamlRoot> WaitForXamlRootAsync() => _xamlRootReady.Task;
