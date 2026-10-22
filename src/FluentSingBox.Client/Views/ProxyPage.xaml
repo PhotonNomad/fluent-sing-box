@@ -29,7 +29,6 @@
                         <local:SettingsSection.SectionContent>
                             <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
                                 <TextBlock x:Name="EmptyApplicationsMessage" Foreground="{ThemeResource TextFillColorSecondaryBrush}" x:Uid="ProxyPage_EmptyApplicationsMessage" />
-                                <TextBlock x:Name="ApplicationDnsHelp" TextWrapping="Wrap" />
                                 <InfoBar x:Name="ApplicationWarnings" Severity="Warning" IsClosable="False" AutomationProperties.AutomationId="Application_PathWarnings" />
                                 <ListView x:Name="ApplicationList" SelectionMode="None" IsItemClickEnabled="False" Padding="0">
                                     <ListView.ItemTemplate>
@@ -75,7 +74,6 @@
                         </local:SettingsSection.SectionContent>
                     </local:SettingsSection>
 
-                    <TextBlock Margin="1,32,0,0" TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" x:Uid="ProxyPage_TextBlock50" />
                 </StackPanel>
             </local:PageLayout.PageContent>
         </local:PageLayout>

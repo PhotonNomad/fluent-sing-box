@@ -1846,7 +1846,7 @@ Windows: {0}
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="ProxyPage_SettingsCard13.Header" xml:space="preserve">
-    <value>默认出口（proxy）</value>
+    <value>默认服务器</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="ProxyPage_DefaultServerComboBox.PlaceholderText" xml:space="preserve">
@@ -1870,7 +1870,7 @@ Windows: {0}
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="ProxyPage_SettingsSection22.Description" xml:space="preserve">
-    <value>一个应用组可包含多个程序，并独立选择代理服务器。</value>
+    <value>按程序分组，各自选择服务器</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="ProxyPage_EmptyApplicationsMessage.Text" xml:space="preserve">
@@ -1879,10 +1879,6 @@ Windows: {0}
   </data>
   <data name="ProxyPage_SettingsCard33.Header" xml:space="preserve">
     <value>启用应用代理</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsCard33.Description" xml:space="preserve">
-    <value>仅保存这组程序的代理配置；在左下角启动核心后生效。</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="ProxyPage_ToggleSwitch34.AutomationProperties.Name" xml:space="preserve">
@@ -1921,16 +1917,8 @@ Windows: {0}
     <value>添加应用组</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
-  <data name="ProxyPage_SettingsCard46.Description" xml:space="preserve">
-    <value>选择一个或多个程序，并为这组程序选择服务器。</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
   <data name="ProxyPage_Button49.Content" xml:space="preserve">
     <value>添加应用组</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_TextBlock50.Text" xml:space="preserve">
-    <value>应用组开关只修改配置。左下角启动 sing-box 时，如配置包含 TUN 会请求管理员权限；修改后关闭再开启核心即可应用。未配置的程序默认直连。</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="RoutingPage_TextBlock4.Text" xml:space="preserve">
@@ -2094,7 +2082,7 @@ Windows: {0}
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Header" xml:space="preserve">
-    <value>默认出口（proxy）</value>
+    <value>默认服务器</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Description" xml:space="preserve">
@@ -2728,7 +2716,7 @@ Windows: {0}
   <data name="Diagnostics_CleanupFailed" xml:space="preserve"><value>删除设备失败：{0}；实例：{1}；pnputil 退出码：{2}。{4}{3}</value></data>
   <data name="Diagnostics_TunConflict" xml:space="preserve"><value>检测到 TUN 名称冲突，不能据此认定为残留。请求的 interface_name：{0}；入站 tag：{1}。{2}{3}{2}该网卡可能属于其他代理/VPN。未删除网卡；请停止其所属程序或更换网卡名称。</value></data>
   <data name="TunPreference_Title" xml:space="preserve"><value>优先接管默认路由</value></data>
-  <data name="TunPreference_Help" xml:space="preserve"><value>使用 IPv4/IPv6 的 /1 路由优先于普通 /0 默认路由，并开启 auto_route。同样或更具体的路由仍可能优先。重启核心后生效，关闭恢复原接管范围。</value></data>
+  <data name="TunPreference_Help" xml:space="preserve"><value>用 /1 路由压过其他默认路由</value></data>
   <data name="CoreButton_Starting" xml:space="preserve"><value>正在启动…</value></data>
   <data name="TunPresence_CheckFailed" xml:space="preserve"><value>无法核实设备是否存在。网卡：{0}；设备实例：{1}；CONFIGRET：{2}。未删除设备。</value></data>
   <data name="CoreButton_Stopping" xml:space="preserve"><value>正在停止…</value></data>
@@ -2930,11 +2918,11 @@ Windows: {0}
   </data>
   <data name="ProxyCoordinator_SystemProxyNeedsInbound" xml:space="preserve"><value>请先开启本地入口，Windows 系统代理指向的就是它。</value></data>
   <data name="TunInbound_Title" xml:space="preserve"><value>TUN 入站</value></data>
-  <data name="TunInbound_Help" xml:space="preserve"><value>在 sing-box 配置中加入 TUN 网卡。需要管理员权限，重启核心后生效。</value></data>
+  <data name="TunInbound_Help" xml:space="preserve"><value>需要管理员权限</value></data>
   <data name="TunAutoRoute_Title" xml:space="preserve"><value>接管系统路由 (auto_route)</value></data>
-  <data name="TunAutoRoute_Help" xml:space="preserve"><value>把 Windows 路由表指向 TUN 网卡。关闭时网卡仍会创建，但除非手动配置路由，不会有流量进入。重启核心后生效。</value></data>
+  <data name="TunAutoRoute_Help" xml:space="preserve"><value>让系统流量经过 TUN 网卡</value></data>
   <data name="TunStrictRoute_Title" xml:space="preserve"><value>严格路由 (strict_route)</value></data>
-  <data name="TunStrictRoute_Help" xml:space="preserve"><value>阻止绕过 TUN 路由的流量，防止泄漏。</value></data>
+  <data name="TunStrictRoute_Help" xml:space="preserve"><value>阻止流量绕过 TUN</value></data>
   <data name="TunAdvanced_Title" xml:space="preserve"><value>高级</value></data>
   <data name="TunAdvanced_Help" xml:space="preserve"><value>网卡名称、地址、MTU 与 DNS</value></data>
   <data name="SystemProxySettingsControl_RestartToApply" xml:space="preserve">
@@ -2947,22 +2935,19 @@ Windows: {0}
     <value>出口</value>
   </data>
   <data name="ProxyPage_OutletSection.Description" xml:space="preserve">
-    <value>代理流量默认使用的服务器，新建应用组也以它为初始选择。</value>
-  </data>
-  <data name="ProxyPage_SystemProxyExpander.Description" xml:space="preserve">
-    <value>sing-box 监听本地入口；Windows 系统代理把系统流量指向它。</value>
+    <value>代理流量的默认服务器</value>
   </data>
   <data name="SystemProxySettingsControl_InboundCard.Header" xml:space="preserve">
     <value>本地入口</value>
   </data>
   <data name="SystemProxySettingsControl_InboundCard.Description" xml:space="preserve">
-    <value>sing-box 在 127.0.0.1 上监听的 mixed（HTTP/SOCKS5）入站。重启核心后生效。</value>
+    <value>127.0.0.1 上的 HTTP/SOCKS5 入站</value>
   </data>
   <data name="SystemProxySettingsControl_InboundSwitch.AutomationProperties.Name" xml:space="preserve">
     <value>启用本地入口</value>
   </data>
   <data name="SystemProxySettingsControl_SettingsCard3.Description" xml:space="preserve">
-    <value>修改 Windows 代理设置，指向本地入口。即时生效。</value>
+    <value>让 Windows 代理指向本地入站</value>
   </data>
   <data name="SystemProxySettingsControl_InboundSwitch.OnContent" xml:space="preserve">
     <value>开</value>

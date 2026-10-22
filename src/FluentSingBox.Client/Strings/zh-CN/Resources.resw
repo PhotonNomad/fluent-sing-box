@@ -137,7 +137,7 @@
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="ProxyPage_SettingsSection22.Description" xml:space="preserve">
-    <value>一个应用组可包含多个程序，并独立选择代理服务器。</value>
+    <value>按程序分组，各自选择服务器</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="ProxyPage_EmptyApplicationsMessage.Text" xml:space="preserve">
@@ -146,10 +146,6 @@
   </data>
   <data name="ProxyPage_SettingsCard33.Header" xml:space="preserve">
     <value>启用应用代理</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsCard33.Description" xml:space="preserve">
-    <value>仅保存这组程序的代理配置；在左下角启动核心后生效。</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="ProxyPage_ToggleSwitch34.AutomationProperties.Name" xml:space="preserve">
@@ -188,16 +184,8 @@
     <value>添加应用组</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
-  <data name="ProxyPage_SettingsCard46.Description" xml:space="preserve">
-    <value>选择一个或多个程序，并为这组程序选择服务器。</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
   <data name="ProxyPage_Button49.Content" xml:space="preserve">
     <value>添加应用组</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_TextBlock50.Text" xml:space="preserve">
-    <value>应用组开关只修改配置。左下角启动 sing-box 时，如配置包含 TUN 会请求管理员权限；修改后关闭再开启核心即可应用。未配置的程序默认直连。</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="RoutingPage_TextBlock4.Text" xml:space="preserve">
@@ -690,42 +678,39 @@
   <data name="Settings_SingBoxDocs.Content" xml:space="preserve">
     <value>sing-box 文档</value>
   </data>
-  <data name="Updates_AutoCheck.Header" xml:space="preserve"><value>自动检查更新</value></data>
-  <data name="Updates_AutoDownload.Header" xml:space="preserve"><value>自动下载更新</value></data>
-  <data name="Updates_Busy" xml:space="preserve"><value>请等待当前操作完成。</value></data>
-  <data name="Updates_ConfirmInstall" xml:space="preserve"><value>保存设置、停止代理核心并退出以安装更新？正在使用的代理连接会中断。</value></data>
-  <data name="Updates_CurrentVersion" xml:space="preserve"><value>版本 {0} · {1}</value></data>
-  <data name="Updates_Development" xml:space="preserve"><value>开发 / 便携副本</value></data>
-  <data name="Updates_Download.Content" xml:space="preserve"><value>下载更新</value></data>
-  <data name="Updates_Install.Content" xml:space="preserve"><value>安装更新</value></data>
-  <data name="Updates_Metered.Header" xml:space="preserve"><value>允许在计费网络上自动下载</value></data>
-  <data name="Updates_NotInstalled" xml:space="preserve"><value>请先安装正式安装包，再使用应用内安装更新。</value></data>
-  <data name="Updates_PolicyDisabled" xml:space="preserve"><value>更新已被策略禁用。</value></data>
-  <data name="Updates_ReleaseNotes.Content" xml:space="preserve"><value>发布说明</value></data>
-  <data name="Updates_SaveBeforeInstall" xml:space="preserve"><value>安装前请保存待处理的更改。</value></data>
-  <data name="Updates_State_checking" xml:space="preserve"><value>正在检查更新…</value></data>
-  <data name="Updates_State_downloadError" xml:space="preserve"><value>下载更新失败。</value></data>
-  <data name="Updates_State_downloading" xml:space="preserve"><value>正在下载更新…</value></data>
-  <data name="Updates_State_idle" xml:space="preserve"><value>可以检查更新。</value></data>
-  <data name="Updates_State_installed" xml:space="preserve"><value>更新已安装，请重新启动应用。</value></data>
-  <data name="Updates_State_installError" xml:space="preserve"><value>安装更新失败。</value></data>
-  <data name="Updates_State_installing" xml:space="preserve"><value>正在安装更新…</value></data>
-  <data name="Updates_State_networkError" xml:space="preserve"><value>检查更新失败。</value></data>
-  <data name="Updates_State_noRelease" xml:space="preserve"><value>尚无可用的已发布稳定版本。</value></data>
-  <data name="Updates_State_readyToDownload" xml:space="preserve"><value>发现新版本：</value></data>
-  <data name="Updates_State_readyToInstall" xml:space="preserve"><value>更新已下载并通过 SHA-256 校验：</value></data>
-  <data name="Updates_State_upToDate" xml:space="preserve"><value>已是最新版本。</value></data>
-  <data name="Updates_Title" xml:space="preserve"><value>应用更新</value></data>
-  <data name="Updates_Unsigned" xml:space="preserve"><value>签名尚未配置。请打开发布页面手动安装测试包。</value></data>
-<data name="Updates_OpenSettings.Content" xml:space="preserve"><value>查看更新</value></data>
-<data name="Updates_Scope_machine" xml:space="preserve"><value>全机安装</value></data>
-<data name="Updates_Scope_user" xml:space="preserve"><value>当前用户安装</value></data>
-  <data name="Updates_FeedbackSection.Header" xml:space="preserve"><value>反馈</value></data>
-  <data name="Updates_ShowNotifications.Content" xml:space="preserve"><value>显示新更新通知</value></data>
-  <data name="Updates_NeverChecked" xml:space="preserve"><value>尚未检查</value></data>
-  <data name="Updates_MeteredExcluded.Text" xml:space="preserve"><value>按流量计费的连接除外</value></data>
-  <data name="Updates_AutoInstall.Text" xml:space="preserve"><value>自动下载并安装更新</value></data>
-  <data name="Updates_LastChecked" xml:space="preserve"><value>上次检查时间：{0}</value></data>
+  <data name="Updates_AutoCheck.Header" xml:space="preserve">
+    <value>自动检查更新</value>
+  </data>
+  <data name="Updates_AutoDownload.Header" xml:space="preserve">
+    <value>自动下载更新</value>
+  </data>
+  <data name="Updates_Download.Content" xml:space="preserve">
+    <value>下载更新</value>
+  </data>
+  <data name="Updates_Install.Content" xml:space="preserve">
+    <value>安装更新</value>
+  </data>
+  <data name="Updates_Metered.Header" xml:space="preserve">
+    <value>允许在计费网络上自动下载</value>
+  </data>
+  <data name="Updates_ReleaseNotes.Content" xml:space="preserve">
+    <value>发布说明</value>
+  </data>
+  <data name="Updates_OpenSettings.Content" xml:space="preserve">
+    <value>查看更新</value>
+  </data>
+  <data name="Updates_FeedbackSection.Header" xml:space="preserve">
+    <value>反馈</value>
+  </data>
+  <data name="Updates_ShowNotifications.Content" xml:space="preserve">
+    <value>显示新更新通知</value>
+  </data>
+  <data name="Updates_MeteredExcluded.Text" xml:space="preserve">
+    <value>按流量计费的连接除外</value>
+  </data>
+  <data name="Updates_AutoInstall.Text" xml:space="preserve">
+    <value>自动下载并安装更新</value>
+  </data>
   <data name="Updates_GitHubAccess.Content" xml:space="preserve">
     <value>GitHub 访问</value>
   </data>
@@ -733,22 +718,19 @@
     <value>出口</value>
   </data>
   <data name="ProxyPage_OutletSection.Description" xml:space="preserve">
-    <value>代理流量默认使用的服务器，新建应用组也以它为初始选择。</value>
-  </data>
-  <data name="ProxyPage_SystemProxyExpander.Description" xml:space="preserve">
-    <value>sing-box 监听本地入口；Windows 系统代理把系统流量指向它。</value>
+    <value>代理流量的默认服务器</value>
   </data>
   <data name="SystemProxySettingsControl_InboundCard.Header" xml:space="preserve">
     <value>本地入口</value>
   </data>
   <data name="SystemProxySettingsControl_InboundCard.Description" xml:space="preserve">
-    <value>sing-box 在 127.0.0.1 上监听的 mixed（HTTP/SOCKS5）入站。重启核心后生效。</value>
+    <value>127.0.0.1 上的 HTTP/SOCKS5 入站</value>
   </data>
   <data name="SystemProxySettingsControl_InboundSwitch.AutomationProperties.Name" xml:space="preserve">
     <value>启用本地入口</value>
   </data>
   <data name="SystemProxySettingsControl_SettingsCard3.Description" xml:space="preserve">
-    <value>修改 Windows 代理设置，指向本地入口。即时生效。</value>
+    <value>让 Windows 代理指向本地入站</value>
   </data>
   <data name="SystemProxySettingsControl_InboundSwitch.OnContent" xml:space="preserve">
     <value>开</value>

@@ -25,7 +25,6 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
     {
         _loading = true;
         ApplicationList.ItemsSource = App.State.Settings.Applications;
-        ApplicationDnsHelp.Text = Localization.Get("Dns_DefaultNodeHelp");
         LoadDefaultServer();
 
         UpdateEmptyApplicationsMessage();

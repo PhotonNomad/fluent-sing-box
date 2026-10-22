@@ -81,10 +81,12 @@ internal sealed class TunConfigurationForm
             dependents.Add(UpdateDependents);
             UpdateDependents();
             _forms.Add((value, form, autoRoute, strictRoute, prefer, preferenceKey));
-            var nested = new Thickness(32, 0, 0, 0);
-            _view.Children.Add(new SettingsCard { Header = Localization.Get("TunAutoRoute_Title") + suffix, Description = Localization.Get("TunAutoRoute_Help"), HeaderIcon = new FontIcon { Glyph = "\uE8AB" }, Content = autoRoute });
-            _view.Children.Add(new SettingsCard { Header = Localization.Get("TunStrictRoute_Title"), Description = Localization.Get("TunStrictRoute_Help"), Content = strictRoute, Margin = nested });
-            _view.Children.Add(new SettingsCard { Header = Localization.Get("TunPreference_Title"), Description = Localization.Get("TunPreference_Help"), Content = prefer, Margin = nested });
+            // Nested under auto_route so the dependent switches line up with the expander's item rows.
+            var routing = new SettingsExpander { Header = Localization.Get("TunAutoRoute_Title") + suffix, Description = Localization.Get("TunAutoRoute_Help"), HeaderIcon = new FontIcon { Glyph = "\uE8AB" }, Content = autoRoute, IsExpanded = false };
+            AutomationProperties.SetAutomationId(routing, id + "_Routing");
+            routing.Items.Add(new SettingsCard { Header = Localization.Get("TunStrictRoute_Title"), Description = Localization.Get("TunStrictRoute_Help"), Content = strictRoute });
+            routing.Items.Add(new SettingsCard { Header = Localization.Get("TunPreference_Title"), Description = Localization.Get("TunPreference_Help"), Content = prefer });
+            _view.Children.Add(routing);
             var advanced = new SettingsExpander { Header = Localization.Get("TunAdvanced_Title") + suffix, Description = Localization.Get("TunAdvanced_Help"), HeaderIcon = new FontIcon { Glyph = "\uE713" }, IsExpanded = false };
             AutomationProperties.SetAutomationId(advanced, id + "_Advanced");
             foreach (var row in form.View.Children.ToArray())
@@ -97,36 +99,6 @@ internal sealed class TunConfigurationForm
             }
             _view.Children.Add(advanced);
         }
-        var cleanup = new Button { Content = Localization.Get("TunCleanup_Button") };
-        AutomationProperties.SetAutomationId(cleanup, "Proxy_Tun_Cleanup");
-        cleanup.Click += async (_, _) =>
-        {
-            cleanup.IsEnabled = false;
-            try { await CleanupAsync(); }
-            catch (Exception exception) { Error(exception); }
-            finally { cleanup.IsEnabled = true; }
-        };
-        _view.Children.Add(new SettingsCard { Header = Localization.Get("TunCleanup_Button"), Description = Localization.Get("TunCleanup_Help"), Content = cleanup });
-    }
-    private async Task CleanupAsync()
-    {
-        if (App.CoreService.IsRunning || App.CoreService.IsTransitioning) throw new InvalidOperationException(Localization.Get("TunCleanup_StopCore"));
-        var adapters = await TunAdapterCleanup.ScanAsync();
-        if (adapters.Length == 0) { _status.Message = Localization.Get("TunCleanup_None"); _status.Severity = InfoBarSeverity.Informational; _status.IsOpen = true; return; }
-        var panel = new StackPanel { Spacing = 12 };
-        panel.Children.Add(new TextBlock { Text = Localization.Get("TunCleanup_ConfirmHelp"), TextWrapping = TextWrapping.Wrap });
-        var choices = adapters.Select(adapter => new CheckBox { Content = $"{adapter.Name}\n{adapter.Description}\n{adapter.DeviceId}", Tag = adapter }).ToArray();
-        for (var index = 0; index < choices.Length; index++)
-        {
-            AutomationProperties.SetAutomationId(choices[index], "TunCleanup_Target_" + index);
-            panel.Children.Add(choices[index]);
-        }
-        var dialog = new ContentDialog { Title = Localization.Get("TunCleanup_Button"), Content = new ScrollViewer { Content = panel, MaxHeight = 420 }, PrimaryButtonText = Localization.Get("TunCleanup_Remove"), CloseButtonText = Localization.Get("ProxyPage_Cancel"), DefaultButton = ContentDialogButton.Close, XamlRoot = _page.XamlRoot, IsPrimaryButtonEnabled = false };
-        foreach (var choice in choices) { choice.Checked += (_, _) => dialog.IsPrimaryButtonEnabled = choices.Any(item => item.IsChecked == true); choice.Unchecked += (_, _) => dialog.IsPrimaryButtonEnabled = choices.Any(item => item.IsChecked == true); }
-        if (await DialogService.ShowAsync(dialog) != ContentDialogResult.Primary) return;
-        var targets = choices.Where(choice => choice.IsChecked == true).Select(choice => (TunAdapterCandidate)choice.Tag).ToArray();
-        await App.CoreService.RunStoppedMaintenanceAsync(() => TunAdapterCleanup.RemoveAsync(targets));
-        _status.Message = Localization.Get("TunCleanup_Done"); _status.Severity = InfoBarSeverity.Success; _status.IsOpen = true;
     }
     private static ToggleSwitch Toggle(bool on, string automationId)
     {

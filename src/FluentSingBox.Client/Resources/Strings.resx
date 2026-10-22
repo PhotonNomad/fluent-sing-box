@@ -1846,7 +1846,7 @@ Windows: {0}
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="ProxyPage_SettingsCard13.Header" xml:space="preserve">
-    <value>Default outlet (proxy)</value>
+    <value>Default server</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="ProxyPage_DefaultServerComboBox.PlaceholderText" xml:space="preserve">
@@ -1870,7 +1870,7 @@ Windows: {0}
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="ProxyPage_SettingsSection22.Description" xml:space="preserve">
-    <value>A group can contain multiple programs and select its own proxy server.</value>
+    <value>Group programs and pick a server for each group</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="ProxyPage_EmptyApplicationsMessage.Text" xml:space="preserve">
@@ -1879,10 +1879,6 @@ Windows: {0}
   </data>
   <data name="ProxyPage_SettingsCard33.Header" xml:space="preserve">
     <value>Enable application proxy</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsCard33.Description" xml:space="preserve">
-    <value>Only save this group's proxy configuration. It takes effect when you start the core using the bottom-left switch.</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="ProxyPage_ToggleSwitch34.AutomationProperties.Name" xml:space="preserve">
@@ -1921,16 +1917,8 @@ Windows: {0}
     <value>Add application group</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
-  <data name="ProxyPage_SettingsCard46.Description" xml:space="preserve">
-    <value>Select one or more programs and choose a server for this group.</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
   <data name="ProxyPage_Button49.Content" xml:space="preserve">
     <value>Add application group</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_TextBlock50.Text" xml:space="preserve">
-    <value>Application group switches only change configuration. Starting sing-box using the bottom-left switch requests administrator permission if TUN is configured. Stop and restart the core after changes. Unconfigured programs connect directly by default.</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="RoutingPage_TextBlock4.Text" xml:space="preserve">
@@ -2094,7 +2082,7 @@ Windows: {0}
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Header" xml:space="preserve">
-    <value>Default outlet (proxy)</value>
+    <value>Default server</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Description" xml:space="preserve">
@@ -2728,7 +2716,7 @@ Windows: {0}
   <data name="Diagnostics_CleanupFailed" xml:space="preserve"><value>Device removal failed: {0}; instance: {1}; pnputil exit code: {2}.{4}{3}</value></data>
   <data name="Diagnostics_TunConflict" xml:space="preserve"><value>A TUN name conflict was detected, not a confirmed leftover. Requested interface_name: {0}; inbound tag: {1}.{2}{3}{2}Another proxy/VPN may own it. No adapter was deleted; stop its owner or use a different interface name.</value></data>
   <data name="TunPreference_Title" xml:space="preserve"><value>Prefer this TUN for default traffic</value></data>
-  <data name="TunPreference_Help" xml:space="preserve"><value>Uses IPv4/IPv6 /1 routes to take precedence over ordinary /0 defaults. Enables auto_route. Equal or more specific routes may still take priority. Restart the core to apply; switching off restores the original route range.</value></data>
+  <data name="TunPreference_Help" xml:space="preserve"><value>Use /1 routes to win over other default routes</value></data>
   <data name="CoreButton_Starting" xml:space="preserve"><value>Starting…</value></data>
   <data name="TunPresence_CheckFailed" xml:space="preserve"><value>Cannot verify device presence. Adapter: {0}; device: {1}; CONFIGRET: {2}. No device was removed.</value></data>
   <data name="CoreButton_Stopping" xml:space="preserve"><value>Stopping…</value></data>
@@ -2930,11 +2918,11 @@ Windows: {0}
   </data>
   <data name="ProxyCoordinator_SystemProxyNeedsInbound" xml:space="preserve"><value>Turn on the local inbound first; the Windows system proxy points at it.</value></data>
   <data name="TunInbound_Title" xml:space="preserve"><value>TUN inbound</value></data>
-  <data name="TunInbound_Help" xml:space="preserve"><value>Adds a TUN adapter to the sing-box configuration. Requires administrator permission. Restart the core to apply.</value></data>
+  <data name="TunInbound_Help" xml:space="preserve"><value>Requires administrator permission</value></data>
   <data name="TunAutoRoute_Title" xml:space="preserve"><value>Take over system routes (auto_route)</value></data>
-  <data name="TunAutoRoute_Help" xml:space="preserve"><value>Points the Windows routing table at the TUN adapter. When off, the adapter exists but receives no traffic unless routed manually. Restart the core to apply.</value></data>
+  <data name="TunAutoRoute_Help" xml:space="preserve"><value>Send system traffic through the TUN adapter</value></data>
   <data name="TunStrictRoute_Title" xml:space="preserve"><value>Strict route (strict_route)</value></data>
-  <data name="TunStrictRoute_Help" xml:space="preserve"><value>Blocks traffic that tries to bypass the TUN routes to prevent leaks.</value></data>
+  <data name="TunStrictRoute_Help" xml:space="preserve"><value>Block traffic that bypasses TUN</value></data>
   <data name="TunAdvanced_Title" xml:space="preserve"><value>Advanced</value></data>
   <data name="TunAdvanced_Help" xml:space="preserve"><value>Adapter name, addresses, MTU and DNS</value></data>
   <data name="SystemProxySettingsControl_RestartToApply" xml:space="preserve">
@@ -2947,22 +2935,19 @@ Windows: {0}
     <value>Outbound</value>
   </data>
   <data name="ProxyPage_OutletSection.Description" xml:space="preserve">
-    <value>The server that proxied traffic uses by default. New application groups start with it.</value>
-  </data>
-  <data name="ProxyPage_SystemProxyExpander.Description" xml:space="preserve">
-    <value>sing-box listens on the local inbound; the Windows system proxy points system traffic at it.</value>
+    <value>Default server for proxied traffic</value>
   </data>
   <data name="SystemProxySettingsControl_InboundCard.Header" xml:space="preserve">
     <value>Local inbound</value>
   </data>
   <data name="SystemProxySettingsControl_InboundCard.Description" xml:space="preserve">
-    <value>A mixed (HTTP/SOCKS5) inbound that sing-box listens on at 127.0.0.1. Restart the core to apply.</value>
+    <value>HTTP/SOCKS5 inbound on 127.0.0.1</value>
   </data>
   <data name="SystemProxySettingsControl_InboundSwitch.AutomationProperties.Name" xml:space="preserve">
     <value>Enable local inbound</value>
   </data>
   <data name="SystemProxySettingsControl_SettingsCard3.Description" xml:space="preserve">
-    <value>Points the Windows proxy setting at the local inbound. Takes effect immediately.</value>
+    <value>Point the Windows proxy at the local inbound</value>
   </data>
   <data name="SystemProxySettingsControl_InboundSwitch.OnContent" xml:space="preserve">
     <value>On</value>
