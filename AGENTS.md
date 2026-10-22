@@ -123,11 +123,15 @@ dotnet test tests/FluentSingBox.Tests -p:Platform=x64
 
 ```powershell
 $env:FLUENTSINGBOX_DATA_DIR = '<临时目录>'
+$env:FLUENTSINGBOX_TEST_BACKGROUND = '1'      # 显示窗口但不激活
 $p = Start-Process -FilePath 'src\FluentSingBox.Client\bin\x64\Debug\net10.0-windows10.0.19041.0\win-x64\fluent sing-box.exe' -PassThru
 ```
 
-- 用 UI Automation 操作，不抢焦点、不模拟点击：导航项的 AutomationId 为 `Navigation_Servers/Proxy/Routing/DNS/Logs/Settings`（`SelectionItemPattern.Select()`），展开项用 `ExpandCollapsePattern`，滚动用 `ScrollPattern`。
-- 截图用 Win32 `PrintWindow(hwnd, hdc, 2)` 抓窗口本身，不依赖屏幕截图（窗口可能被遮挡或处于最小化）。抓之前先 `ShowWindow(hwnd, 4)`，再用 `SetWindowPos` 调整到足够大的尺寸。
+- 不用 computer use 或屏幕截图：它会干扰用户的输入法和正在做的事。用 UI Automation 操作，用 Win32 `PrintWindow(hwnd, hdc, 2)` 抓窗口本身。
+- 用 `SetWindowPos(hwnd, 0, -4000, 40, 宽, 高, 0x14)`（`SWP_NOZORDER|SWP_NOACTIVATE`）把窗口移到屏幕外并设好尺寸；`PrintWindow` 在屏幕外照样能抓到完整画面。
+- 不抢前台的步骤（已实测）：带 `FLUENTSINGBOX_TEST_BACKGROUND=1` 启动、`SetWindowPos`、`PrintWindow`。
+- **切换页面会抢前台**：导航项（AutomationId `Navigation_Servers/Proxy/Routing/DNS/Logs/Settings`）只支持 `SelectionItemPattern`，没有 `InvokePattern`；调用 `Select()` 会激活测试窗口。只截启动页（服务器页）时不要切换；需要其他页面时，告诉用户这一步会短暂抢走焦点。展开（`ExpandCollapsePattern`）和滚动（`ScrollPattern`）是否抢前台尚未单独测出。
+- **先切页面，再缩窗口**：窗口变窄（高 DPI 下 1150 物理像素也算窄）后导航栏收成汉堡菜单，导航项从自动化树里消失，只剩 `NavigationPaneToggleButton`。所以先在默认尺寸下 `Select()`，再 `SetWindowPos` 改尺寸。
 - 页面元素的 AutomationId 多数在 XAML 或代码里用 `AutomationProperties.SetAutomationId` 设置，搜索 `AutomationId` 可以找到。
 - 无法在测试中验证的：核心启停与提权宿主、真实节点联网、TUN/DNS 实际分流、UAC、安装与升级、联网检查更新。改到这些地方时，明确告诉用户哪些没验证。
 
