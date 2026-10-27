@@ -44,11 +44,7 @@ public sealed class AppState
 
         Settings.RemoveLegacyGeoRules();
         // A previous abrupt shutdown must not leave Windows pointing at a dead local proxy.
-        if (Settings.HasSystemProxySnapshot)
-        {
-            WindowsProxyService.Restore(Settings);
-            Settings.SystemProxyEnabled = false;
-        }
+        if (Settings.HasSystemProxySnapshot) WindowsProxyService.Restore(Settings);
 
 
         if (Settings.DefaultServerId != "direct" && !Settings.Servers.Any(server => server.Id == Settings.DefaultServerId))

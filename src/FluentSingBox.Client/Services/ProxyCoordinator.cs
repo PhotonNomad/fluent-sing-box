@@ -30,17 +30,12 @@ public sealed class ProxyCoordinator(AppState state)
             catch
             {
                 WindowsProxyService.Restore(state.Settings);
-                state.Settings.SystemProxyEnabled = false;
                 state.Settings.ResumeSystemProxyOnLaunch = false;
                 await state.SavePreferencesAsync();
                 throw;
             }
         }
-        else
-        {
-            WindowsProxyService.Restore(state.Settings);
-            state.Settings.SystemProxyEnabled = false;
-        }
+        else WindowsProxyService.Restore(state.Settings);
         state.Settings.ResumeSystemProxyOnLaunch = state.Settings.SystemProxyEnabled;
         await state.SavePreferencesAsync();
     }

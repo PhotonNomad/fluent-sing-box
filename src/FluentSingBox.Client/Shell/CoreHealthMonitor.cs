@@ -33,7 +33,6 @@ internal sealed class CoreHealthMonitor
         try
         {
             var restored = WindowsProxyService.Restore(App.State.Settings);
-            App.State.Settings.SystemProxyEnabled = false;
             App.State.Settings.CoreOnlyEnabled = false;
             // A crashed core is not resumed on the next launch.
             App.State.Settings.ResumeCoreOnLaunch = false;

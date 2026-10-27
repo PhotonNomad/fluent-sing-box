@@ -18,7 +18,6 @@ internal static class ShutdownCoordinator
         WindowsProxyService.Restore(App.State.Settings);
         await App.CoreService.ShutdownAsync();
         App.State.Settings.CoreOnlyEnabled = false;
-        App.State.Settings.SystemProxyEnabled = false;
         await App.State.SavePreferencesAsync();
         await AppUpdateService.Current.ValidateInstallAsync();
         RecordUpdateTransition("validated-before-launch");
@@ -39,7 +38,6 @@ internal static class ShutdownCoordinator
             App.CoreService.ReleaseStoppedResources();
         }
         App.State.Settings.CoreOnlyEnabled = false;
-        App.State.Settings.SystemProxyEnabled = false;
         try
         {
             await App.State.FlushPendingConfigurationAsync();
@@ -59,7 +57,6 @@ internal static class ShutdownCoordinator
         try { App.CoreService.Stop(); }
         catch (Exception exception) { RecordExitFailure("session-end-core-stop", exception); }
         App.State.Settings.CoreOnlyEnabled = false;
-        App.State.Settings.SystemProxyEnabled = false;
         try
         {
             // Off the UI thread so the save does not wait on this blocked dispatcher.

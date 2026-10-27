@@ -358,6 +358,10 @@ public sealed partial class MainWindow : Window
         catch (Exception exception)
         {
             ShutdownCoordinator.RecordExitFailure("core-stop", exception);
+            // The update handoff may have stopped the core before failing; the health
+            // monitor only refreshes the switch for a core the user started.
+            App.State.Settings.CoreOnlyEnabled = App.CoreService.IsRunning;
+            UpdateCoreSwitch();
             _lifecycle = WindowLifecycle.Running;
             _exitRequested = false;
             _installUpdate = false;

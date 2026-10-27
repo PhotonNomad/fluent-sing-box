@@ -42,9 +42,15 @@ public static class WindowsProxyService
         NotifyWindows();
     }
 
+    // Every return leaves Windows without our proxy, so each one also clears the switch; callers
+    // that stop before the core is gone must not keep showing the proxy as on.
     public static bool Restore(AppSettingsData settings)
     {
-        if (!settings.HasSystemProxySnapshot) return true;
+        if (!settings.HasSystemProxySnapshot)
+        {
+            settings.SystemProxyEnabled = false;
+            return true;
+        }
 
         using var key = Registry.CurrentUser.CreateSubKey(InternetSettingsKey, writable: true)
             ?? throw new InvalidOperationException(Localization.Get("WindowsProxyService_CannotOpenTheCurrentUserSWindowsNetwork"));
@@ -55,6 +61,7 @@ public static class WindowsProxyService
         {
             settings.HasSystemProxySnapshot = false;
             settings.OwnedProxyServer = null;
+            settings.SystemProxyEnabled = false;
             return false;
         }
         var flags = settings.PreviousConnectionFlags ?? (1 | (settings.PreviousProxyEnable != 0 ? 2 : 0) | (!string.IsNullOrEmpty(settings.PreviousAutoConfigUrl) ? 4 : 0));
@@ -66,6 +73,7 @@ public static class WindowsProxyService
         RestoreString(key, "AutoConfigURL", settings.PreviousAutoConfigUrl);
         settings.HasSystemProxySnapshot = false;
         settings.OwnedProxyServer = null;
+        settings.SystemProxyEnabled = false;
         NotifyWindows();
         return true;
     }
