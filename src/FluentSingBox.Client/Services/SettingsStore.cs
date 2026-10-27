@@ -8,11 +8,26 @@ public static class SettingsStore
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
     public static async Task<AppSettingsData> LoadAsync(string path)
     {
-        if (!File.Exists(path)) return File.Exists(path + ".backup") ? await ReadAsync(path + ".backup") : new();
+        // Antivirus and sync tools can hold the file briefly while the app starts.
+        for (var attempt = 1; ; attempt++)
+        {
+            try { return await LoadOnceAsync(path); }
+            catch (IOException exception) when (exception is not FileNotFoundException && attempt < 5) { await Task.Delay(200); }
+        }
+    }
+
+    private static async Task<AppSettingsData> LoadOnceAsync(string path)
+    {
+        if (!File.Exists(path))
+        {
+            if (!File.Exists(path + ".backup")) return new();
+            try { return await ReadAsync(path + ".backup"); }
+            catch (JsonException) { KeepInvalid(path + ".backup"); return new(); }
+        }
         try { return await ReadAsync(path); }
         catch (JsonException)
         {
-            File.Copy(path, path + ".invalid-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N"));
+            KeepInvalid(path);
             if (!File.Exists(path + ".backup")) return new();
             try
             {
@@ -23,6 +38,9 @@ public static class SettingsStore
             catch (JsonException) { return new(); }
         }
     }
+
+    private static void KeepInvalid(string path) =>
+        File.Copy(path, path + ".invalid-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N"));
 
     public static async Task SaveAsync(string path, AppSettingsData settings)
     {

@@ -65,7 +65,7 @@ public sealed partial class App : Application
             var dialog = new ContentDialog
             {
                 Title = Localization.Get("App_FluentSingBoxCouldNotStart"),
-                Content = exception.Message,
+                Content = State.IsLoaded ? exception.Message : exception.Message + Environment.NewLine + Localization.Get("App_SettingsNotSaved"),
                 CloseButtonText = Localization.Get("App_Close")
             };
             Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(dialog, "Startup_ErrorDialog");

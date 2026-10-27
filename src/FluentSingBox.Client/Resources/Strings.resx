@@ -16,6 +16,10 @@
     <value>fluent sing-box could not start</value>
     <comment>Source: App.xaml.cs</comment>
   </data>
+  <data name="App_SettingsNotSaved" xml:space="preserve">
+    <value>Settings could not be read. Changes made in this session will not be saved; restart fluent sing-box.</value>
+    <comment>Source: App.xaml.cs</comment>
+  </data>
   <data name="App_Close" xml:space="preserve">
     <value>Close</value>
     <comment>Source: App.xaml.cs</comment>

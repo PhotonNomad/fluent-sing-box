@@ -21,15 +21,18 @@ public sealed class AppState
 
     public static AppState Current { get; } = new();
     public AppSettingsData Settings { get; private set; } = new();
+    public bool IsLoaded => _settingsPath.Length > 0;
     public event Action<string>? BackgroundSaveFailed;
 
     public async Task LoadAsync()
     {
         var directory = AppPaths.DataDirectory;
         Directory.CreateDirectory(directory);
-        _settingsPath = Path.Combine(directory, "settings.json");
-
-        var settings = await SettingsStore.LoadAsync(_settingsPath);
+        var settingsPath = Path.Combine(directory, "settings.json");
+        var settings = await SettingsStore.LoadAsync(settingsPath);
+        // Saving stays disabled until a successful read, so an unreadable file is never
+        // overwritten by empty defaults.
+        _settingsPath = settingsPath;
         foreach (var remove in _removeCollectionObservers) remove();
         _removeCollectionObservers.Clear();
         foreach (var item in _observed) item.PropertyChanged -= ObservedPropertyChanged;

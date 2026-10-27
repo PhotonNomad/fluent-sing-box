@@ -16,6 +16,10 @@
     <value>fluent sing-box 无法启动</value>
     <comment>Source: App.xaml.cs</comment>
   </data>
+  <data name="App_SettingsNotSaved" xml:space="preserve">
+    <value>无法读取设置，本次运行中的修改不会保存，请重新启动 fluent sing-box。</value>
+    <comment>Source: App.xaml.cs</comment>
+  </data>
   <data name="App_Close" xml:space="preserve">
     <value>关闭</value>
     <comment>Source: App.xaml.cs</comment>
