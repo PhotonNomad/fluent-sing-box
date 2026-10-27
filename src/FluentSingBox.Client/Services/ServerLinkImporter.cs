@@ -328,7 +328,8 @@ public static class ServerLinkImporter
 
     private static string DecodeBase64(string value)
     {
-        var normalized = Uri.UnescapeDataString(value).Replace('-', '+').Replace('_', '/');
+        // Subscriptions are often line-wrapped; padding must be computed without the whitespace.
+        var normalized = string.Concat(Uri.UnescapeDataString(value).Where(character => !char.IsWhiteSpace(character))).Replace('-', '+').Replace('_', '/');
         normalized = normalized.PadRight((normalized.Length + 3) / 4 * 4, '=');
         try { return Encoding.UTF8.GetString(Convert.FromBase64String(normalized)); }
         catch (FormatException) { throw new FormatException(Localization.Get("ServerLinkImporter_InvalidBase64Content")); }
