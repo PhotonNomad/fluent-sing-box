@@ -64,8 +64,8 @@ public static class SingBoxCoreHost
             catch (Exception exception)
             {
                 var logPath = Path.Combine(Path.GetDirectoryName(configPath) ?? string.Empty, "sing-box.log");
-                var details = File.Exists(logPath) ? await File.ReadAllTextAsync(logPath) : string.Empty;
-                if (details.Length > 2400) details = details[^2400..];
+                // sing-box still holds its log open for writing here; read it with shared access.
+                var details = await LogReader.TryReadTailAsync(logPath, 2400);
                 var exitText = core.HasExited ? Localization.Format("SingBoxCoreService_ExitCode0", core.ExitCode) : Localization.Get("SingBoxCoreService_TheCoreIsStillRunningButHasNot");
                 await writer.WriteLineAsync(CoreHostProtocol.Error(Localization.Format("SingBoxCoreService_SingBoxCouldNotStartAndListenOn", proxyPort, exitText, exception.Message, details)));
                 StopHostedCore(core, console, diagnosticPath);

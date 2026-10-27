@@ -27,6 +27,13 @@ public static class LogReader
         catch (FileNotFoundException) { return string.Empty; }
     }
 
+    // Failure paths read the log only to explain an error; a read error must not replace it.
+    public static async Task<string> TryReadTailAsync(string path, int maxBytes)
+    {
+        try { return await ReadTailAsync(path, maxBytes); }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { return string.Empty; }
+    }
+
     public static string Redact(string text, AppSettingsData settings)
     {
         var secrets = new HashSet<string>(StringComparer.Ordinal);

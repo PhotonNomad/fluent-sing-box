@@ -146,16 +146,14 @@ public sealed class SingBoxCoreService : IDisposable
         }
         catch (TimeoutException exception)
         {
-            var details = File.Exists(logPath) ? await File.ReadAllTextAsync(logPath) : string.Empty;
             await StopAsync();
-            if (details.Length > 1600) details = details[^1600..];
+            var details = await LogReader.TryReadTailAsync(logPath, 1600);
             throw new InvalidOperationException(Localization.Format("SingBoxCoreService_TimedOutWaitingForSingBoxToStart", details), exception);
         }
         catch (IOException exception)
         {
-            var details = File.Exists(logPath) ? await File.ReadAllTextAsync(logPath) : string.Empty;
             await StopAsync();
-            if (details.Length > 1600) details = details[^1600..];
+            var details = await LogReader.TryReadTailAsync(logPath, 1600);
             throw new InvalidOperationException(Localization.Format("SingBoxCoreService_CannotConnectToTheSingBoxCoreHost", details), exception);
         }
         catch (Exception exception)
@@ -204,10 +202,9 @@ public sealed class SingBoxCoreService : IDisposable
         catch (Exception exception)
         {
             var exitCode = IsProcessRunning(_coreProcess) ? (int?)null : _coreProcess.ExitCode;
-            var details = File.Exists(logPath) ? await File.ReadAllTextAsync(logPath) : string.Empty;
-            if (details.Length > 2400) details = details[^2400..];
             StopCoreProcess();
             CleanupHandles();
+            var details = await LogReader.TryReadTailAsync(logPath, 2400);
             var exitText = exitCode is null ? Localization.Get("SingBoxCoreService_NotExitedYet") : Localization.Format("SingBoxCoreService_ExitCode0", exitCode);
             throw new InvalidOperationException(Localization.Format("SingBoxCoreService_SingBoxCouldNotStartAndListenOn", proxyPort, exitText, exception.Message, details), exception);
         }
