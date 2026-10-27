@@ -1305,6 +1305,10 @@
     <value>无法设置全局 TUN</value>
     <comment>Source: Views\ProxyPage.xaml.cs</comment>
   </data>
+  <data name="ProxyPage_CannotSaveApplicationGroup" xml:space="preserve">
+    <value>无法保存应用组</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
   <data name="ProxyPage_CannotApplyServer" xml:space="preserve">
     <value>无法应用服务器</value>
     <comment>Source: Views\ProxyPage.xaml.cs</comment>

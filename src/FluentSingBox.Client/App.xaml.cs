@@ -16,7 +16,12 @@ public sealed partial class App : Application
     {
         InitializeComponent();
         UnhandledException += (_, eventArgs) =>
+        {
             DiagnosticsLog.Write(DiagnosticsCategory.ClientErrors, LogReader.Redact(eventArgs.Exception.ToString(), State.Settings));
+            // The process ends without the normal exit cleanup; Windows must not keep pointing at its local port.
+            try { WindowsProxyService.Restore(State.Settings); }
+            catch { }
+        };
     }
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)

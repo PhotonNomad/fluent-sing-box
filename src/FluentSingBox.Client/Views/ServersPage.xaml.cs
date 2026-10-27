@@ -212,7 +212,9 @@ public sealed partial class ServersPage : Page
             if (!isNew) await App.State.SaveAsync();
             return source;
         }
-        catch (Exception exception) when (exception is JsonException or FormatException or InvalidOperationException)
+        // Core validation can also fail with timeouts and IO or process-start errors; none may
+        // escape the async void Add/Edit handlers.
+        catch (Exception exception)
         {
             await ShowMessageAsync(Localization.Get("ServersPage_CannotEditServer"), exception.Message);
             return null;

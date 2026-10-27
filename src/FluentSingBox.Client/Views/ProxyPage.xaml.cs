@@ -89,12 +89,16 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
             return;
         }
 
-        await ManageApplicationAsync(new ApplicationProxyProfile { ServerId = App.State.Settings.DefaultServerId ?? string.Empty, MatchMode = "name" }, adding: true);
+        try { await ManageApplicationAsync(new ApplicationProxyProfile { ServerId = App.State.Settings.DefaultServerId ?? string.Empty, MatchMode = "name" }, adding: true); }
+        catch (Exception exception) { await ShowMessageAsync(Localization.Get("ProxyPage_CannotSaveApplicationGroup"), exception.Message); }
     }
 
     private async void EditApplication_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement { DataContext: ApplicationProxyProfile profile }) await ManageApplicationAsync(profile);
+        if (sender is not FrameworkElement { DataContext: ApplicationProxyProfile profile }) return;
+        // An exception escaping an async void handler ends the process and skips exit cleanup.
+        try { await ManageApplicationAsync(profile); }
+        catch (Exception exception) { await ShowMessageAsync(Localization.Get("ProxyPage_CannotSaveApplicationGroup"), exception.Message); }
     }
 
     private async void DeleteApplication_Click(object sender, RoutedEventArgs e)
@@ -115,8 +119,8 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
         try { await App.ProxyCoordinator.RefreshApplicationProfileAsync(profile); }
         catch (Exception exception)
         {
+            // SaveAsync has already rolled the model back; saving again would only fail again.
             profile.ServerId = previous;
-            await App.State.SaveAsync();
             await ShowMessageAsync(Localization.Get("ProxyPage_CannotApplyServer"), exception.Message);
         }
     }
@@ -299,8 +303,11 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
         if (adding) App.State.AddApplication(updated);
         else
         {
+            var index = App.State.Settings.Applications.IndexOf(profile);
+            // A failed background save may have rolled back this uncommitted group while the dialog was open.
+            if (index < 0) { App.State.AddApplication(updated); return; }
             foreach (var server in App.State.Settings.Servers) updated.AvailableServers.Add(server);
-            App.State.Settings.Applications[App.State.Settings.Applications.IndexOf(profile)] = updated;
+            App.State.Settings.Applications[index] = updated;
             await App.ProxyCoordinator.RefreshApplicationProfileAsync(updated);
         }
     }

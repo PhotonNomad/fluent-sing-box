@@ -1305,6 +1305,10 @@
     <value>Cannot configure global TUN</value>
     <comment>Source: Views\ProxyPage.xaml.cs</comment>
   </data>
+  <data name="ProxyPage_CannotSaveApplicationGroup" xml:space="preserve">
+    <value>Cannot save application group</value>
+    <comment>Source: Views\ProxyPage.xaml.cs</comment>
+  </data>
   <data name="ProxyPage_CannotApplyServer" xml:space="preserve">
     <value>Cannot apply server</value>
     <comment>Source: Views\ProxyPage.xaml.cs</comment>
