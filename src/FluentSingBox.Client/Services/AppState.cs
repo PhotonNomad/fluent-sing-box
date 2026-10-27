@@ -145,6 +145,13 @@ public sealed class AppState
         await _saveGate.WaitAsync();
         try
         {
+            // The snapshot below includes every edit made so far; a pending debounced save
+            // would only validate the same model again.
+            lock (_scheduleLock)
+            {
+                _dirty = false;
+                _debounce?.Cancel();
+            }
             var candidate = ConfigurationFileService.Snapshot(Settings);
             await ConfigurationFileService.SynchronizeAsync(candidate);
             await SettingsStore.SaveAsync(_settingsPath, candidate);

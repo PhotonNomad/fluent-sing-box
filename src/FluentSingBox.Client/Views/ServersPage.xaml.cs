@@ -213,7 +213,6 @@ public sealed partial class ServersPage : Page
             if (candidate.DefaultServerId != "direct" && !candidate.Servers.Any(server => server.Id == candidate.DefaultServerId)) candidate.DefaultServerId = candidateServer.Id;
             await App.CoreService.ValidateAsync(candidate);
             ServerEditorDraft.Apply(source, name, outbound);
-            if (!isNew) await App.State.SaveAsync();
             return source;
         }
         // Core validation can also fail with timeouts and IO or process-start errors; none may
