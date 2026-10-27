@@ -173,6 +173,7 @@ internal sealed class SchemaObjectForm
         }
         var options = schema["anyOf"] as JsonArray;
         var variants = options?.OfType<JsonObject>().Select(_catalog.Resolve).ToArray() ?? [schema];
+        var integer = variants.All(item => item["type"]?.ToString() is "integer" or "number");
         var objectSchema = variants.FirstOrDefault(item => item["type"]?.ToString() == "object");
         if (objectSchema is not null && _catalog.Properties(objectSchema, current as JsonObject ?? new()).Count > 0 && _depth < 2)
         {
@@ -223,7 +224,10 @@ internal sealed class SchemaObjectForm
                     if (_refreshingReferences) { result[key] = current?.DeepClone(); return; }
                     throw new InvalidOperationException(Localization.Get(dnsFinal ? "Schema_SelectDnsServer" : "Schema_SelectOutbound"));
                 }
-                Put(result, key, selected);
+                // Choices are shown as text; integer enums such as ip_version must be written back as numbers.
+                if (current is not null && selected == current.ToString()) result[key] = current.DeepClone();
+                else if (integer && long.TryParse(selected, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number)) result[key] = number;
+                else Put(result, key, selected);
             });
             combo.SelectionChanged += (_, _) => Changed?.Invoke();
             return Card(key, combo);
@@ -245,7 +249,6 @@ internal sealed class SchemaObjectForm
             PlaceholderText = simpleArray ? Localization.Get("Schema_OnePerLine") : complex ? "JSON" : Localization.Get("Schema_Default") };
         AutomationProperties.SetAutomationId(box, _id + "_" + key);
         box.TextChanged += (_, _) => Changed?.Invoke();
-        var integer = variants.All(item => item["type"]?.ToString() is "integer" or "number");
         _readers.Add(result =>
         {
             var text = box.Text.Trim();
