@@ -76,7 +76,8 @@ public sealed partial class ServersPage : Page
         try
         {
             var profiles = preview.SelectedItems.OfType<ServerImportEntry>().Where(item => item.Server is not null).Select(item => item.Server!).ToArray();
-            var hadDefault = App.State.FindServer(App.State.Settings.DefaultServerId) is not null;
+            // "direct" is an explicit choice, not a missing default.
+            var hadDefault = App.State.Settings.DefaultServerId == "direct" || App.State.FindServer(App.State.Settings.DefaultServerId) is not null;
             foreach (var profile in profiles) App.State.AddServer(profile);
             if (!hadDefault)
             {
