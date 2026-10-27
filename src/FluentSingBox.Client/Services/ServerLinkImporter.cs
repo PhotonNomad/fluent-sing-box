@@ -70,6 +70,7 @@ public static class ServerLinkImporter
     private static ServerProfile ParseUri(string link)
     {
         if (link.StartsWith("vmess://", StringComparison.OrdinalIgnoreCase)) return ParseVmess(link[8..]);
+        if (link.StartsWith("ss://", StringComparison.OrdinalIgnoreCase)) link = ExpandLegacyShadowsocks(link);
 
         var uri = new Uri(link);
         var scheme = uri.Scheme.ToLowerInvariant();
@@ -196,25 +197,11 @@ public static class ServerLinkImporter
 
     private static void ParseShadowsocks(Uri uri, JsonObject outbound, ref string? name)
     {
-        string userInfo;
-        string host = uri.Host;
+        // Legacy links were expanded to this form by ExpandLegacyShadowsocks.
+        if (string.IsNullOrWhiteSpace(uri.UserInfo)) throw new FormatException(Localization.Get("ServerLinkImporter_TheShadowsocksLinkIsMissingTheServerAddress"));
+        var userInfo = Uri.UnescapeDataString(uri.UserInfo);
+        var host = uri.Host;
         var port = uri.Port > 0 ? uri.Port : 8388;
-        if (!string.IsNullOrWhiteSpace(uri.UserInfo))
-        {
-            userInfo = Uri.UnescapeDataString(uri.UserInfo);
-        }
-        else
-        {
-            var body = uri.AbsolutePath.Trim('/');
-            var decoded = DecodeBase64(body);
-            var at = decoded.LastIndexOf('@');
-            if (at < 0) throw new FormatException(Localization.Get("ServerLinkImporter_TheShadowsocksLinkIsMissingTheServerAddress"));
-            userInfo = decoded[..at];
-            var endpoint = decoded[(at + 1)..];
-            var split = endpoint.LastIndexOf(':');
-            if (split < 1 || !int.TryParse(endpoint[(split + 1)..], out port)) throw new FormatException(Localization.Get("ServerLinkImporter_InvalidPortInTheShadowsocksLink"));
-            host = endpoint[..split];
-        }
 
         if (!userInfo.Contains(':')) userInfo = DecodeBase64(userInfo);
         var credentials = userInfo.Split(':', 2);
@@ -325,6 +312,23 @@ public static class ServerLinkImporter
     }
 
     private static string Decode(string value) => Uri.UnescapeDataString(value.Replace('+', ' '));
+
+    // Legacy ss://BASE64(method:password@host:port) keeps the base64 in the authority, which
+    // Uri lower-cases as a host name; rewrite it to the SIP002 userinfo@host:port form first.
+    private static string ExpandLegacyShadowsocks(string link)
+    {
+        var body = link[5..];
+        var end = body.IndexOfAny(['#', '?']);
+        var encoded = end < 0 ? body : body[..end];
+        if (encoded.Contains('@')) return link;
+        var decoded = DecodeBase64(encoded.TrimEnd('/'));
+        var at = decoded.LastIndexOf('@');
+        if (at < 0) throw new FormatException(Localization.Get("ServerLinkImporter_TheShadowsocksLinkIsMissingTheServerAddress"));
+        var endpoint = decoded[(at + 1)..];
+        var split = endpoint.LastIndexOf(':');
+        if (split < 1 || !int.TryParse(endpoint[(split + 1)..], out _)) throw new FormatException(Localization.Get("ServerLinkImporter_InvalidPortInTheShadowsocksLink"));
+        return "ss://" + Uri.EscapeDataString(decoded[..at]) + "@" + endpoint + (end < 0 ? "" : body[end..]);
+    }
 
     private static string DecodeBase64(string value)
     {
