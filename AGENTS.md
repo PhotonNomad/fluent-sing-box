@@ -72,6 +72,7 @@ tools/ProcessName.Regression/     进程名匹配的手动回归小工具
 | `sing-box/user-config.json` | 用户可编辑的完整配置（含 `.backup`） |
 | `sing-box/config.json` | 核心下次启动读取的运行配置 |
 | `sing-box/schema.json`、日志、`cache.db`、`rule-sets/` | 当前核心的 Schema、运行日志、缓存、更新过的规则集 |
+| `sing-box/failures/<时间>/` | 核心启动失败或意外退出时的现场：sing-box.log、core-host.log 末尾、预检报告、报错文本；只保留最近 10 份，不复制配置和设置文件 |
 | `updates/` | 更新状态与下载缓存 |
 
 ## 3. 行为约定（改代码前必须知道）

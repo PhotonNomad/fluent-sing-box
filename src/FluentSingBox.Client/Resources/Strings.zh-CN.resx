@@ -329,6 +329,10 @@
     <value>连接进程不是本次启动的核心宿主。</value>
     <comment>Source: Services\CoreControlPipe.cs</comment>
   </data>
+  <data name="CoreFailureSnapshot_SavedTo" xml:space="preserve">
+    <value>诊断文件已保存到：{0}</value>
+    <comment>Source: Services\CoreFailureSnapshot.cs</comment>
+  </data>
   <data name="CoreProcessLease_InvalidCoreProcessRecord" xml:space="preserve">
     <value>核心进程记录无效。</value>
     <comment>Source: Services\CoreProcessLease.cs</comment>

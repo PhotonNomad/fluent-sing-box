@@ -39,8 +39,11 @@ internal sealed class CoreHealthMonitor
             App.State.Settings.ResumeCoreOnLaunch = false;
             App.State.Settings.ResumeSystemProxyOnLaunch = false;
             _coreStateChanged();
+            var message = restored ? Localization.Get("MainWindow_TheCoreStoppedUnexpectedlyPreviousSystemProxySettings") : Localization.Get("MainWindow_TheCoreStoppedUnexpectedlyAnotherProgramChangedThe");
+            // The crashed run's log is current; the next start would rotate it away.
+            var snapshot = await CoreFailureSnapshot.SaveAsync(message, DateTime.MinValue);
             await App.State.SaveAsync();
-            _report(restored ? Localization.Get("MainWindow_TheCoreStoppedUnexpectedlyPreviousSystemProxySettings") : Localization.Get("MainWindow_TheCoreStoppedUnexpectedlyAnotherProgramChangedThe"));
+            _report(snapshot is null ? message : message + Environment.NewLine + CoreFailureSnapshot.Describe(snapshot));
         }
         catch (Exception exception) { _report(Localization.Get("MainWindow_TheCoreStoppedUnexpectedlyRecoveryFailed") + exception.Message); }
         finally { _recovering = false; }

@@ -62,8 +62,17 @@ public sealed class SingBoxCoreService : IDisposable
     {
         if (IsRunning) return;
         _status = CoreStatus.Starting;
+        var attemptStarted = DateTime.UtcNow;
         try { await StartInternalAsync(settings); _status = CoreStatus.Running; }
-        catch (Exception exception) { _status = CoreStatus.Faulted; StartupPreflight.WriteReport("failed", LogReader.Redact(exception.Message, settings)); throw; }
+        catch (Exception exception)
+        {
+            _status = CoreStatus.Faulted;
+            var message = LogReader.Redact(exception.Message, settings);
+            StartupPreflight.WriteReport("failed", message);
+            var snapshot = await CoreFailureSnapshot.SaveAsync(message, attemptStarted);
+            if (snapshot is null) throw;
+            throw new InvalidOperationException(exception.Message + Environment.NewLine + CoreFailureSnapshot.Describe(snapshot), exception);
+        }
     }
 
     private async Task StartInternalAsync(AppSettingsData settings)

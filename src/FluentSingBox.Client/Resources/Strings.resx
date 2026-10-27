@@ -329,6 +329,10 @@
     <value>The connected process is not the core host started by this instance.</value>
     <comment>Source: Services\CoreControlPipe.cs</comment>
   </data>
+  <data name="CoreFailureSnapshot_SavedTo" xml:space="preserve">
+    <value>Diagnostic files were saved to: {0}</value>
+    <comment>Source: Services\CoreFailureSnapshot.cs</comment>
+  </data>
   <data name="CoreProcessLease_InvalidCoreProcessRecord" xml:space="preserve">
     <value>Invalid core process record.</value>
     <comment>Source: Services\CoreProcessLease.cs</comment>
