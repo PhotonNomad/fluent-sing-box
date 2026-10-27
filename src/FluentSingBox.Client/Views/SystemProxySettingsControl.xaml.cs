@@ -17,9 +17,22 @@ public sealed partial class SystemProxySettingsControl : UserControl
         PortTextBox.TextChanged += (_, _) => ScheduleSave();
         UsernameTextBox.TextChanged += (_, _) => ScheduleSave();
         PasswordInput.PasswordChanged += (_, _) => ScheduleSave();
-        Loaded += (_, _) => LoadFromSettings();
-        Unloaded += async (_, _) => await _autoSave.FlushAsync();
+        Loaded += (_, _) =>
+        {
+            WindowsProxyService.StateChanged -= ProxyStateChanged;
+            WindowsProxyService.StateChanged += ProxyStateChanged;
+            LoadFromSettings();
+        };
+        Unloaded += async (_, _) =>
+        {
+            WindowsProxyService.StateChanged -= ProxyStateChanged;
+            await _autoSave.FlushAsync();
+        };
     }
+
+    // Only the switch follows; a full reload would discard a port or credential draft. The
+    // toggle handler ignores a value that already matches the settings.
+    private void ProxyStateChanged() => DispatcherQueue.TryEnqueue(() => SystemProxySwitch.IsOn = App.State.Settings.SystemProxyEnabled);
 
     private void ScheduleSave()
     {

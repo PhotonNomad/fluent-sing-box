@@ -25,7 +25,6 @@ public sealed class ProxyCoordinator(AppState state)
                 await state.SavePreferencesAsync();
                 if (_shuttingDown) throw new OperationCanceledException(Localization.Get("ProxyCoordinator_TheClientIsExiting"));
                 WindowsProxyService.Enable(state.Settings);
-                state.Settings.SystemProxyEnabled = true;
             }
             catch
             {

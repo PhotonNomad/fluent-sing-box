@@ -10,6 +10,10 @@ public static class WindowsProxyService
     private const int InternetOptionSettingsChanged = 39;
     private const int InternetOptionRefresh = 37;
 
+    // Raised after Enable or Restore changes SystemProxyEnabled; crash recovery and exit
+    // cleanup restore the proxy while the switch may be on screen.
+    public static event Action? StateChanged;
+
     public static void Capture(AppSettingsData settings)
     {
         using var key = Registry.CurrentUser.CreateSubKey(InternetSettingsKey, writable: true)
@@ -40,17 +44,15 @@ public static class WindowsProxyService
         key.SetValue("ProxyEnable", 1, RegistryValueKind.DWord);
         WindowsProxyConnection.Set(3, settings.OwnedProxyServer, "localhost;127.*;[::1]", null);
         NotifyWindows();
+        settings.SystemProxyEnabled = true;
+        StateChanged?.Invoke();
     }
 
     // Every return leaves Windows without our proxy, so each one also clears the switch; callers
     // that stop before the core is gone must not keep showing the proxy as on.
     public static bool Restore(AppSettingsData settings)
     {
-        if (!settings.HasSystemProxySnapshot)
-        {
-            settings.SystemProxyEnabled = false;
-            return true;
-        }
+        if (!settings.HasSystemProxySnapshot) return Released(settings, true);
 
         using var key = Registry.CurrentUser.CreateSubKey(InternetSettingsKey, writable: true)
             ?? throw new InvalidOperationException(Localization.Get("WindowsProxyService_CannotOpenTheCurrentUserSWindowsNetwork"));
@@ -61,8 +63,7 @@ public static class WindowsProxyService
         {
             settings.HasSystemProxySnapshot = false;
             settings.OwnedProxyServer = null;
-            settings.SystemProxyEnabled = false;
-            return false;
+            return Released(settings, false);
         }
         var flags = settings.PreviousConnectionFlags ?? (1 | (settings.PreviousProxyEnable != 0 ? 2 : 0) | (!string.IsNullOrEmpty(settings.PreviousAutoConfigUrl) ? 4 : 0));
         WindowsProxyConnection.Set(flags, settings.PreviousProxyServer, settings.PreviousProxyOverride, settings.PreviousAutoConfigUrl);
@@ -73,9 +74,15 @@ public static class WindowsProxyService
         RestoreString(key, "AutoConfigURL", settings.PreviousAutoConfigUrl);
         settings.HasSystemProxySnapshot = false;
         settings.OwnedProxyServer = null;
-        settings.SystemProxyEnabled = false;
         NotifyWindows();
-        return true;
+        return Released(settings, true);
+    }
+
+    private static bool Released(AppSettingsData settings, bool restored)
+    {
+        settings.SystemProxyEnabled = false;
+        StateChanged?.Invoke();
+        return restored;
     }
 
     private static void RestoreString(RegistryKey key, string name, string? value)
