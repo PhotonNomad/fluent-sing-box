@@ -10,6 +10,7 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
 {
     private bool _loading;
     private bool _observingApplications;
+    private bool _observingServers;
     private bool _changingApplicationProxy;
     private readonly TunConfigurationForm _tun;
 
@@ -35,18 +36,32 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
             App.State.Settings.Applications.CollectionChanged += Applications_CollectionChanged;
             _observingApplications = true;
         }
+        if (!_observingServers)
+        {
+            App.State.Settings.Servers.CollectionChanged += Servers_CollectionChanged;
+            _observingServers = true;
+        }
     }
 
     public async Task<bool> FlushPendingChangesAsync()
         => await SystemProxySettings.FlushPendingChangesAsync() && await _tun.FlushPendingChangesAsync();
 
     private void Applications_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs args) => UpdateEmptyApplicationsMessage();
+    private void Servers_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs args) => LoadDefaultServer();
+    public void RefreshServers() => LoadDefaultServer();
 
     private void ProxyPage_Unloaded(object sender, RoutedEventArgs args)
     {
-        if (!_observingApplications) return;
-        App.State.Settings.Applications.CollectionChanged -= Applications_CollectionChanged;
-        _observingApplications = false;
+        if (_observingApplications)
+        {
+            App.State.Settings.Applications.CollectionChanged -= Applications_CollectionChanged;
+            _observingApplications = false;
+        }
+        if (_observingServers)
+        {
+            App.State.Settings.Servers.CollectionChanged -= Servers_CollectionChanged;
+            _observingServers = false;
+        }
     }
 
     private void LoadDefaultServer()

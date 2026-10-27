@@ -69,6 +69,10 @@ public sealed partial class MainWindow : Window
             {
                 serversPage.RefreshView();
             }
+            else if (ContentFrame.Content is ProxyPage proxyPage)
+            {
+                proxyPage.RefreshServers();
+            }
         });
         Activated += async (_, _) =>
         {
@@ -76,6 +80,10 @@ public sealed partial class MainWindow : Window
             if (ContentFrame.Content is ServersPage serversPage)
             {
                 serversPage.RefreshView();
+            }
+            else if (ContentFrame.Content is ProxyPage proxyPage)
+            {
+                proxyPage.RefreshServers();
             }
         };
     }

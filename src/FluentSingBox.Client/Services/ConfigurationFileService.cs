@@ -230,6 +230,32 @@ public static class ConfigurationFileService
             if (existing is not null)
             {
                 existing.FromUserConfig = true;
+                if (existing.Id != cs.Id)
+                {
+                    var oldId = existing.Id;
+                    var newId = cs.Id;
+                    existing.Id = newId;
+
+                    if (settings.DefaultServerId == oldId)
+                        settings.DefaultServerId = newId;
+
+                    if (settings.RouteFinalServerId == oldId)
+                        settings.RouteFinalServerId = newId;
+
+                    foreach (var rule in settings.RoutingRules)
+                    {
+                        if (rule.ServerId == oldId)
+                            rule.ServerId = newId;
+                    }
+
+                    foreach (var app in settings.Applications)
+                    {
+                        if (app.SelectedServerId == oldId)
+                            app.SelectedServerId = newId;
+                        if (app.ServerId == oldId)
+                            app.ServerId = newId;
+                    }
+                }
                 if (!string.IsNullOrWhiteSpace(cs.Name)) existing.Name = cs.Name;
                 existing.Address = cs.Address;
                 existing.Port = cs.Port;
