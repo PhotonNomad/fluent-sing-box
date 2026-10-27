@@ -220,18 +220,22 @@ public sealed class ServerEditorForm : Grid
             Header = Localization.Get("ServerEditorForm_AdvancedConfigurationOptional"), HorizontalAlignment = HorizontalAlignment.Stretch, Content = advancedContent
         };
         AutomationProperties.SetAutomationId(advanced, "ServerEditor_Advanced");
-        advanced.Expanding += (_, _) =>
-        {
-            if (_advancedMode.IsChecked == true) return;
-            try { _preview.Text = _current.Build().ToJsonString(new JsonSerializerOptions { WriteIndented = true }); }
-            catch (FormatException exception) { _preview.Text = exception.Message; }
-        };
+        advanced.Expanding += (_, _) => { if (_advancedMode.IsChecked != true) RefreshPreview(); };
         _fields.Children.Add(advanced);
         UpdateVisibility();
     }
 
+    private void RefreshPreview()
+    {
+        if (_preview is null) return;
+        try { _preview.Text = _current.Build().ToJsonString(new JsonSerializerOptions { WriteIndented = true }); }
+        catch (FormatException exception) { _preview.Text = exception.Message; }
+    }
+
     private void SetAdvancedMode(bool enabled)
     {
+        // Field edits made after the fold was expanded must reach the JSON that is about to be saved.
+        if (enabled) RefreshPreview();
         if (_preview is not null) _preview.IsReadOnly = !enabled;
         _type.IsEnabled = !enabled;
         foreach (var (_, control) in _controls) if (control is Control input) input.IsEnabled = !enabled;
