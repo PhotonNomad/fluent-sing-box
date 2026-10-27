@@ -85,9 +85,10 @@ public sealed partial class ServersPage : Page
                     ?? profiles.FirstOrDefault();
                 if (defaultProfile is not null) App.State.SetDefaultServer(defaultProfile);
             }
-            await ApplyChangesAsync();
+            var saved = await ApplyChangesAsync();
             RefreshView();
-            if (profiles.Length > 1) await ShowMessageAsync(Localization.Get("ServersPage_ImportComplete"), Localization.Format("ServersPage_Added0Servers", profiles.Length));
+            // A failed save removed the imported servers again; the page already shows why.
+            if (saved && profiles.Length > 1) await ShowMessageAsync(Localization.Get("ServersPage_ImportComplete"), Localization.Format("ServersPage_Added0Servers", profiles.Length));
         }
         catch (Exception exception) when (exception is FormatException or JsonException)
         {
@@ -145,14 +146,16 @@ public sealed partial class ServersPage : Page
         if (sender is FrameworkElement { DataContext: ServerProfile server }) await DeleteServerAsync(server);
     }
 
-    private async Task ApplyChangesAsync()
+    // Reports a failure on the page and returns false; the model has already been rolled back.
+    private async Task<bool> ApplyChangesAsync()
     {
-        try { await App.ProxyCoordinator.ApplyConfigurationChangesAsync(); }
+        try { await App.ProxyCoordinator.ApplyConfigurationChangesAsync(); return true; }
         catch (Exception exception)
         {
             OperationMessage.IsOpen = true;
             OperationMessage.Severity = InfoBarSeverity.Error;
             OperationMessage.Message = LogReader.Redact(exception.Message, App.State.Settings);
+            return false;
         }
     }
 
