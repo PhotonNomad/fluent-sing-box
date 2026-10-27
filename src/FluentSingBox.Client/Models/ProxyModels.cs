@@ -359,6 +359,11 @@ public sealed class ApplicationProxyProfile : ObservableModel
     }
 }
 
+// Settings that never reach the generated configuration. They hold preferences saved on their
+// own or the real state of the Windows proxy, so a failed configuration save must not revert them.
+[AttributeUsage(AttributeTargets.Property)]
+public sealed class KeepOnRollbackAttribute : Attribute { }
+
 public sealed class AppSettingsData
 {
     public ConfigurationOptions Configuration { get; set; } = new();
@@ -369,30 +374,30 @@ public sealed class AppSettingsData
     public string? DefaultServerId { get; set; }
     public string RouteFinalMode { get; set; } = "default";
     public string? RouteFinalServerId { get; set; }
-    public string SingBoxExecutablePath { get; set; } = string.Empty;
-    public string ThemeChoice { get; set; } = "system";
-    public string LanguageChoice { get; set; } = "system";
-    public bool LaunchAtStartup { get; set; }
-    public bool SystemProxyEnabled { get; set; }
+    [KeepOnRollback] public string SingBoxExecutablePath { get; set; } = string.Empty;
+    [KeepOnRollback] public string ThemeChoice { get; set; } = "system";
+    [KeepOnRollback] public string LanguageChoice { get; set; } = "system";
+    [KeepOnRollback] public bool LaunchAtStartup { get; set; }
+    [KeepOnRollback] public bool SystemProxyEnabled { get; set; }
     // The managed mixed inbound (system-http); the Windows proxy switch points at it.
     public bool SystemProxyInboundEnabled { get; set; } = true;
     public bool GlobalTunEnabled { get; set; }
     // The user's last core and system proxy choices. Exit cleanup clears the runtime flags
     // above but not these, so the next launch can bring the same session back.
-    public bool ResumeCoreOnLaunch { get; set; }
-    public bool ResumeSystemProxyOnLaunch { get; set; }
+    [KeepOnRollback] public bool ResumeCoreOnLaunch { get; set; }
+    [KeepOnRollback] public bool ResumeSystemProxyOnLaunch { get; set; }
     public int SystemProxyPort { get; set; } = 10809;
     public bool SystemProxyAuthEnabled { get; set; }
     public string SystemProxyUsername { get; set; } = string.Empty;
     public string SystemProxyPassword { get; set; } = string.Empty;
-    public bool HasSystemProxySnapshot { get; set; }
-    public int PreviousProxyEnable { get; set; }
-    public int? PreviousConnectionFlags { get; set; }
-    public string? PreviousProxyServer { get; set; }
-    public string? PreviousProxyOverride { get; set; }
-    public string? PreviousAutoConfigUrl { get; set; }
-    public string? OwnedProxyServer { get; set; }
-    public bool PreviousProxyEnablePresent { get; set; } = true;
+    [KeepOnRollback] public bool HasSystemProxySnapshot { get; set; }
+    [KeepOnRollback] public int PreviousProxyEnable { get; set; }
+    [KeepOnRollback] public int? PreviousConnectionFlags { get; set; }
+    [KeepOnRollback] public string? PreviousProxyServer { get; set; }
+    [KeepOnRollback] public string? PreviousProxyOverride { get; set; }
+    [KeepOnRollback] public string? PreviousAutoConfigUrl { get; set; }
+    [KeepOnRollback] public string? OwnedProxyServer { get; set; }
+    [KeepOnRollback] public bool PreviousProxyEnablePresent { get; set; } = true;
 
     public void EnsureBuiltInRules()
     {
