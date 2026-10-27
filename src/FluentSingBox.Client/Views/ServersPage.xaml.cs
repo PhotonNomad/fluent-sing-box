@@ -12,10 +12,16 @@ public sealed partial class ServersPage : Page
     public ServersPage()
     {
         InitializeComponent();
-        Loaded += (_, _) => RefreshView();
+        Loaded += async (_, _) => await RefreshViewAsync();
     }
 
-    private void RefreshView()
+    private async Task RefreshViewAsync()
+    {
+        await ConfigurationFileService.SynchronizeWithUserConfigAsync(App.State.Settings);
+        RefreshView();
+    }
+
+    public void RefreshView()
     {
         ServerList.ItemsSource = null;
         ServerList.ItemsSource = App.State.Settings.Servers;

@@ -35,6 +35,58 @@ public static class ServerLinkImporter
         return result;
     }
 
+    public static readonly HashSet<string> NonProxyOutboundTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "direct", "block", "dns", "selector", "urltest"
+    };
+
+    public static IReadOnlyList<ServerProfile> ExtractProxyServers(string json)
+    {
+        var text = json.Trim();
+        if (text.Length == 0) return [];
+        JsonNode? root;
+        try { root = JsonNode.Parse(text); }
+        catch (JsonException) { return []; }
+        if (root is null) return [];
+
+        var entries = new List<(string Section, JsonObject Node)>();
+        if (root is JsonObject configuration && configuration["type"] is null && (configuration["outbounds"] is JsonArray || configuration["endpoints"] is JsonArray))
+        {
+            foreach (var section in new[] { "outbounds", "endpoints" })
+            {
+                if (configuration[section] is JsonArray array)
+                {
+                    foreach (var item in array.OfType<JsonObject>())
+                    {
+                        entries.Add((section, item));
+                    }
+                }
+            }
+        }
+        else if (root is JsonArray array)
+        {
+            foreach (var item in array.OfType<JsonObject>())
+            {
+                entries.Add(("outbounds", item));
+            }
+        }
+        else if (root is JsonObject single && single["type"] is not null)
+        {
+            entries.Add(("outbounds", single));
+        }
+
+        var profiles = new List<ServerProfile>();
+        foreach (var (section, node) in entries)
+        {
+            var type = node["type"]?.GetValue<string>();
+            if (string.IsNullOrWhiteSpace(type) || NonProxyOutboundTypes.Contains(type)) continue;
+            var profile = CreateProfile((JsonObject)node.DeepClone(), null);
+            profile.ConfigSection = section;
+            profiles.Add(profile);
+        }
+        return profiles;
+    }
+
     private static IReadOnlyList<ServerProfile> ParseJson(string json)
     {
         var root = JsonNode.Parse(json) ?? throw new FormatException(Localization.Get("ServerLinkImporter_TheJSONContentIsEmpty"));
@@ -46,6 +98,8 @@ public static class ServerLinkImporter
                     foreach (var entry in entries)
                     {
                         if (entry is not JsonObject node || string.IsNullOrWhiteSpace(node["type"]?.ToString())) throw new FormatException(Localization.Get("ServerLinkImporter_EveryConfigurationEntryMustBeAnObjectContaining"));
+                        var type = node["type"]?.GetValue<string>();
+                        if (!string.IsNullOrWhiteSpace(type) && NonProxyOutboundTypes.Contains(type)) continue;
                         var profile = CreateProfile((JsonObject)node.DeepClone(), null);
                         profile.ConfigSection = section;
                         profiles.Add(profile);
@@ -355,14 +409,27 @@ public static class ServerLinkImporter
         _ => -1
     };
 
+    public static string GenerateStableId(string type, string host, int port, string? tag)
+    {
+        var raw = $"{type}:{host}:{port}:{tag}".ToLowerInvariant();
+        var bytes = System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(raw));
+        return Convert.ToHexString(bytes).ToLowerInvariant();
+    }
+
     private static ServerProfile CreateProfile(JsonObject outbound, string? preferredName)
     {
         var type = outbound["type"]?.GetValue<string>() ?? "sing-box";
         var host = outbound["server"]?.GetValue<string>() ?? string.Empty;
         var port = int.TryParse(outbound["server_port"]?.ToString(), out var parsedPort) ? parsedPort : 0;
+        if (string.IsNullOrWhiteSpace(host) && outbound["peers"] is JsonArray peers && peers.FirstOrDefault() is JsonObject firstPeer)
+        {
+            host = firstPeer["server"]?.GetValue<string>() ?? string.Empty;
+            if (int.TryParse(firstPeer["server_port"]?.ToString(), out var peerPort)) port = peerPort;
+        }
         var tag = outbound["tag"]?.GetValue<string>();
         return new ServerProfile
         {
+            Id = GenerateStableId(type, host, port, tag),
             Name = string.IsNullOrWhiteSpace(preferredName) ? (string.IsNullOrWhiteSpace(tag) ? $"{type} {host}:{port}".Trim() : tag) : preferredName,
             Address = host,
             Port = port,

@@ -17,13 +17,15 @@ public sealed class SingBoxConfigBuilder
         var defaultServer = settings.Servers.FirstOrDefault(server => server.Id == settings.DefaultServerId);
         if (defaultServer is null && settings.Servers.Count > 0 && settings.DefaultServerId != "direct")
             throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_AddAndSelectADefaultServerFirst"));
+        var tagMap = BuildServerTagMap(settings.Servers);
+        string ResolveTag(string serverId) => tagMap.TryGetValue(serverId, out var mapped) ? mapped : OutboundTag(serverId);
         var finalOutbound = settings.RouteFinalMode switch
         {
             "auto" => settings.GlobalTunEnabled ? "proxy" : "direct",
             "direct" => "direct",
             "default" => "proxy",
             "server" => settings.Servers.Any(server => server.Id == settings.RouteFinalServerId)
-                ? OutboundTag(settings.RouteFinalServerId!)
+                ? ResolveTag(settings.RouteFinalServerId!)
                 : throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_TheServerSelectedForUnmatchedTrafficFinalNo")),
             _ => throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_TheUnmatchedTrafficFinalActionIsInvalidSelect"))
         };
@@ -65,19 +67,19 @@ public sealed class SingBoxConfigBuilder
         foreach (var server in settings.Servers.Where(server => !string.IsNullOrWhiteSpace(server.OutboundJson)))
         {
             var sourceTag = ParseOutbound(server)["tag"]?.GetValue<string>();
-            if (!string.IsNullOrWhiteSpace(sourceTag) && !importedTags.TryAdd(sourceTag, OutboundTag(server.Id)))
-                throw new InvalidOperationException(Localization.Format("SingBoxConfigBuilder_DuplicateServerTag0GiveEachServerA", sourceTag));
+            if (!string.IsNullOrWhiteSpace(sourceTag))
+                importedTags.TryAdd(sourceTag, ResolveTag(server.Id));
         }
         foreach (var server in settings.Servers.OrderByDescending(server => server.Id == defaultServer?.Id))
         {
-            (server.ConfigSection == "endpoints" ? endpoints : outbounds).Add(BuildServerOutbound(server, OutboundTag(server.Id), importedTags));
+            (server.ConfigSection == "endpoints" ? endpoints : outbounds).Add(BuildServerOutbound(server, ResolveTag(server.Id), importedTags));
         }
         outbounds.Add(new JsonObject { ["type"] = "direct", ["tag"] = "direct" });
         outbounds.Add(new JsonObject
         {
             ["type"] = "selector", ["tag"] = "proxy",
-            ["outbounds"] = new JsonArray(settings.Servers.Select(server => (JsonNode?)JsonValue.Create(OutboundTag(server.Id))).Append(JsonValue.Create("direct")).ToArray()),
-            ["default"] = defaultServer is null ? "direct" : OutboundTag(defaultServer.Id)
+            ["outbounds"] = new JsonArray(settings.Servers.Select(server => (JsonNode?)JsonValue.Create(ResolveTag(server.Id))).Append(JsonValue.Create("direct")).ToArray()),
+            ["default"] = defaultServer is null ? "direct" : ResolveTag(defaultServer.Id)
         });
 
         var inbounds = new JsonArray();
@@ -152,7 +154,7 @@ public sealed class SingBoxConfigBuilder
                 ["inbound"] = new JsonArray("app-tun"),
                 [group.Key] = new JsonArray(group.Select(path => (JsonNode?)JsonValue.Create(group.Key == "process_path_regex" ? ApplicationMatching.StorePathRegex(path)! : path)).ToArray()),
                 ["action"] = "route",
-                ["outbound"] = server is null ? "proxy" : OutboundTag(server.Id)
+                ["outbound"] = server is null ? "proxy" : ResolveTag(server.Id)
             });
         }
 
@@ -174,7 +176,7 @@ public sealed class SingBoxConfigBuilder
 
         foreach (var rule in settings.RoutingRules.Where(rule => rule.IsEnabled && !rule.IsBuiltIn && !rule.MatchPrivateAddresses && rule.Outbound != "block"))
         {
-            AddAddressRule(routeRules, rule, defaultServer, settings);
+            AddAddressRule(routeRules, rule, defaultServer, settings, tagMap);
         }
 
         if (settings.RoutingRules.Any(rule => rule.IsEnabled && rule.BuiltInKind == "china-domains"))
@@ -296,9 +298,33 @@ public sealed class SingBoxConfigBuilder
 
     public static string OutboundTag(string serverId) => $"proxy-{serverId}";
 
-    // The tag is an internal key; the server name in settings is the only display name.
+    public static Dictionary<string, string> BuildServerTagMap(IEnumerable<ServerProfile> servers)
+    {
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        var usedTags = new HashSet<string>(StringComparer.Ordinal) { "direct", "block", "dns", "proxy" };
+        foreach (var server in servers)
+        {
+            var rawName = server.Name?.Trim();
+            var baseTag = string.IsNullOrWhiteSpace(rawName) ? OutboundTag(server.Id) : rawName;
+            var tag = baseTag;
+            var counter = 2;
+            while (!usedTags.Add(tag))
+            {
+                tag = $"{baseTag}-{counter++}";
+            }
+            result[server.Id] = tag;
+        }
+        return result;
+    }
+
+    // The tag is an internal key or friendly unique name; the server name in settings is the display name.
     public static string OutboundDisplayName(string tag, IEnumerable<ServerProfile> servers)
-        => servers.FirstOrDefault(server => OutboundTag(server.Id) == tag) is { } server && !string.IsNullOrWhiteSpace(server.Name) ? server.Name : tag;
+    {
+        var list = servers as IReadOnlyList<ServerProfile> ?? servers.ToList();
+        var tagMap = BuildServerTagMap(list);
+        return list.FirstOrDefault(server => (tagMap.TryGetValue(server.Id, out var mapped) ? mapped : OutboundTag(server.Id)) == tag) is { } server
+            && !string.IsNullOrWhiteSpace(server.Name) ? server.Name : tag;
+    }
 
     public static JsonObject BuildManagedInbound(AppSettingsData settings)
     {
@@ -325,7 +351,7 @@ public sealed class SingBoxConfigBuilder
         return ruleSet;
     }
 
-    private static void AddAddressRule(JsonArray routeRules, RouteRuleProfile rule, ServerProfile? defaultServer, AppSettingsData settings)
+    private static void AddAddressRule(JsonArray routeRules, RouteRuleProfile rule, ServerProfile? defaultServer, AppSettingsData settings, IReadOnlyDictionary<string, string> tagMap)
     {
         RouteAddressValidator.Validate(rule.Addresses);
         var tokens = rule.Addresses
@@ -364,7 +390,7 @@ public sealed class SingBoxConfigBuilder
             : new JsonObject
             {
                 ["action"] = "route",
-                ["outbound"] = ResolveOutbound(rule, defaultServer, settings)
+                ["outbound"] = ResolveOutbound(rule, defaultServer, settings, tagMap)
             };
         if (domains.Count > 0) route["domain"] = domains;
         if (domainSuffixes.Count > 0) route["domain_suffix"] = domainSuffixes;
@@ -495,12 +521,14 @@ public sealed class SingBoxConfigBuilder
         }
     }
 
-    private static string ResolveOutbound(RouteRuleProfile rule, ServerProfile? defaultServer, AppSettingsData settings) =>
+    private static string ResolveOutbound(RouteRuleProfile rule, ServerProfile? defaultServer, AppSettingsData settings, IReadOnlyDictionary<string, string> tagMap) =>
         rule.Outbound switch
         {
             "direct" => "direct",
             "block" => "block",
-            "proxy" => settings.Servers.FirstOrDefault(server => server.Id == rule.ServerId) is { } selected ? OutboundTag(selected.Id) : "proxy",
+            "proxy" => settings.Servers.FirstOrDefault(server => server.Id == rule.ServerId) is { } selected
+                ? (tagMap.TryGetValue(selected.Id, out var tag) ? tag : OutboundTag(selected.Id))
+                : "proxy",
             _ => "proxy"
         };
 

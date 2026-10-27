@@ -13,7 +13,17 @@ public static class ConfigurationFileService
     private static readonly SemaphoreSlim Gate = new(1, 1);
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
-    public static AppSettingsData Snapshot(AppSettingsData settings) => JsonSerializer.Deserialize<AppSettingsData>(JsonSerializer.Serialize(settings))!;
+    public static AppSettingsData Snapshot(AppSettingsData settings)
+    {
+        var clone = JsonSerializer.Deserialize<AppSettingsData>(JsonSerializer.Serialize(settings))!;
+        var configMap = settings.Servers.ToDictionary(s => s.Id, s => s.FromUserConfig);
+        foreach (var server in clone.Servers)
+        {
+            if (configMap.TryGetValue(server.Id, out var fromConfig))
+                server.FromUserConfig = fromConfig;
+        }
+        return clone;
+    }
 
     // Validate draft form changes against the same merged source that SaveAsync will write.
     public static string ApplyPendingChanges(AppSettingsData settings, string json)
@@ -142,7 +152,7 @@ public static class ConfigurationFileService
         }
     }
 
-    public static async Task ImportAsync(AppSettingsData settings, string json, string? expectedSource = null, bool validateWithCore = true)
+    public static async Task ImportAsync(AppSettingsData settings, string json, string? expectedSource = null, bool validateWithCore = true, bool syncServers = true)
     {
         await Gate.WaitAsync();
         var staging = FilePath + ".import-" + Guid.NewGuid().ToString("N") + ".json";
@@ -163,11 +173,18 @@ public static class ConfigurationFileService
                 using var core = new SingBoxCoreService();
                 runtime = await core.BuildValidatedConfigurationAsync(candidate);
             }
+
+            if (syncServers && expectedSource is null)
+            {
+                await SynchronizeWithUserConfigAsync(settings, node.ToJsonString());
+            }
+
             string? baseline;
             try { baseline = Generated(settings); }
             catch (InvalidOperationException) { baseline = null; } // A valid imported file need not have valid GUI profiles.
             if (expectedSource is not null && await File.ReadAllTextAsync(FilePath) != expectedSource)
                 throw new InvalidOperationException(Localization.Get("Schema_SourceChanged"));
+            ConfigFileWatcher.SuppressNext(TimeSpan.FromMilliseconds(500));
             await ReplacePairAsync(FilePath, node.ToJsonString(JsonOptions), baseline ?? "{}", runtime);
             await DnsCachePolicy.TrackAsync(settings, node.ToJsonString());
             settings.Configuration.ExternalFilePath = FilePath;
@@ -180,6 +197,83 @@ public static class ConfigurationFileService
         {
             try { TryDeleteStagingFile(staging, settings); }
             finally { Gate.Release(); }
+        }
+    }
+
+    public static async Task SynchronizeWithUserConfigAsync(AppSettingsData settings, string? directJson = null)
+    {
+        string text;
+        if (!string.IsNullOrWhiteSpace(directJson))
+        {
+            text = directJson;
+        }
+        else
+        {
+            var path = !string.IsNullOrWhiteSpace(settings.Configuration.ExternalFilePath)
+                ? settings.Configuration.ExternalFilePath
+                : FilePath;
+
+            if (!File.Exists(path)) return;
+            try { text = await File.ReadAllTextAsync(path); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { return; }
+        }
+
+        var configServers = ServerLinkImporter.ExtractProxyServers(text);
+        var configMatched = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var cs in configServers)
+        {
+            cs.FromUserConfig = true;
+            var existing = settings.Servers.FirstOrDefault(es =>
+                (es.FromUserConfig && es.Id == cs.Id)
+                || ServerMetadataComparer.HasEquivalentConnectionMetadata(cs, es));
+            if (existing is not null)
+            {
+                existing.FromUserConfig = true;
+                if (!string.IsNullOrWhiteSpace(cs.Name)) existing.Name = cs.Name;
+                existing.Address = cs.Address;
+                existing.Port = cs.Port;
+                existing.OutboundJson = cs.OutboundJson;
+                existing.ConfigSection = cs.ConfigSection;
+                configMatched.Add(existing.Id);
+            }
+            else
+            {
+                settings.Servers.Add(cs);
+                configMatched.Add(cs.Id);
+                foreach (var app in settings.Applications)
+                {
+                    if (!app.AvailableServers.Any(s => s.Id == cs.Id))
+                        app.AvailableServers.Add(cs);
+                }
+            }
+        }
+
+        var toRemove = settings.Servers.Where(s => s.FromUserConfig && !configMatched.Contains(s.Id)).ToList();
+        foreach (var removed in toRemove)
+        {
+            settings.Servers.Remove(removed);
+            foreach (var app in settings.Applications)
+            {
+                var appServer = app.AvailableServers.FirstOrDefault(s => s.Id == removed.Id);
+                if (appServer is not null) app.AvailableServers.Remove(appServer);
+            }
+        }
+
+        var currentDefault = settings.Servers.FirstOrDefault(s => s.Id == settings.DefaultServerId);
+        if (currentDefault is null && settings.Servers.Count > 0)
+        {
+            var newDefault = settings.Servers.FirstOrDefault(s => s.ProtocolSummary is not ("direct" or "block" or "dns"))
+                ?? settings.Servers.FirstOrDefault();
+            if (newDefault is not null)
+            {
+                settings.DefaultServerId = newDefault.Id;
+            }
+        }
+
+        foreach (var server in settings.Servers)
+        {
+            server.IsDefault = server.Id == settings.DefaultServerId;
         }
     }
 

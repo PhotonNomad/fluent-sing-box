@@ -26,10 +26,14 @@ public static class SettingsStore
 
     public static async Task SaveAsync(string path, AppSettingsData settings)
     {
+        ConfigFileWatcher.SuppressNext(TimeSpan.FromMilliseconds(500));
         var temporary = path + ".tmp";
-        // Callers serialize writes; capture JSON before awaiting IO so UI edits cannot
-        // mutate a collection while its async serialization is enumerating it.
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(settings, Options);
+        // Do not dump user-config.json servers into settings.json:
+        var copy = ConfigurationFileService.Snapshot(settings);
+        var externalIds = new HashSet<string>(settings.Servers.Where(s => s.FromUserConfig).Select(s => s.Id), StringComparer.Ordinal);
+        copy.Servers = new System.Collections.ObjectModel.ObservableCollection<ServerProfile>(
+            copy.Servers.Where(s => !externalIds.Contains(s.Id)));
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(copy, Options);
         await using (var output = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true))
         {
             await output.WriteAsync(bytes);

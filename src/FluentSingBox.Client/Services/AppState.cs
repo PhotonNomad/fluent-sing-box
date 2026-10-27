@@ -47,7 +47,7 @@ public sealed class AppState
             Settings.SystemProxyEnabled = false;
         }
 
-
+        await ConfigurationFileService.SynchronizeWithUserConfigAsync(Settings);
         if (Settings.DefaultServerId != "direct" && !Settings.Servers.Any(server => server.Id == Settings.DefaultServerId))
         {
             Settings.DefaultServerId = Settings.Servers.FirstOrDefault()?.Id;
@@ -75,6 +75,56 @@ public sealed class AppState
         foreach (var item in Settings.RoutingRules) Observe(item);
         await SavePreferencesAsync();
         _committedSettings = ConfigurationFileService.Snapshot(Settings);
+    }
+
+    public async Task ReloadSettingsAsync()
+    {
+        if (string.IsNullOrEmpty(_settingsPath)) return;
+        await _saveGate.WaitAsync();
+        try
+        {
+            var settings = await SettingsStore.LoadAsync(_settingsPath);
+            foreach (var remove in _removeCollectionObservers) remove();
+            _removeCollectionObservers.Clear();
+            foreach (var item in _observed) item.PropertyChanged -= ObservedPropertyChanged;
+            _observed.Clear();
+
+            Settings = settings;
+            Settings.CoreOnlyEnabled = false;
+
+            await ConfigurationFileService.SynchronizeWithUserConfigAsync(Settings);
+
+            if (Settings.DefaultServerId != "direct" && !Settings.Servers.Any(server => server.Id == Settings.DefaultServerId))
+            {
+                Settings.DefaultServerId = Settings.Servers.FirstOrDefault()?.Id;
+            }
+            Settings.EnsureBuiltInRules();
+            foreach (var server in Settings.Servers)
+            {
+                server.IsDefault = server.Id == Settings.DefaultServerId;
+            }
+            for (var index = 0; index < Settings.Applications.Count; index++)
+            {
+                var app = Settings.Applications[index];
+                app.AvailableServers.Clear();
+                foreach (var server in Settings.Servers)
+                {
+                    app.AvailableServers.Add(server);
+                }
+                Observe(app);
+            }
+
+            ObserveCollection(Settings.Servers);
+            ObserveCollection(Settings.RoutingRules);
+            ObserveCollection(Settings.Applications);
+            foreach (var item in Settings.Servers) Observe(item);
+            foreach (var item in Settings.RoutingRules) Observe(item);
+            _committedSettings = ConfigurationFileService.Snapshot(Settings);
+        }
+        finally
+        {
+            _saveGate.Release();
+        }
     }
 
     public void AddServer(ServerProfile server)

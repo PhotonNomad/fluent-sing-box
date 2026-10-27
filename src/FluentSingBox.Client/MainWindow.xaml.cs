@@ -27,6 +27,7 @@ public sealed partial class MainWindow : Window
     private bool _navigating;
     private bool _installUpdate;
     private object? _selectedNavigationItem;
+    private ConfigFileWatcher? _configFileWatcher;
 
     public MainWindow()
     {
@@ -54,6 +55,29 @@ public sealed partial class MainWindow : Window
         _healthMonitor.Start();
         try { _sessionEnd = new SessionEndHandler(WinRT.Interop.WindowNative.GetWindowHandle(this), EndSession); }
         catch (Exception exception) { ShutdownCoordinator.RecordExitFailure("session-end-hook", exception); }
+        _configFileWatcher = new ConfigFileWatcher(DispatcherQueue, async (type) =>
+        {
+            if (type is "settings" or "all")
+            {
+                await App.State.ReloadSettingsAsync();
+            }
+            else
+            {
+                await ConfigurationFileService.SynchronizeWithUserConfigAsync(App.State.Settings);
+            }
+            if (ContentFrame.Content is ServersPage serversPage)
+            {
+                serversPage.RefreshView();
+            }
+        });
+        Activated += async (_, _) =>
+        {
+            await ConfigurationFileService.SynchronizeWithUserConfigAsync(App.State.Settings);
+            if (ContentFrame.Content is ServersPage serversPage)
+            {
+                serversPage.RefreshView();
+            }
+        };
     }
 
     // Logoff, shutdown or a Restart Manager close: release the proxy and core before the
@@ -423,6 +447,8 @@ public sealed partial class MainWindow : Window
         _sessionEnd?.Dispose();
         _xamlRootReady.TrySetCanceled();
         _healthMonitor.Stop();
+        _configFileWatcher?.Dispose();
+        _configFileWatcher = null;
         if (_lifecycle != WindowLifecycle.ShutDown)
         {
             try { App.CoreService.Stop(); }
