@@ -118,6 +118,12 @@ public sealed class ServerEditorForm : Grid
                     var members = new StackPanel { Spacing = 8 };
                     members.Children.Add(new TextBlock { Text = field.Label });
                     var selectedTags = ServerEditorDraft.SplitList(value).ToHashSet(StringComparer.Ordinal);
+                    // Members that are not servers here (direct, block, tags from user-config.json) have no
+                    // checkbox and must survive a checkbox change.
+                    var serverTags = App.State.Settings.Servers
+                        .SelectMany(server => new[] { SingBoxConfigBuilder.OutboundTag(server.Id), ServerEditorDraft.FromProfile(server)["tag"]?.ToString() })
+                        .OfType<string>().ToHashSet(StringComparer.Ordinal);
+                    var preservedMembers = ServerEditorDraft.SplitList(value).Where(tag => !serverTags.Contains(tag)).ToArray();
                     var memberChoices = new List<CheckBox>();
                     foreach (var server in App.State.Settings.Servers.Where(server => server.Id != _sourceId))
                     {
@@ -127,7 +133,7 @@ public sealed class ServerEditorForm : Grid
                         memberChoices.Add(checkbox); members.Children.Add(checkbox);
                         void Changed(object sender, RoutedEventArgs args)
                         {
-                            _current.Set(field.Path, string.Join(",", memberChoices.Where(item => item.IsChecked == true).Select(item => item.Tag)));
+                            _current.Set(field.Path, string.Join(",", preservedMembers.Concat(memberChoices.Where(item => item.IsChecked == true).Select(item => (string)item.Tag))));
                             foreach (var candidate in App.State.Settings.Servers)
                                 if (_current.Get("default") == ServerEditorDraft.FromProfile(candidate)["tag"]?.ToString())
                                     _current.Set("default", SingBoxConfigBuilder.OutboundTag(candidate.Id));
@@ -147,6 +153,9 @@ public sealed class ServerEditorForm : Grid
                         // Preserve an imported reference until it is explicitly changed.
                         selector.Items.Add(new ComboBoxItem { Content = server.Name, Tag = value == original ? original : tag });
                     }
+                    // A reference to a non-server outbound (for example direct) stays selectable as written.
+                    if (value.Length > 0 && !selector.Items.Cast<ComboBoxItem>().Any(item => (string)item.Tag == value))
+                        selector.Items.Add(new ComboBoxItem { Content = value, Tag = value });
                     selector.SelectedItem = selector.Items.Cast<ComboBoxItem>().FirstOrDefault(item => (string)item.Tag == value) ?? selector.Items[0];
                     selector.SelectionChanged += (_, _) => { if (selector.SelectedItem is ComboBoxItem { Tag: string tag }) _current.Set(field.Path, tag); };
                     control = selector;
