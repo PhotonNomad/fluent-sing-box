@@ -11,6 +11,8 @@ public sealed class ProxyCoordinator(AppState state)
     public void BeginShutdown() => _shuttingDown = true;
     public void CancelShutdown() => _shuttingDown = false;
 
+    // The Windows switch does not change the generated configuration, so it saves only
+    // preferences: the snapshot must be on disk before the registry changes.
     public async Task SetSystemProxyEnabledAsync(bool enabled)
     {
         if (enabled)
@@ -20,7 +22,7 @@ public sealed class ProxyCoordinator(AppState state)
             {
                 if (_shuttingDown) throw new OperationCanceledException(Localization.Get("ProxyCoordinator_TheClientIsExiting"));
                 WindowsProxyService.Capture(state.Settings);
-                await state.SaveAsync();
+                await state.SavePreferencesAsync();
                 if (_shuttingDown) throw new OperationCanceledException(Localization.Get("ProxyCoordinator_TheClientIsExiting"));
                 WindowsProxyService.Enable(state.Settings);
                 state.Settings.SystemProxyEnabled = true;
@@ -30,7 +32,7 @@ public sealed class ProxyCoordinator(AppState state)
                 WindowsProxyService.Restore(state.Settings);
                 state.Settings.SystemProxyEnabled = false;
                 state.Settings.ResumeSystemProxyOnLaunch = false;
-                await state.SaveAsync();
+                await state.SavePreferencesAsync();
                 throw;
             }
         }
@@ -40,7 +42,7 @@ public sealed class ProxyCoordinator(AppState state)
             state.Settings.SystemProxyEnabled = false;
         }
         state.Settings.ResumeSystemProxyOnLaunch = state.Settings.SystemProxyEnabled;
-        await state.SaveAsync();
+        await state.SavePreferencesAsync();
     }
 
     // Windows must not keep pointing at a listener the next core start will not open.

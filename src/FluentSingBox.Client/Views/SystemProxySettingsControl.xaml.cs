@@ -168,11 +168,7 @@ public sealed partial class SystemProxySettingsControl : UserControl
             || oldAuthEnabled != authEnabled
             || oldUsername != username
             || oldPassword != password;
-        if (!changed)
-        {
-            await App.State.SaveAsync();
-            return;
-        }
+        if (!changed) return;
 
         settings.SystemProxyPort = port;
         settings.SystemProxyAuthEnabled = authEnabled;
