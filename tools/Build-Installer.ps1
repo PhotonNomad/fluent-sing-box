@@ -181,7 +181,7 @@ foreach ($taskScope in $taskScopes) {
     Sign-Artifact $taskMsi
     $taskBundleSource = Join-Path $taskStage 'Bundle.wxs'
     $taskBundle = @"
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Bundle Name="fluent sing-box" Manufacturer="PhotonNomad" Version="$Version" UpgradeCode="$taskBundleUpgrade" IconSourceFile="$(Escape-Xml (Join-Path $taskPayload 'Assets/fluent-sing-box.ico'))">
     <BootstrapperApplication>
       <bal:WixStandardBootstrapperApplication Theme="rtfLicense" ThemeFile="$(Escape-Xml (Join-Path $taskRoot 'installer/FluentTheme.xml'))" LocalizationFile="$(Escape-Xml (Join-Path $taskRoot 'installer/Strings.en-US.wxl'))" LogoFile="$(Escape-Xml (Join-Path $taskPayload 'Assets/fluent-sing-box.png'))" LicenseFile="$(Escape-Xml (Join-Path $taskRoot 'installer/License.rtf'))" SuppressOptionsUI="no" SuppressRepair="yes" />
@@ -190,13 +190,17 @@ foreach ($taskScope in $taskScopes) {
       <Payload Name="2052\thm.wxl" SourceFile="$(Escape-Xml (Join-Path $taskRoot 'installer/Strings.zh-CN.wxl'))" />
     </BootstrapperApplication>
     <Variable Name="InstallFolder" Type="formatted" Value="$taskDefaultFolder" bal:Overridable="yes" />
+    <!-- An upgrade keeps the folder the app is already in, so the success page can launch it from there. -->
+    <util:RegistrySearch Id="ExistingInstallSearch" Root="$taskRegistry" Key="Software\PhotonNomad\FluentSingBox\Install" Value="Path" Variable="ExistingInstallFolder" />
+    <SetVariable Id="UseExistingInstallFolder" Variable="InstallFolder" Value="[ExistingInstallFolder]" Condition="ExistingInstallFolder" After="ExistingInstallSearch" />
+    <Variable Name="LaunchTarget" Type="formatted" Value="[InstallFolder]\fluent sing-box.exe" />
     <Chain><MsiPackage DisplayName="fluent sing-box" SourceFile="$(Escape-Xml $taskMsi)" Compressed="yes" Visible="no" bal:DisplayInternalUICondition="false"><MsiProperty Name="BOOTSTRAPPERINSTALLFOLDER" Value="[InstallFolder]" /><MsiProperty Name="FSBAPPRUNNINGMESSAGE" Value="$(Escape-Xml $taskAppRunningChinese)" Condition="WixStdBALanguageId = 2052" /></MsiPackage></Chain>
   </Bundle>
 </Wix>
 "@
     Set-Content $taskBundleSource $taskBundle -Encoding utf8
     $taskExe = Join-Path $taskOutput "$taskBaseName.exe"
-    Invoke-Wix @('build',$taskBundleSource,'-arch','x64','-ext','WixToolset.BootstrapperApplications.wixext','-o',$taskExe)
+    Invoke-Wix @('build',$taskBundleSource,'-arch','x64','-ext','WixToolset.BootstrapperApplications.wixext','-ext','WixToolset.Util.wixext','-o',$taskExe)
     if ($CertificateThumbprint) {
         $taskEngine = Join-Path $taskStage 'engine.exe'
         Invoke-Wix @('burn','detach',$taskExe,'-engine',$taskEngine)
