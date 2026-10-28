@@ -19,7 +19,8 @@ public static class ConfigurationCompiler
                 LogPath = logPath,
                 BuiltInRuleSetPath = BundledRuleSets.ResolveCurrent,
                 ProcessPathPattern = ApplicationMatching.StorePathRegex,
-                GroupSelections = settings.GroupSelections.GetValueOrDefault(profile.Id) ?? new Dictionary<string, string>()
+                GroupSelections = settings.GroupSelections.GetValueOrDefault(profile.Id) ?? new Dictionary<string, string>(),
+                HostHasIpv6 = Ipv6Network.HostHasIpv6()
             }).ToJsonString(Indented);
         }
         catch (ProfileCompileException error) { throw new InvalidOperationException(ProfileMessages.Describe(profile, error.Diagnostics), error); }

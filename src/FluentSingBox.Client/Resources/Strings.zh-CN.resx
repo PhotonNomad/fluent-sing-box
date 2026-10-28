@@ -1561,17 +1561,6 @@ Windows: {0}
   <data name="Updates_LastChecked" xml:space="preserve"><value>上次检查时间：{0}</value></data>
   <data name="Configuration_UnknownReference" xml:space="preserve"><value>{0}：引用的“{1}”不存在，未保存本次修改。</value></data>
   <data name="Configuration_DuplicateTag" xml:space="preserve"><value>{0}：标签“{1}”重复，未保存本次修改。</value></data>
-  <data name="Ipv6_Title" xml:space="preserve"><value>IPv6 连通性</value></data>
-  <data name="Ipv6_CheckAgain" xml:space="preserve"><value>重新检测</value></data>
-  <data name="Ipv6_Checking" xml:space="preserve"><value>正在检测到 Cloudflare 和 Google 的 IPv6 TCP 与 TLS 连接，最长约 4 秒……</value></data>
-  <data name="Ipv6_Reachable" xml:space="preserve"><value>IPv6 连接检测通过 {0}/{1} 个测试端点。</value></data>
-  <data name="Ipv6_NoLocalAddress" xml:space="preserve"><value>本机活动网卡未发现公网 IPv6 地址，IPv6 连接检测也未通过。代理仍可能提供 IPv6 访问。</value></data>
-  <data name="Ipv6_Unsupported" xml:space="preserve"><value>系统的 IPv6 套接字功能不可用。</value></data>
-  <data name="Ipv6_Unconfirmed" xml:space="preserve"><value>暂时无法确认 IPv6 连通性：可能是测试端点被阻止，或当前 IPv6 路径不可用。</value></data>
-  <data name="Ipv6_RecommendIpv4" xml:space="preserve"><value>当前 DNS 策略仍允许 IPv6；若连接失败，建议改为 ipv4_only。程序不会自动更改你的选择。</value></data>
-  <data name="Ipv6_Ipv4Selected" xml:space="preserve"><value>DNS 当前为 ipv4_only，保持该设置。</value></data>
-  <data name="Ipv6_TunWithoutAddress" xml:space="preserve"><value>TUN 没有 IPv6 地址，但 DNS 仍允许 IPv6。IPv6 流量可能改走其他网卡；删除 TUN 地址不等于禁用 IPv6。</value></data>
-  <data name="Ipv6_Scope" xml:space="preserve"><value>检测沿用当前路由，可能经过 TUN/VPN；通过不代表所选代理节点或所有目标网站的 IPv6 都可用。</value></data>
   <data name="Updates_RepositoryUnavailable" xml:space="preserve">
     <value>无法访问 GitHub 仓库。私有仓库请先配置“GitHub 访问”，并确认账号拥有仓库读取权限。</value>
   </data>
@@ -2556,5 +2545,8 @@ Windows: {0}
   </data>
   <data name="Servers_DefaultServer.PlaceholderText" xml:space="preserve">
     <value>未设置</value>
+  </data>
+  <data name="Tun_Ipv6Hint.Message" xml:space="preserve">
+    <value>本机网络没有 IPv6，TUN 的 IPv6 地址不会生效；连到有 IPv6 的网络后自动恢复。</value>
   </data>
 </root>

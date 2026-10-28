@@ -11,6 +11,7 @@
                     <local:SettingsSection.SectionContent>
                         <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
                             <InfoBar x:Name="TunStatus" IsOpen="False" IsClosable="True" AutomationProperties.AutomationId="Tun_Status" />
+                            <InfoBar x:Name="Ipv6Hint" IsOpen="False" IsClosable="False" Severity="Informational" AutomationProperties.AutomationId="Tun_Ipv6Hint" x:Uid="Tun_Ipv6Hint" />
                             <controls:SettingsCard x:Uid="Tun_EnabledCard">
                                 <controls:SettingsCard.HeaderIcon>
                                     <FontIcon Glyph="&#xE839;" />

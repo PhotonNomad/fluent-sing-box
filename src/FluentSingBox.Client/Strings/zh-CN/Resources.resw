@@ -869,4 +869,7 @@
   <data name="Servers_DefaultServer.PlaceholderText" xml:space="preserve">
     <value>未设置</value>
   </data>
+  <data name="Tun_Ipv6Hint.Message" xml:space="preserve">
+    <value>本机网络没有 IPv6，TUN 的 IPv6 地址不会生效；连到有 IPv6 的网络后自动恢复。</value>
+  </data>
 </root>

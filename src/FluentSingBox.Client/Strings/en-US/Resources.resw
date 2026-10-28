@@ -869,4 +869,7 @@
   <data name="Servers_DefaultServer.PlaceholderText" xml:space="preserve">
     <value>Not set</value>
   </data>
+  <data name="Tun_Ipv6Hint.Message" xml:space="preserve">
+    <value>This network has no IPv6, so the adapter's IPv6 addresses are left out. They apply again on a network with IPv6.</value>
+  </data>
 </root>

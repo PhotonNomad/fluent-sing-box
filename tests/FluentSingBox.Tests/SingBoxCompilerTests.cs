@@ -189,6 +189,25 @@ public class SingBoxCompilerTests
         Assert.DoesNotContain(RouteRules(config), rule => rule!["action"]?.ToString() == "resolve");
     }
 
+    // Without IPv6 on the machine, an IPv6 TUN address only makes apps try IPv6 and fail.
+    [Fact]
+    public void TunLeavesOutIpv6WhenTheHostHasNone()
+    {
+        var profile = ProfileJson.CreateDefault();
+        profile.Capture.Tun.PreferRoutes = true;
+        profile.Capture.Tun.ExcludedRoutes = ["192.168.0.0/16", "fd00::/8"];
+
+        var withIpv6 = Compile(profile)["inbounds"]![1]!.AsObject();
+        var without = Compile(profile, Options with { HostHasIpv6 = false })["inbounds"]![1]!.AsObject();
+
+        Assert.Equal(2, withIpv6["address"]!.AsArray().Count);
+        Assert.Equal(["172.19.0.1/30"], without["address"]!.AsArray().Select(item => item!.ToString()));
+        Assert.Equal(["0.0.0.0/1", "128.0.0.0/1"], without["route_address"]!.AsArray().Select(item => item!.ToString()));
+        Assert.Equal(["192.168.0.0/16"], without["route_exclude_address"]!.AsArray().Select(item => item!.ToString()));
+        // The profile itself keeps them for the next network that has IPv6.
+        Assert.Equal(2, profile.Capture.Tun.Addresses.Count);
+    }
+
     [Fact]
     public void DomainResolversBootstrapThroughTheSystem()
     {

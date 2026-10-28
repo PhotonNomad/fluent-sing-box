@@ -87,6 +87,7 @@ tools/                            Build.ps1、Build-Installer.ps1、Setup-Instal
 - **默认分流**（`Configuration/Profiles/default-profile.json`）：按顺序：ChatGPT/Codex、Claude 程序走「代理」；局域网直连；拦截 QUIC/STUN/DoT；国内域名、国内 IP（排除境外域名）直连；来自系统代理的流量走「代理」；其余流量直连。TUN 默认开启，首次启动核心会请求管理员权限；DNS 国内域名用 114 UDP，其余用 1.1.1.1 DoH（经「代理」）。第一个添加的节点自动成为默认服务器；`hijack-dns` 只在开启 TUN 时生成。
 - **进程规则**：名称匹配必须是完整 `.exe` 名且大小写与磁盘一致（sing-box 区分大小写）；Store 应用路径编译成只放宽版本号的 `process_path_regex`。
 - **界面列表**：配置变化后用 `Rows.Sync` 只替换有变化的行，不要整表重建（会闪烁、跳回顶部、收起展开项）。
+- **TUN 与 IPv6**：启动核心时只看本机网卡有没有公网 IPv6 地址（`Services/Ipv6Network.cs`，不联网探测）。没有时编译器丢掉 TUN 的 IPv6 地址和 IPv6 排除路由，配置文件里仍保留，代理页 TUN 区显示提示。否则 Windows 会以为有 IPv6，直连 IPv6 字面地址的程序（如微信传图）会失败。
 - **节点组**：`select` 组的当前成员是运行状态，存在 `settings.json`，改它不改配置；编译时写成 selector 的 `default`，并用 `cache_id` 让缓存里的旧选择失效。
 - **后台工作**：更新检查在启动约 30 秒后开始；隔离数据目录和便携副本不跑后台更新、不执行安装。
 

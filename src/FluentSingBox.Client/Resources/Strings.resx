@@ -1561,17 +1561,6 @@ Windows: {0}
   <data name="Updates_LastChecked" xml:space="preserve"><value>Last checked: {0}</value></data>
   <data name="Configuration_UnknownReference" xml:space="preserve"><value>{0}: reference '{1}' does not exist. The change was not saved.</value></data>
   <data name="Configuration_DuplicateTag" xml:space="preserve"><value>{0}: duplicate tag '{1}'. The change was not saved.</value></data>
-  <data name="Ipv6_Title" xml:space="preserve"><value>IPv6 connectivity</value></data>
-  <data name="Ipv6_CheckAgain" xml:space="preserve"><value>Check again</value></data>
-  <data name="Ipv6_Checking" xml:space="preserve"><value>Checking IPv6 TCP and TLS connectivity to Cloudflare and Google (up to 4 seconds)…</value></data>
-  <data name="Ipv6_Reachable" xml:space="preserve"><value>IPv6 connections succeeded for {0}/{1} test endpoints.</value></data>
-  <data name="Ipv6_NoLocalAddress" xml:space="preserve"><value>No global IPv6 address was found on an active local interface, and the IPv6 connection tests failed. A proxy may still provide IPv6 access.</value></data>
-  <data name="Ipv6_Unsupported" xml:space="preserve"><value>The system IPv6 socket stack is unavailable.</value></data>
-  <data name="Ipv6_Unconfirmed" xml:space="preserve"><value>IPv6 connectivity could not be confirmed. The test endpoints may be blocked, or the current IPv6 path may be unavailable.</value></data>
-  <data name="Ipv6_RecommendIpv4" xml:space="preserve"><value>This DNS strategy still allows IPv6. Consider ipv4_only if connections fail; your setting has not been changed.</value></data>
-  <data name="Ipv6_Ipv4Selected" xml:space="preserve"><value>DNS is set to ipv4_only; this setting is preserved.</value></data>
-  <data name="Ipv6_TunWithoutAddress" xml:space="preserve"><value>TUN has no IPv6 address while DNS still allows IPv6. IPv6 traffic may use another interface; removing the TUN address does not disable IPv6.</value></data>
-  <data name="Ipv6_Scope" xml:space="preserve"><value>Tests follow the current route, possibly through TUN/VPN. Success does not verify the selected proxy node or every destination.</value></data>
   <data name="Updates_RepositoryUnavailable" xml:space="preserve">
     <value>The GitHub repository is unavailable. For a private repository, configure GitHub access and ensure your account can read it.</value>
   </data>
@@ -2556,5 +2545,8 @@ Windows: {0}
   </data>
   <data name="Servers_DefaultServer.PlaceholderText" xml:space="preserve">
     <value>Not set</value>
+  </data>
+  <data name="Tun_Ipv6Hint.Message" xml:space="preserve">
+    <value>This network has no IPv6, so the adapter's IPv6 addresses are left out. They apply again on a network with IPv6.</value>
   </data>
 </root>

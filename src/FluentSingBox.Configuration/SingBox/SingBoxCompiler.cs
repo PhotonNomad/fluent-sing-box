@@ -16,6 +16,9 @@ public sealed record SingBoxCompileOptions
     public Func<string, string?> ProcessPathPattern { get; init; } = _ => null;
     // Group ID → chosen member target ("node:<id>") for select groups.
     public IReadOnlyDictionary<string, string> GroupSelections { get; init; } = new Dictionary<string, string>();
+    // Whether this machine has a global IPv6 address right now. Without one, an IPv6 address on the
+    // TUN adapter makes Windows think IPv6 works and apps that dial IPv6 literals fail.
+    public bool HostHasIpv6 { get; init; } = true;
 }
 
 public sealed class ProfileCompileException(IReadOnlyList<ProfileDiagnostic> diagnostics)
@@ -314,20 +317,24 @@ public static class SingBoxCompiler
             var tun = profile.Capture.Tun;
             if (tun.Enabled)
             {
+                // The profile keeps its IPv6 entries; they apply again on a network that has IPv6.
+                var dropIpv6 = !options.HostHasIpv6 && tun.Addresses.Any(address => !address.Contains(':'));
+                var addresses = tun.Addresses.Where(address => !dropIpv6 || !address.Contains(':')).ToList();
+                var excluded = tun.ExcludedRoutes.Where(route => !dropIpv6 || !route.Contains(':')).ToList();
                 var inbound = new JsonObject
                 {
                     ["type"] = "tun", ["tag"] = TunTag, ["interface_name"] = TunInterfaceName,
-                    ["address"] = Strings(tun.Addresses), ["mtu"] = tun.Mtu, ["auto_route"] = true,
+                    ["address"] = Strings(addresses), ["mtu"] = tun.Mtu, ["auto_route"] = true,
                     ["strict_route"] = tun.StrictRoute, ["stack"] = tun.Stack.ToString().ToLowerInvariant()
                 };
                 if (tun.PreferRoutes)
                 {
                     var routes = new List<string>();
-                    if (tun.Addresses.Any(address => address.Contains('.'))) routes.AddRange(["0.0.0.0/1", "128.0.0.0/1"]);
-                    if (tun.Addresses.Any(address => address.Contains(':'))) routes.AddRange(["::/1", "8000::/1"]);
+                    if (addresses.Any(address => address.Contains('.'))) routes.AddRange(["0.0.0.0/1", "128.0.0.0/1"]);
+                    if (addresses.Any(address => address.Contains(':'))) routes.AddRange(["::/1", "8000::/1"]);
                     inbound["route_address"] = Strings(routes);
                 }
-                if (tun.ExcludedRoutes.Count > 0) inbound["route_exclude_address"] = Strings(tun.ExcludedRoutes);
+                if (excluded.Count > 0) inbound["route_exclude_address"] = Strings(excluded);
                 inbounds.Add(inbound);
             }
             return inbounds;

@@ -14,8 +14,8 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
     {
         InitializeComponent();
         _autoSave = new AutoSaveController(DispatcherQueue, TimeSpan.FromMilliseconds(800), SaveTextAsync);
-        Loaded += (_, _) => { App.State.ProfileChanged += ProfileChanged; Load(); };
-        Unloaded += (_, _) => App.State.ProfileChanged -= ProfileChanged;
+        Loaded += (_, _) => { App.State.ProfileChanged += ProfileChanged; Ipv6Network.Changed += NetworkChanged; Load(); };
+        Unloaded += (_, _) => { App.State.ProfileChanged -= ProfileChanged; Ipv6Network.Changed -= NetworkChanged; };
     }
 
     public async Task<bool> FlushPendingChangesAsync()
@@ -24,6 +24,13 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
     private static TunCapture Tun => App.State.Profile.Capture.Tun;
 
     private void ProfileChanged() => DispatcherQueue.TryEnqueue(() => { if (!HasTextChanges()) Load(); });
+
+    private void NetworkChanged() => DispatcherQueue.TryEnqueue(UpdateIpv6Hint);
+
+    // The compiler leaves out the TUN's IPv6 addresses on a machine without IPv6; say so where they are edited.
+    private void UpdateIpv6Hint() =>
+        Ipv6Hint.IsOpen = Tun.Addresses.Any(address => address.Contains(':')) && Tun.Addresses.Any(address => !address.Contains(':'))
+            && !Ipv6Network.HostHasIpv6();
 
     private void Load()
     {
@@ -36,6 +43,7 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
         PreferRoutesSwitch.IsOn = tun.PreferRoutes;
         AddressesTextBox.Text = string.Join(Environment.NewLine, tun.Addresses);
         ExcludedRoutesTextBox.Text = string.Join(Environment.NewLine, tun.ExcludedRoutes);
+        UpdateIpv6Hint();
         _loading = false;
     }
 
