@@ -129,7 +129,7 @@ public sealed class SingBoxConfigBuilder
         // per-app server. Other address rules come after process selection.
         foreach (var rule in settings.RoutingRules.Where(rule => rule.IsEnabled && !rule.IsBuiltIn && rule.Outbound == "block"))
         {
-            AddAddressRule(routeRules, rule, defaultServer, settings);
+            AddAddressRule(routeRules, rule, defaultServer, settings, tagMap);
         }
 
         foreach (var rule in settings.RoutingRules.Where(rule => rule.IsEnabled && (rule.MatchPrivateAddresses || rule.BuiltInKind == "private")))

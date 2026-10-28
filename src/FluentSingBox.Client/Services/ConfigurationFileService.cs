@@ -250,8 +250,6 @@ public static class ConfigurationFileService
 
                     foreach (var app in settings.Applications)
                     {
-                        if (app.SelectedServerId == oldId)
-                            app.SelectedServerId = newId;
                         if (app.ServerId == oldId)
                             app.ServerId = newId;
                     }
