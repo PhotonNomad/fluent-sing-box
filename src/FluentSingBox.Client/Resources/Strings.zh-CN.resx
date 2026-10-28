@@ -2752,7 +2752,7 @@ Windows: {0}
   <data name="Schema_SelectDirectDnsServer" xml:space="preserve"><value>请选择直连 DNS 服务器，节点域名解析不能依赖尚未连接的代理。</value></data>
   <data name="Tray_Restore" xml:space="preserve"><value>打开 fluent sing-box</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>退出</value></data>
-  <data name="Tray_Unavailable" xml:space="preserve"><value>无法创建托盘图标，窗口将保持打开。</value></data>
+  <data name="Tray_Unavailable" xml:space="preserve"><value>无法创建托盘图标。</value></data>
   <data name="Settings_SaveFailed" xml:space="preserve">
     <value>无法保存设置</value>
   </data>

@@ -146,18 +146,20 @@ public sealed partial class MainWindow : Window
 
     public Task<XamlRoot> WaitForXamlRootAsync() => _xamlRootReady.Task;
 
-    private void RunInBackground()
+    // Without a tray icon a hidden window could never be brought back, so the caller exits
+    // instead; closing the window must never be refused.
+    private bool TryRunInBackground()
     {
-        if (_lifecycle != WindowLifecycle.Running || _coreSwitchBusy) return;
         try
         {
             _trayIcon ??= new TrayIcon(WinRT.Interop.WindowNative.GetWindowHandle(this), RestoreFromTray, ExitFromTray);
             AppWindow.Hide();
+            return true;
         }
         catch (Exception exception)
         {
-            RecoveryMessage.Message = Localization.Get("Tray_Unavailable") + " " + exception.Message;
-            RecoveryMessage.IsOpen = true;
+            ShutdownCoordinator.RecordExitFailure("tray-unavailable", exception);
+            return false;
         }
     }
 
@@ -329,7 +331,7 @@ public sealed partial class MainWindow : Window
         if (_lifecycle == WindowLifecycle.ShutDown) return;
         args.Cancel = true;
         if (_lifecycle == WindowLifecycle.ShuttingDown) return;
-        if (!_exitRequested) { RunInBackground(); return; }
+        if (!_exitRequested && !_coreSwitchBusy && TryRunInBackground()) return;
         if (_coreSwitchBusy || _navigating) return;
         await ShutdownAndCloseAsync();
     }

@@ -2752,7 +2752,7 @@ Windows: {0}
   <data name="Schema_SelectDirectDnsServer" xml:space="preserve"><value>Select a direct DNS server. Resolving the node hostname must not depend on its proxy connection.</value></data>
   <data name="Tray_Restore" xml:space="preserve"><value>Open fluent sing-box</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>Exit</value></data>
-  <data name="Tray_Unavailable" xml:space="preserve"><value>Cannot create the notification icon; the window will stay open.</value></data>
+  <data name="Tray_Unavailable" xml:space="preserve"><value>Cannot create the notification icon.</value></data>
   <data name="Settings_SaveFailed" xml:space="preserve">
     <value>Could not save settings</value>
   </data>
