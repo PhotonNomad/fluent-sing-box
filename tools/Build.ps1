@@ -44,7 +44,7 @@ try {
     $taskReleaseSettings | ConvertTo-Json | Set-Content (Join-Path $taskStaging 'release.json') -Encoding utf8
     if (!(Test-Path -LiteralPath (Join-Path $taskStaging 'fluent sing-box.exe'))) { throw 'Publish did not produce the executable.' }
     foreach ($taskRequired in @(
-        'Defaults/settings.json', 'Defaults/user-config.json',
+        'Schemas/profile.schema.json',
         'ThirdParty/Schemas/sing-box-1.14.2.schema.json', 'ThirdParty/RuleSets/manifest.json',
         'ThirdParty/RuleSets/geosite-geolocation-cn.srs',
         'ThirdParty/RuleSets/geosite-geolocation-!cn.srs', 'ThirdParty/RuleSets/geoip-cn.srs'

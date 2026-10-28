@@ -1,0 +1,98 @@
+{
+  "formatVersion": 1,
+  "id": "default",
+  "name": "默认配置",
+  "nodes": [],
+  "groups": [],
+  "ruleSets": [
+    { "id": "geosite-cn", "name": "国内域名", "source": { "type": "builtIn", "name": "geosite-geolocation-cn" } },
+    { "id": "geosite-not-cn", "name": "境外域名", "source": { "type": "builtIn", "name": "geosite-geolocation-!cn" } },
+    { "id": "geoip-cn", "name": "国内 IP", "source": { "type": "builtIn", "name": "geoip-cn" } }
+  ],
+  "rules": [
+    {
+      "id": "private",
+      "name": "局域网直连",
+      "match": { "type": "privateIp" },
+      "target": "direct"
+    },
+    {
+      "id": "connection-guard",
+      "name": "拦截 QUIC、STUN 和 DoT",
+      "enabled": false,
+      "match": {
+        "type": "any",
+        "matchers": [
+          { "type": "port", "ports": ["853"] },
+          { "type": "protocol", "protocols": ["quic", "stun"] }
+        ]
+      },
+      "target": "block"
+    },
+    {
+      "id": "china-domains",
+      "name": "国内域名直连",
+      "match": { "type": "ruleSet", "ruleSetId": "geosite-cn" },
+      "target": "direct"
+    },
+    {
+      "id": "china-addresses",
+      "name": "国内 IP 直连",
+      "match": {
+        "type": "all",
+        "matchers": [
+          { "type": "ruleSet", "ruleSetId": "geoip-cn" },
+          { "type": "not", "matcher": { "type": "ruleSet", "ruleSetId": "geosite-not-cn" } }
+        ]
+      },
+      "target": "direct"
+    }
+  ],
+  "final": "direct",
+  "dns": {
+    "servers": [
+      { "id": "local", "name": "国内 DNS", "type": "udp", "address": "114.114.114.114", "port": 53 },
+      { "id": "system", "name": "系统 DNS", "type": "system" },
+      {
+        "id": "remote",
+        "name": "境外 DNS",
+        "type": "https",
+        "address": "1.1.1.1",
+        "port": 443,
+        "serverName": "cloudflare-dns.com",
+        "path": "/dns-query",
+        "via": "default"
+      }
+    ],
+    "rules": [
+      {
+        "id": "lan-names",
+        "name": "局域网域名",
+        "match": { "type": "domain", "mode": "suffix", "values": [".local", ".lan"] },
+        "serverId": "system"
+      },
+      {
+        "id": "china-domains",
+        "name": "国内域名",
+        "match": { "type": "ruleSet", "ruleSetId": "geosite-cn" },
+        "serverId": "local"
+      }
+    ],
+    "finalServerId": "remote",
+    "strategy": "ipv4Only",
+    "cacheEnabled": true
+  },
+  "capture": {
+    "systemProxy": { "enabled": true, "listen": "127.0.0.1", "port": 10809 },
+    "tun": {
+      "enabled": false,
+      "stack": "mixed",
+      "mtu": 1500,
+      "addresses": ["172.19.0.1/30", "fdfe:dcba:9876::1/126"],
+      "strictRoute": true,
+      "preferRoutes": false,
+      "excludedRoutes": []
+    }
+  },
+  "general": { "logLevel": "info" }
+}

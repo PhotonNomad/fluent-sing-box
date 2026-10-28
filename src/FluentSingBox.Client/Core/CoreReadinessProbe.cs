@@ -8,8 +8,8 @@ internal static class CoreReadinessProbe
     // Quiet log levels print no startup line: probe the managed listener when it exists.
     public static Task WaitForCoreStartedAsync(Process core, string logPath, TimeSpan timeout, string configText)
     {
-        if (!ConfigurationComposer.NeedsListenerReadiness(configText)) return WaitForCoreStartedAsync(core, logPath, timeout);
-        var port = ConfigurationComposer.ManagedListenerPort(configText);
+        if (!RuntimeConfiguration.NeedsListenerReadiness(configText)) return WaitForCoreStartedAsync(core, logPath, timeout);
+        var port = RuntimeConfiguration.ManagedListenerPort(configText);
         return WaitForCoreStartedAsync(core, logPath, timeout, port, quietWithoutListener: port is null);
     }
 

@@ -17,7 +17,7 @@ public sealed partial class App : Application
         InitializeComponent();
         UnhandledException += (_, eventArgs) =>
         {
-            DiagnosticsLog.Write(DiagnosticsCategory.ClientErrors, LogReader.Redact(eventArgs.Exception.ToString(), State.Settings));
+            DiagnosticsLog.Write(DiagnosticsCategory.ClientErrors, LogReader.Redact(eventArgs.Exception.ToString()));
             // The process ends without the normal exit cleanup; Windows must not keep pointing at its local port.
             try { WindowsProxyService.Restore(State.Settings); }
             catch { }
@@ -48,11 +48,6 @@ public sealed partial class App : Application
             {
                 State.Settings.LaunchAtStartup = StartupService.IsEnabled();
             }
-            // Opening the editor must not execute the core or validate its configuration.
-            // Missing managed files still get a template; custom paths are checked on start.
-            var external = State.Settings.Configuration.ExternalFilePath;
-            if (!State.Settings.Configuration.NativeEnabled && (string.IsNullOrWhiteSpace(external) || string.Equals(Path.GetFullPath(external), Path.GetFullPath(ConfigurationFileService.FilePath), StringComparison.OrdinalIgnoreCase)))
-                await ConfigurationFileService.EnsureAsync(State.Settings, validateWithCore: false);
             await State.SavePreferencesAsync();
 
             MainWindow = new MainWindow();
@@ -61,7 +56,7 @@ public sealed partial class App : Application
             try { await AppUpdateService.Current.InitializeAsync(); }
             catch (Exception error)
             {
-                DiagnosticsLog.Write(DiagnosticsCategory.UpdateStartup, LogReader.Redact(error.Message, State.Settings));
+                DiagnosticsLog.Write(DiagnosticsCategory.UpdateStartup, LogReader.Redact(error.Message));
             }
             await MainWindow.ResumeLastSessionAsync();
         }

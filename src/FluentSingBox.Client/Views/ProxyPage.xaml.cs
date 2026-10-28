@@ -1,6 +1,5 @@
-using FluentSingBox.Client.Models;
 using FluentSingBox.Client.Services;
-using System.Collections.Specialized;
+using FluentSingBox.Configuration.Profiles;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -9,371 +8,104 @@ namespace FluentSingBox.Client.Views;
 public sealed partial class ProxyPage : Page, IPendingConfigurationPage
 {
     private bool _loading;
-    private bool _observingApplications;
-    private bool _observingServers;
-    private bool _changingApplicationProxy;
-    private readonly TunConfigurationForm _tun;
+    private readonly AutoSaveController _autoSave;
 
     public ProxyPage()
     {
         InitializeComponent();
-        _tun = new TunConfigurationForm(this, TunForm);
-        Loaded += ProxyPage_Loaded;
-        Unloaded += ProxyPage_Unloaded;
-    }
-
-    private void ProxyPage_Loaded(object sender, RoutedEventArgs e)
-    {
-        _loading = true;
-        ApplicationList.ItemsSource = App.State.Settings.Applications;
-        LoadDefaultServer();
-
-        UpdateEmptyApplicationsMessage();
-        _loading = false;
-
-        if (!_observingApplications)
-        {
-            App.State.Settings.Applications.CollectionChanged += Applications_CollectionChanged;
-            _observingApplications = true;
-        }
-        if (!_observingServers)
-        {
-            App.State.Settings.Servers.CollectionChanged += Servers_CollectionChanged;
-            _observingServers = true;
-        }
+        _autoSave = new AutoSaveController(DispatcherQueue, TimeSpan.FromMilliseconds(800), SaveTextAsync);
+        Loaded += (_, _) => { App.State.ProfileChanged += ProfileChanged; Load(); };
+        Unloaded += (_, _) => App.State.ProfileChanged -= ProfileChanged;
     }
 
     public async Task<bool> FlushPendingChangesAsync()
-        => await SystemProxySettings.FlushPendingChangesAsync() && await _tun.FlushPendingChangesAsync();
+        => await SystemProxySettings.FlushPendingChangesAsync() && await _autoSave.FlushAsync();
 
-    private void Applications_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs args) => UpdateEmptyApplicationsMessage();
-    private void Servers_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs args) => LoadDefaultServer();
-    public void RefreshServers()
-    {
-        LoadDefaultServer();
-        UpdateEmptyApplicationsMessage();
-    }
+    private static TunCapture Tun => App.State.Profile.Capture.Tun;
 
-    private void ProxyPage_Unloaded(object sender, RoutedEventArgs args)
-    {
-        if (_observingApplications)
-        {
-            App.State.Settings.Applications.CollectionChanged -= Applications_CollectionChanged;
-            _observingApplications = false;
-        }
-        if (_observingServers)
-        {
-            App.State.Settings.Servers.CollectionChanged -= Servers_CollectionChanged;
-            _observingServers = false;
-        }
-    }
+    private void ProfileChanged() => DispatcherQueue.TryEnqueue(() => { if (!HasTextChanges()) Load(); });
 
-    private void LoadDefaultServer()
+    private void Load()
     {
-        var settings = App.State.Settings;
-        var wasLoading = _loading;
         _loading = true;
+        var tun = Tun;
+        TunSwitch.IsOn = tun.Enabled;
+        StackComboBox.SelectedValue = tun.Stack.ToString();
+        MtuTextBox.Text = tun.Mtu.ToString();
+        StrictRouteSwitch.IsOn = tun.StrictRoute;
+        PreferRoutesSwitch.IsOn = tun.PreferRoutes;
+        AddressesTextBox.Text = string.Join(Environment.NewLine, tun.Addresses);
+        ExcludedRoutesTextBox.Text = string.Join(Environment.NewLine, tun.ExcludedRoutes);
+        _loading = false;
+    }
+
+    private bool HasTextChanges() => MtuTextBox.Text != Tun.Mtu.ToString()
+        || !Editor.Lines(AddressesTextBox.Text).SequenceEqual(Tun.Addresses)
+        || !Editor.Lines(ExcludedRoutesTextBox.Text).SequenceEqual(Tun.ExcludedRoutes);
+
+    private async Task CommitAsync(Action<TunCapture> edit)
+    {
         try
         {
-            DefaultServerComboBox.ItemsSource = new[] { new ServerProfile { Id = "direct", Name = Localization.Get(settings.Servers.Count == 0 ? "DefaultOutlet_DirectEmpty" : "DefaultOutlet_Direct") } }.Concat(settings.Servers).ToArray();
-            DefaultServerComboBox.SelectedValue = settings.DefaultServerId ?? "direct";
+            await App.State.UpdateAsync(profile => edit(profile.Capture.Tun));
+            ShowStatus(Localization.Get(App.CoreService.IsRunning ? "SystemProxySettingsControl_RestartToApply" : "Schema_Saved"),
+                App.CoreService.IsRunning ? InfoBarSeverity.Informational : InfoBarSeverity.Success);
         }
-        finally { _loading = wasLoading; }
-    }
-
-    private async void DefaultServer_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_loading || App.State.IsRefreshing || DefaultServerComboBox.SelectedItem is not ServerProfile server
-            || App.State.Settings.DefaultServerId == server.Id) return;
-        App.State.SetDefaultServer(server);
-        try { await App.ProxyCoordinator.ApplyConfigurationChangesAsync(); }
         catch (Exception exception)
         {
-            _loading = true;
-            LoadDefaultServer();
-            _loading = false;
-            await ShowMessageAsync(Localization.Get("ProxyPage_CannotApplyServer"), exception.Message);
+            Load();
+            ShowStatus(LogReader.Redact(exception.Message), InfoBarSeverity.Error);
+            throw;
         }
     }
 
-    private void UpdateEmptyApplicationsMessage()
+    private void ShowStatus(string message, InfoBarSeverity severity)
     {
-        EmptyApplicationsMessage.Visibility = App.State.Settings.Applications.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        var warnings = ApplicationMatching.PathWarnings(App.State.Settings).ToList();
-        if (App.State.Settings.Applications.Any(profile => profile.MatchMode == "path" && profile.ExecutablePaths.Any(path => ApplicationMatching.StorePathRegex(path) is not null)))
-            warnings.Add(Localization.Get("ApplicationMatch_StorePath"));
-        ApplicationWarnings.Message = string.Join(Environment.NewLine, warnings);
-        ApplicationWarnings.IsOpen = warnings.Count > 0;
+        TunStatus.Message = message;
+        TunStatus.Severity = severity;
+        TunStatus.IsOpen = true;
     }
 
-    private async void AddApplication_Click(object sender, RoutedEventArgs e)
+    // Starting with TUN asks for administrator rights; the configuration says nothing more.
+    private async void TunSwitch_Toggled(object sender, RoutedEventArgs e)
     {
-        if (App.State.Settings.Servers.Count == 0)
+        if (_loading || TunSwitch.IsOn == Tun.Enabled) return;
+        var enabled = TunSwitch.IsOn;
+        try { await _autoSave.FlushAsync(); await CommitAsync(tun => tun.Enabled = enabled); }
+        catch { }
+    }
+
+    private async void TunOption_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_loading || !Enum.TryParse<TunStack>(StackComboBox.SelectedValue as string, out var stack)) return;
+        var strict = StrictRouteSwitch.IsOn;
+        var prefer = PreferRoutesSwitch.IsOn;
+        if (stack == Tun.Stack && strict == Tun.StrictRoute && prefer == Tun.PreferRoutes) return;
+        try { await CommitAsync(tun => { tun.Stack = stack; tun.StrictRoute = strict; tun.PreferRoutes = prefer; }); }
+        catch { }
+    }
+
+    private void TunText_Changed(object sender, TextChangedEventArgs e)
+    {
+        if (!_loading && HasTextChanges()) _autoSave.Schedule();
+    }
+
+    private async Task<bool> SaveTextAsync()
+    {
+        if (!HasTextChanges()) return true;
+        if (!int.TryParse(MtuTextBox.Text, out var mtu) || mtu is < 1280 or > 65535)
         {
-            await ShowMessageAsync(Localization.Get("ProxyPage_NoServersYet"), Localization.Get("ProxyPage_AddAServerBeforeCreatingAnApplicationGroup"));
-            return;
+            ShowStatus(Localization.Get("ConfigurationComposer_TUNMTUMustBeBetween1280And65535"), InfoBarSeverity.Error);
+            Load();
+            return false;
         }
-
-        try { await ManageApplicationAsync(new ApplicationProxyProfile { ServerId = App.State.Settings.DefaultServerId ?? string.Empty, MatchMode = "name" }, adding: true); }
-        catch (Exception exception) { await ShowMessageAsync(Localization.Get("ProxyPage_CannotSaveApplicationGroup"), exception.Message); }
-    }
-
-    private async void EditApplication_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is not FrameworkElement { DataContext: ApplicationProxyProfile profile }) return;
-        // An exception escaping an async void handler ends the process and skips exit cleanup.
-        try { await ManageApplicationAsync(profile); }
-        catch (Exception exception) { await ShowMessageAsync(Localization.Get("ProxyPage_CannotSaveApplicationGroup"), exception.Message); }
-    }
-
-    private async void DeleteApplication_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement { DataContext: ApplicationProxyProfile profile })
-        {
-            try { await RemoveApplicationAsync(profile); }
-            catch (Exception exception) { await ShowMessageAsync(Localization.Get("ProxyPage_CannotDeleteApplicationGroup"), exception.Message); }
-        }
-    }
-
-    private async void ApplicationServer_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_loading || App.State.IsRefreshing || sender is not ComboBox { DataContext: ApplicationProxyProfile profile } combo
-            || !combo.IsLoaded || combo.SelectedValue is not string serverId || serverId == profile.ServerId) return;
-        var previous = profile.ServerId;
-        profile.ServerId = serverId;
-        try { await App.ProxyCoordinator.RefreshApplicationProfileAsync(profile); }
-        catch (Exception exception)
-        {
-            // SaveAsync has already rolled the model back; saving again would only fail again.
-            profile.ServerId = previous;
-            await ShowMessageAsync(Localization.Get("ProxyPage_CannotApplyServer"), exception.Message);
-        }
-    }
-
-    private async void ApplicationProxySwitch_Toggled(object sender, RoutedEventArgs e)
-    {
-        if (_loading || App.State.IsRefreshing || _changingApplicationProxy || sender is not ToggleSwitch toggle
-            || toggle.DataContext is not ApplicationProxyProfile profile
-            || toggle.IsOn == profile.IsEnabled)
-        {
-            return;
-        }
-
-        var previousState = profile.IsEnabled;
-        _changingApplicationProxy = true;
-        ApplicationList.IsEnabled = false;
-        toggle.IsEnabled = false;
+        var addresses = Editor.Lines(AddressesTextBox.Text).ToList();
+        var excluded = Editor.Lines(ExcludedRoutesTextBox.Text).ToList();
         try
         {
-            await App.ProxyCoordinator.SetApplicationProxyEnabledAsync(profile, toggle.IsOn);
+            await CommitAsync(tun => { tun.Mtu = mtu; tun.Addresses = addresses; tun.ExcludedRoutes = excluded; });
+            return true;
         }
-        catch (Exception exception)
-        {
-            profile.IsEnabled = previousState;
-            toggle.IsOn = previousState;
-            await ShowMessageAsync(Localization.Get("ProxyPage_CannotSwitchApplicationProxy"), exception.Message);
-        }
-        finally { _changingApplicationProxy = false; toggle.IsEnabled = true; ApplicationList.IsEnabled = true; }
-    }
-
-    private async Task ManageApplicationAsync(ApplicationProxyProfile profile, bool adding = false)
-    {
-        var name = new TextBox { Header = Localization.Get("ProxyPage_ApplicationGroupName"), Text = profile.Name };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(name, "ApplicationEditor_Name");
-        var serverComboBox = CreateServerComboBox(profile.ServerId);
-        var mode = new ComboBox { Header = Localization.Get("ApplicationMatch_Mode") };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(mode, "ApplicationEditor_MatchMode");
-        foreach (var value in new[] { "name", "path" })
-        {
-            var item = new ComboBoxItem { Content = Localization.Get(value == "path" ? "ApplicationMatch_Path" : "ApplicationMatch_Name"), Tag = value };
-            Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(item, "ApplicationEditor_MatchMode_" + value);
-            mode.Items.Add(item);
-        }
-        mode.SelectedIndex = profile.MatchMode == "name" ? 0 : 1;
-        var programs = new TextBox
-        {
-            Header = Localization.Get("ProxyPage_ProgramPathsOnePerLine"),
-            AcceptsReturn = true,
-            Text = string.Join(Environment.NewLine, profile.ExecutablePaths),
-            TextWrapping = TextWrapping.Wrap,
-            MinHeight = 110,
-            MaxHeight = 180
-        };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(programs, "ApplicationEditor_Paths");
-        // Enable multiline before assigning Text; single-line TextBox truncates at the first newline.
-        var names = new TextBox { Header = Localization.Get("ApplicationMatch_Names"), AcceptsReturn = true, Text = string.Join(Environment.NewLine, profile.ProcessNames), MinHeight = 110, MaxHeight = 180 };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(names, "ApplicationEditor_Names");
-        var choosePrograms = new Button { Content = Localization.Get("ProxyPage_AddPrograms"), HorizontalAlignment = HorizontalAlignment.Left };
-        var chooseProcesses = new Button { Content = Localization.Get("ApplicationMatch_ChooseRunning"), HorizontalAlignment = HorizontalAlignment.Left };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(chooseProcesses, "ApplicationEditor_ChooseProcesses");
-        var processChoices = new ListView { SelectionMode = ListViewSelectionMode.Multiple, DisplayMemberPath = nameof(RunningApplication.Display), MaxHeight = 160, Visibility = Visibility.Collapsed };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(processChoices, "ApplicationEditor_RunningProcesses");
-        IReadOnlyList<RunningApplication> running = [];
-        var processSearch = new TextBox { PlaceholderText = Localization.Get("ApplicationMatch_SearchProcesses"), Visibility = Visibility.Collapsed };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(processSearch, "ApplicationEditor_ProcessSearch");
-        processSearch.TextChanged += (_, _) => processChoices.ItemsSource = running.Where(item => item.Display.Contains(processSearch.Text, StringComparison.OrdinalIgnoreCase)).ToArray();
-        var addProcesses = new Button { Content = Localization.Get("ApplicationMatch_AddSelected"), HorizontalAlignment = HorizontalAlignment.Left, Visibility = Visibility.Collapsed };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(addProcesses, "ApplicationEditor_AddProcesses");
-        chooseProcesses.Click += async (_, _) =>
-        {
-            running = await Task.Run(ApplicationMatching.RunningProcesses);
-            processChoices.ItemsSource = running.Where(item => item.Display.Contains(processSearch.Text, StringComparison.OrdinalIgnoreCase)).ToArray();
-            processSearch.Visibility = processChoices.Visibility = addProcesses.Visibility = Visibility.Visible;
-        };
-        addProcesses.Click += (_, _) =>
-        {
-            // Names survive Store updates and CLI bin/<hash> upgrades.
-            mode.SelectedIndex = 0;
-            names.Text = string.Join(Environment.NewLine, names.Text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Concat(processChoices.SelectedItems.Cast<RunningApplication>().Select(item => item.Name)).Distinct(StringComparer.Ordinal));
-            processSearch.Visibility = processChoices.Visibility = addProcesses.Visibility = Visibility.Collapsed;
-        };
-        void UpdateMode()
-        {
-            var byName = mode.SelectedIndex == 0;
-            programs.Visibility = choosePrograms.Visibility = byName ? Visibility.Collapsed : Visibility.Visible;
-            names.Visibility = byName ? Visibility.Visible : Visibility.Collapsed;
-        }
-        mode.SelectionChanged += (_, _) => UpdateMode();
-        UpdateMode();
-        choosePrograms.Click += async (_, _) =>
-        {
-            var files = await FilePickerService.PickFilesAsync(".exe");
-            if (files.Count == 0) return;
-            var paths = programs.Text
-                .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Concat(files.Select(file => file.Path))
-                .Distinct(StringComparer.OrdinalIgnoreCase);
-            programs.Text = string.Join(Environment.NewLine, paths);
-        };
-
-        var panel = new StackPanel { Spacing = 12 };
-        var editorError = new InfoBar { Severity = InfoBarSeverity.Error, IsClosable = true };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(editorError, "ApplicationEditor_Error");
-        panel.Children.Add(editorError);
-        panel.Children.Add(name);
-        panel.Children.Add(serverComboBox);
-        panel.Children.Add(mode);
-        panel.Children.Add(new TextBlock { Text = Localization.Get("ApplicationMatch_Help"), TextWrapping = TextWrapping.Wrap });
-        panel.Children.Add(programs);
-        panel.Children.Add(names);
-        panel.Children.Add(choosePrograms);
-        panel.Children.Add(chooseProcesses);
-        panel.Children.Add(processSearch);
-        panel.Children.Add(processChoices);
-        panel.Children.Add(addProcesses);
-        var dialog = new ContentDialog
-        {
-            Title = Localization.Get(adding ? "ProxyPage_AddApplicationGroup" : "ProxyPage_EditApplicationGroup"),
-            Content = new ScrollViewer { Content = panel, MaxHeight = 600, VerticalScrollBarVisibility = ScrollBarVisibility.Auto },
-            PrimaryButtonText = Localization.Get("ProxyPage_Save"),
-            CloseButtonText = Localization.Get("ProxyPage_Cancel"),
-            DefaultButton = ContentDialogButton.Primary,
-            XamlRoot = XamlRoot
-        };
-        dialog.PrimaryButtonClick += (_, args) =>
-        {
-            var byName = mode.SelectedIndex == 0;
-            var entries = (byName ? names.Text : programs.Text).Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            if (byName)
-            {
-                try
-                {
-                    var resolved = ApplicationMatching.RunningProcesses().Select(item => item.Name).ToList();
-                    // Resolve extensionless entries from running processes or PATH. Explicit .exe
-                    // names retain their casing because sing-box uses case-sensitive matching.
-                    foreach (var directory in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries))
-                        foreach (var entry in entries.Where(item => !Path.HasExtension(item) && item.IndexOfAny(Path.GetInvalidFileNameChars()) < 0))
-                        {
-                            var fileName = Path.HasExtension(entry) ? entry : entry + ".exe";
-                            try { resolved.AddRange(Directory.EnumerateFiles(directory, fileName).Select(Path.GetFileName).OfType<string>()); }
-                            catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
-                        }
-                    entries = entries.Select(entry => ApplicationMatching.NormalizeName(entry, resolved)).ToArray();
-                    names.Text = string.Join(Environment.NewLine, entries.Distinct(StringComparer.Ordinal));
-                }
-                catch (Exception error) when (error is InvalidOperationException or ArgumentException)
-                { args.Cancel = true; editorError.Message = error.Message; editorError.IsOpen = true; return; }
-            }
-            var message = string.IsNullOrWhiteSpace(name.Text) ? Localization.Get("ApplicationEditor_GroupNameRequired")
-                : entries.Length == 0 ? Localization.Get(byName ? "ApplicationEditor_ProcessNameRequired" : "ApplicationEditor_PathRequired")
-                : byName && entries.Any(item => item.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) ? Localization.Get("ApplicationMatch_NameHelp")
-                : serverComboBox.SelectedValue is not string ? Localization.Get("ProxyPage_SelectAServerForThisApplicationGroup")
-                : null;
-            if (message is null) return;
-            args.Cancel = true;
-            editorError.Message = message;
-            editorError.IsOpen = true;
-        };
-        if (await DialogService.ShowAsync(dialog) != ContentDialogResult.Primary) return;
-
-        var paths = programs.Text
-            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
-        var processNames = names.Text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct(StringComparer.Ordinal).ToArray();
-        var matchMode = mode.SelectedIndex == 0 ? "name" : "path";
-
-        if (serverComboBox.SelectedValue is not string serverId)
-        {
-            await ShowMessageAsync(Localization.Get("ProxyPage_ServerSelectionRequired"), Localization.Get("ProxyPage_SelectAServerForThisApplicationGroup"));
-            return;
-        }
-
-        var updated = new ApplicationProxyProfile
-        {
-            Id = profile.Id, Name = name.Text.Trim(), ServerId = serverId, IsEnabled = profile.IsEnabled,
-            MatchMode = matchMode, ProcessNames = new(processNames), ExecutablePaths = new(paths)
-        };
-        if (adding) App.State.AddApplication(updated);
-        else
-        {
-            var index = App.State.Settings.Applications.IndexOf(profile);
-            // A failed background save may have rolled back this uncommitted group while the dialog was open.
-            if (index < 0) { App.State.AddApplication(updated); return; }
-            foreach (var server in App.State.Settings.Servers) updated.AvailableServers.Add(server);
-            App.State.Settings.Applications[index] = updated;
-            await App.ProxyCoordinator.RefreshApplicationProfileAsync(updated);
-        }
-    }
-
-    private async Task RemoveApplicationAsync(ApplicationProxyProfile profile)
-    {
-        var dialog = new ContentDialog
-        {
-            Title = Localization.Get("ProxyPage_DeleteApplicationGroup"),
-            Content = Localization.Format("ProxyPage_Delete0", profile.Name),
-            PrimaryButtonText = Localization.Get("ProxyPage_Delete"),
-            CloseButtonText = Localization.Get("ProxyPage_Cancel"),
-            DefaultButton = ContentDialogButton.Close,
-            XamlRoot = XamlRoot
-        };
-        if (await DialogService.ShowAsync(dialog) != ContentDialogResult.Primary) return;
-        App.State.RemoveApplication(profile);
-        await App.ProxyCoordinator.ApplyConfigurationChangesAsync();
-    }
-
-    private static ComboBox CreateServerComboBox(string? selectedServerId)
-    {
-        var comboBox = new ComboBox
-        {
-            Header = Localization.Get("ProxyPage_ProxyServer"),
-            ItemsSource = App.State.Settings.Servers,
-            DisplayMemberPath = nameof(ServerProfile.Name),
-            SelectedValuePath = nameof(ServerProfile.Id),
-            PlaceholderText = Localization.Get("ProxyPage_SelectServer"),
-            MinWidth = 280,
-            HorizontalAlignment = HorizontalAlignment.Stretch
-        };
-        comboBox.SelectedValue = App.State.Settings.Servers.Any(server => server.Id == selectedServerId)
-            ? selectedServerId
-            : App.State.Settings.DefaultServerId;
-        return comboBox;
-    }
-
-    private async Task ShowMessageAsync(string title, string message)
-    {
-        var dialog = new ContentDialog { Title = title, Content = message, CloseButtonText = Localization.Get("App_Close"), XamlRoot = XamlRoot };
-        await DialogService.ShowAsync(dialog);
+        catch { return false; }
     }
 }

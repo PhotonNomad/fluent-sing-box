@@ -1,82 +1,55 @@
-<Page x:Class="FluentSingBox.Client.Views.ProxyPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:models="using:FluentSingBox.Client.Models" xmlns:controls="using:CommunityToolkit.WinUI.Controls" xmlns:local="using:FluentSingBox.Client.Views">
-    <Grid>
-        <local:PageLayout x:Name="OverviewPanel">
-            <local:PageLayout.HeaderContent>
-                <TextBlock HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Style="{StaticResource TitleTextBlockStyle}" AutomationProperties.HeadingLevel="Level1" x:Uid="ProxyPage_TextBlock5" />
-            </local:PageLayout.HeaderContent>
-            <local:PageLayout.PageContent>
-                <StackPanel Spacing="0">
+<Page x:Class="FluentSingBox.Client.Views.ProxyPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="using:CommunityToolkit.WinUI.Controls" xmlns:local="using:FluentSingBox.Client.Views">
+    <local:PageLayout>
+        <local:PageLayout.HeaderContent>
+            <TextBlock HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Style="{StaticResource TitleTextBlockStyle}" AutomationProperties.HeadingLevel="Level1" x:Uid="ProxyPage_TextBlock5" />
+        </local:PageLayout.HeaderContent>
+        <local:PageLayout.PageContent>
+            <StackPanel Spacing="0">
+                <local:SystemProxySettingsControl x:Name="SystemProxySettings" />
 
-                    <local:SettingsSection x:Uid="ProxyPage_OutletSection">
-                        <local:SettingsSection.SectionContent>
-                            <controls:SettingsCard x:Uid="ProxyPage_SettingsCard13">
+                <local:SettingsSection Header="TUN">
+                    <local:SettingsSection.SectionContent>
+                        <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
+                            <InfoBar x:Name="TunStatus" IsOpen="False" IsClosable="True" AutomationProperties.AutomationId="Tun_Status" />
+                            <controls:SettingsCard x:Uid="Tun_EnabledCard">
                                 <controls:SettingsCard.HeaderIcon>
-                                    <FontIcon Glyph="&#xE909;" />
+                                    <FontIcon Glyph="&#xE839;" />
                                 </controls:SettingsCard.HeaderIcon>
-                                <ComboBox x:Name="DefaultServerComboBox" AutomationProperties.AutomationId="Proxy_DefaultOutlet" MinWidth="{StaticResource SettingActionControlMinWidth}" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="DefaultServer_SelectionChanged" x:Uid="ProxyPage_DefaultServerComboBox" />
+                                <ToggleSwitch x:Name="TunSwitch" Toggled="TunSwitch_Toggled" AutomationProperties.AutomationId="Tun_Enabled" />
                             </controls:SettingsCard>
-                        </local:SettingsSection.SectionContent>
-                    </local:SettingsSection>
-
-                    <local:SystemProxySettingsControl x:Name="SystemProxySettings" />
-
-                    <local:SettingsSection Header="TUN">
-                        <local:SettingsSection.SectionContent>
-                            <StackPanel x:Name="TunForm" Spacing="{StaticResource SettingsCardSpacing}" />
-                        </local:SettingsSection.SectionContent>
-                    </local:SettingsSection>
-                    <local:SettingsSection x:Uid="ProxyPage_SettingsSection22">
-                        <local:SettingsSection.SectionContent>
-                            <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
-                                <TextBlock x:Name="EmptyApplicationsMessage" Foreground="{ThemeResource TextFillColorSecondaryBrush}" x:Uid="ProxyPage_EmptyApplicationsMessage" />
-                                <InfoBar x:Name="ApplicationWarnings" Severity="Warning" IsClosable="False" AutomationProperties.AutomationId="Application_PathWarnings" />
-                                <ListView x:Name="ApplicationList" SelectionMode="None" IsItemClickEnabled="False" Padding="0">
-                                    <ListView.ItemTemplate>
-                                        <DataTemplate x:DataType="models:ApplicationProxyProfile">
-                                            <controls:SettingsExpander AutomationProperties.AutomationId="{x:Bind ExpanderAutomationId}" Header="{x:Bind Name, Mode=OneWay}" Description="{x:Bind RowDescription, Mode=OneWay}" IsExpanded="False">
-                                                <controls:SettingsExpander.HeaderIcon>
-                                                    <FontIcon Glyph="" />
-                                                </controls:SettingsExpander.HeaderIcon>
-                                                <controls:SettingsExpander.Items>
-                                                    <controls:SettingsCard x:Uid="ProxyPage_SettingsCard33">
-                                                        <ToggleSwitch IsOn="{x:Bind IsEnabled, Mode=OneWay}" Toggled="ApplicationProxySwitch_Toggled" x:Uid="ProxyPage_ToggleSwitch34" />
-                                                    </controls:SettingsCard>
-                                                    <controls:SettingsCard x:Uid="ProxyPage_SettingsCard35">
-                                                        <ComboBox AutomationProperties.AutomationId="{x:Bind ServerAutomationId}" ItemsSource="{x:Bind AvailableServers}" DisplayMemberPath="Name" SelectedValuePath="Id" SelectedValue="{x:Bind ServerId, Mode=OneWay}" SelectionChanged="ApplicationServer_SelectionChanged" MinWidth="220" x:Uid="ProxyPage_ComboBox36" />
-                                                    </controls:SettingsCard>
-                                                    <controls:SettingsCard ContentAlignment="Left" x:Uid="ProxyPage_SettingsCard37">
-                                                        <ItemsControl ItemsSource="{x:Bind MatchEntries, Mode=OneWay}">
-                                                            <ItemsControl.ItemTemplate>
-                                                                <DataTemplate>
-                                                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                                                </DataTemplate>
-                                                            </ItemsControl.ItemTemplate>
-                                                        </ItemsControl>
-                                                    </controls:SettingsCard>
-                                                    <controls:SettingsCard x:Uid="ProxyPage_SettingsCard42">
-                                                        <Button AutomationProperties.AutomationId="{x:Bind EditAutomationId}" Click="EditApplication_Click" x:Uid="ProxyPage_Button43" />
-                                                    </controls:SettingsCard>
-                                                    <controls:SettingsCard x:Uid="ProxyPage_SettingsCard44">
-                                                        <Button AutomationProperties.AutomationId="{x:Bind DeleteAutomationId}" Click="DeleteApplication_Click" x:Uid="ProxyPage_Button45" />
-                                                    </controls:SettingsCard>
-                                                </controls:SettingsExpander.Items>
-                                            </controls:SettingsExpander>
-                                        </DataTemplate>
-                                    </ListView.ItemTemplate>
-                                </ListView>
-                                <controls:SettingsCard x:Uid="ProxyPage_SettingsCard46">
-                                    <controls:SettingsCard.HeaderIcon>
-                                        <FontIcon Glyph="" />
-                                    </controls:SettingsCard.HeaderIcon>
-                                    <Button Click="AddApplication_Click" Style="{StaticResource AccentButtonStyle}" x:Uid="ProxyPage_Button49" />
-                                </controls:SettingsCard>
-                            </StackPanel>
-                        </local:SettingsSection.SectionContent>
-                    </local:SettingsSection>
-
-                </StackPanel>
-            </local:PageLayout.PageContent>
-        </local:PageLayout>
-
-    </Grid>
+                            <controls:SettingsExpander x:Name="TunOptions" x:Uid="Tun_Options" AutomationProperties.AutomationId="Tun_Options">
+                                <controls:SettingsExpander.HeaderIcon>
+                                    <FontIcon Glyph="&#xE713;" />
+                                </controls:SettingsExpander.HeaderIcon>
+                                <controls:SettingsExpander.Items>
+                                    <controls:SettingsCard x:Uid="Tun_StackCard">
+                                        <ComboBox x:Name="StackComboBox" MinWidth="{StaticResource SettingActionControlMinWidth}" SelectedValuePath="Tag" SelectionChanged="TunOption_Changed" AutomationProperties.AutomationId="Tun_Stack">
+                                            <ComboBoxItem Content="mixed" Tag="Mixed" />
+                                            <ComboBoxItem Content="system" Tag="System" />
+                                            <ComboBoxItem Content="gvisor" Tag="Gvisor" />
+                                        </ComboBox>
+                                    </controls:SettingsCard>
+                                    <controls:SettingsCard x:Uid="Tun_MtuCard">
+                                        <TextBox x:Name="MtuTextBox" MinWidth="{StaticResource SettingActionControlMinWidth}" InputScope="Number" TextChanged="TunText_Changed" AutomationProperties.AutomationId="Tun_Mtu" />
+                                    </controls:SettingsCard>
+                                    <controls:SettingsCard x:Uid="Tun_StrictRouteCard">
+                                        <ToggleSwitch x:Name="StrictRouteSwitch" Toggled="TunOption_Changed" AutomationProperties.AutomationId="Tun_StrictRoute" />
+                                    </controls:SettingsCard>
+                                    <controls:SettingsCard x:Uid="Tun_PreferRoutesCard">
+                                        <ToggleSwitch x:Name="PreferRoutesSwitch" Toggled="TunOption_Changed" AutomationProperties.AutomationId="Tun_PreferRoutes" />
+                                    </controls:SettingsCard>
+                                    <controls:SettingsCard x:Uid="Tun_AddressesCard" ContentAlignment="Vertical" HorizontalContentAlignment="Stretch">
+                                        <TextBox x:Name="AddressesTextBox" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="64" TextChanged="TunText_Changed" AutomationProperties.AutomationId="Tun_Addresses" />
+                                    </controls:SettingsCard>
+                                    <controls:SettingsCard x:Uid="Tun_ExcludedRoutesCard" ContentAlignment="Vertical" HorizontalContentAlignment="Stretch">
+                                        <TextBox x:Name="ExcludedRoutesTextBox" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="64" TextChanged="TunText_Changed" AutomationProperties.AutomationId="Tun_ExcludedRoutes" x:Uid="Tun_ExcludedRoutesTextBox" />
+                                    </controls:SettingsCard>
+                                </controls:SettingsExpander.Items>
+                            </controls:SettingsExpander>
+                        </StackPanel>
+                    </local:SettingsSection.SectionContent>
+                </local:SettingsSection>
+            </StackPanel>
+        </local:PageLayout.PageContent>
+    </local:PageLayout>
 </Page>

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Net;
-using System.Text.Json;
 using FluentSingBox.Client.Models;
+using FluentSingBox.Configuration.Profiles;
 
 namespace FluentSingBox.Client.Services;
 
@@ -10,7 +10,8 @@ public sealed record NodeProbeResult(bool Success, long Milliseconds, string Mes
 public static class NodeProbeService
 {
     private static readonly SemaphoreSlim Gate = new(1, 1);
-    public static async Task<NodeProbeResult> ProbeAsync(AppSettingsData source, ServerProfile node, CancellationToken cancellation = default, bool preserveRouting = false)
+
+    public static async Task<NodeProbeResult> ProbeAsync(AppSettingsData settings, Profile source, Node node, CancellationToken cancellation = default)
     {
         await Gate.WaitAsync(cancellation);
         Process? process = null;
@@ -19,34 +20,19 @@ public static class NodeProbeService
         try
         {
             Directory.CreateDirectory(directory);
-            var settings = JsonSerializer.Deserialize<AppSettingsData>(JsonSerializer.Serialize(source))!;
-            settings.DefaultServerId = node.Id;
-            if (!preserveRouting) settings.RoutingRules.Clear();
-            settings.Applications.Clear();
-            settings.GlobalTunEnabled = false;
-            settings.RouteFinalMode = "auto";
-            // Never start extra inbounds/TUN/services while probing a node.
-            settings.Configuration.Sections.Clear();
-            settings.Configuration.NativeEnabled = false;
-            settings.Configuration.ExternalFilePath = "";
-            settings.Configuration.LogTimestamp = true;
-            settings.SystemProxyAuthEnabled = false;
-            settings.SystemProxyEnabled = false;
-            // The probe sends its request through the managed listener.
-            settings.SystemProxyInboundEnabled = true;
             var listener = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
-            listener.Start(); settings.SystemProxyPort = ((IPEndPoint)listener.LocalEndpoint).Port; listener.Stop();
+            listener.Start(); var port = ((IPEndPoint)listener.LocalEndpoint).Port; listener.Stop();
             var executable = await SingBoxCoreBundle.ResolveExecutablePathAsync(settings.SingBoxExecutablePath);
             var config = Path.Combine(directory, "config.json");
             var log = Path.Combine(directory, "core.log");
-            await File.WriteAllTextAsync(config, new SingBoxConfigBuilder().BuildGenerated(settings, log), cancellation);
+            await File.WriteAllTextAsync(config, ConfigurationCompiler.Build(ProbeProfile(source, node, port), settings, log), cancellation);
             await CoreCommand.CheckAsync(executable, config, cancellation);
             var start = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = directory };
             start.ArgumentList.Add("run"); start.ArgumentList.Add("-c"); start.ArgumentList.Add(config);
             process = Process.Start(start) ?? throw new InvalidOperationException(Localization.Get("NodeProbeService_CannotStartTheConnectionTest"));
             job.Attach(process);
             await CoreReadinessProbe.WaitForCoreStartedAsync(process, log, TimeSpan.FromSeconds(10), await File.ReadAllTextAsync(config, cancellation)).WaitAsync(cancellation);
-            using var handler = new HttpClientHandler { UseProxy = true, Proxy = new WebProxy($"http://127.0.0.1:{settings.SystemProxyPort}"), AllowAutoRedirect = false };
+            using var handler = new HttpClientHandler { UseProxy = true, Proxy = new WebProxy($"http://127.0.0.1:{port}"), AllowAutoRedirect = false };
             using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
             var clock = Stopwatch.StartNew();
             using var response = await client.GetAsync("https://www.google.com/generate_204", HttpCompletionOption.ResponseHeadersRead, cancellation);
@@ -59,7 +45,7 @@ public static class NodeProbeService
         {
             var tail = await LogReader.ReadTailAsync(Path.Combine(directory, "core.log"));
             var diagnostic = string.Join("\n", tail.Split('\n').TakeLast(8));
-            return new(false, 0, Localization.Get("NodeProbeService_ConnectionTestFailed") + LogReader.Redact(exception.Message + "\n" + diagnostic, source));
+            return new(false, 0, Localization.Get("NodeProbeService_ConnectionTestFailed") + LogReader.Redact(exception.Message + "\n" + diagnostic));
         }
         finally
         {
@@ -73,5 +59,23 @@ public static class NodeProbeService
             }
             Gate.Release();
         }
+    }
+
+    // Only the node itself, reached through a private listener: no rules, groups or TUN.
+    private static Profile ProbeProfile(Profile source, Node node, int port)
+    {
+        var probe = AppState.Clone(source);
+        probe.Nodes.RemoveAll(item => item.Id != node.Id);
+        probe.Groups.Clear();
+        probe.Rules.Clear();
+        probe.Final = Target.Node(node.Id);
+        probe.Dns.Rules.Clear();
+        foreach (var server in probe.Dns.Servers.Where(server => server.Via?.Kind is TargetKind.Node or TargetKind.Group))
+            server.Via = Target.Default;
+        foreach (var set in probe.RuleSets) if (set.Source is RemoteRuleSetSource remote) remote.Via = null;
+        probe.Capture.Tun.Enabled = false;
+        probe.Capture.SystemProxy = new SystemProxyCapture { Enabled = true, Listen = "127.0.0.1", Port = port };
+        probe.General.LogLevel = LogLevel.Info;
+        return probe;
     }
 }

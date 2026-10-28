@@ -48,7 +48,6 @@ public sealed partial class MainWindow : Window
         RootNavigationView.SizeChanged += RootNavigationView_SizeChanged;
         RootGrid.Loaded += RootGrid_Loaded;
         Closed += MainWindow_Closed;
-        App.State.BackgroundSaveFailed += BackgroundSaveFailed;
         AppUpdateService.Current.Changed += ApplicationUpdateChanged;
         AppUpdateService.Current.AutomaticInstallRequested += AutomaticInstallRequested;
         AppWindow.Closing += MainWindow_Closing;
@@ -57,20 +56,20 @@ public sealed partial class MainWindow : Window
         _healthMonitor.Start();
         try { _sessionEnd = new SessionEndHandler(WinRT.Interop.WindowNative.GetWindowHandle(this), EndSession); }
         catch (Exception exception) { ShutdownCoordinator.RecordExitFailure("session-end-hook", exception); }
-        App.State.SettingsChanged += RefreshCurrentPage;
+        App.State.ProfileChanged += ProfileChanged;
         StartWatchingFiles();
+        if (App.State.StartupWarning is { } warning) ShowRecoveryMessage(warning);
+        // A missed watcher event still reaches the app the next time the window is used.
         Activated += async (_, args) =>
         {
             if (args.WindowActivationState == WindowActivationState.Deactivated || _lifecycle != WindowLifecycle.Running) return;
-            try { await App.State.RefreshExternalFilesAsync(reloadSettings: true); }
-            catch (Exception error) { ReportConfigurationRefreshError(error); }
+            await ReloadProfileAsync();
         };
     }
 
     private void StartWatchingFiles()
     {
-        var path = string.IsNullOrWhiteSpace(App.State.Settings.Configuration.ExternalFilePath)
-            ? ConfigurationFileService.FilePath : App.State.Settings.Configuration.ExternalFilePath;
+        var path = App.State.ProfilePath;
         if (_configFileWatcher is not null && string.Equals(path, _watchedConfigPath, StringComparison.OrdinalIgnoreCase)) return;
         var previous = _configFileWatcher;
         _watchedConfigPath = path;
@@ -86,8 +85,8 @@ public sealed partial class MainWindow : Window
         {
             try
             {
-                if (_lifecycle == WindowLifecycle.Running && _configFileWatcher is not null)
-                    await App.State.RefreshExternalFilesAsync(change.HasFlag(ConfigFileChange.Settings));
+                if (_lifecycle == WindowLifecycle.Running && _configFileWatcher is not null && change.HasFlag(ConfigFileChange.UserConfig))
+                    await ReloadProfileAsync();
                 completion.TrySetResult();
             }
             catch (Exception error) { completion.TrySetException(error); }
@@ -95,16 +94,28 @@ public sealed partial class MainWindow : Window
         return completion.Task;
     }
 
+    // A file that is valid again (even unchanged from the active profile) clears the old error.
+    private async Task ReloadProfileAsync()
+    {
+        try
+        {
+            await App.State.ReloadFromDiskAsync();
+            if (_configurationRefreshError) { RecoveryMessage.IsOpen = false; _configurationRefreshError = false; }
+        }
+        catch (Exception error) { ReportConfigurationRefreshError(error); }
+    }
+
     private void ReportConfigurationRefreshError(Exception error)
         => DispatcherQueue.TryEnqueue(() =>
         {
-            ShowRecoveryMessage(error is System.Text.Json.JsonException
-                ? Localization.Get("ConfigurationFileService_TheConfigurationContainsInvalidJSON")
-                : LogReader.Redact(error.Message, App.State.Settings));
+            ShowRecoveryMessage(Localization.Get("Profiles_ExternalEditRejected") + " " + (error is System.Text.Json.JsonException
+                ? Localization.Format("Profiles_InvalidFile", error.Message)
+                : LogReader.Redact(error.Message)));
             _configurationRefreshError = true;
         });
 
-    private void RefreshCurrentPage()
+    // Pages refresh themselves; the window follows a switched profile file and clears a stale error.
+    private void ProfileChanged() => DispatcherQueue.TryEnqueue(() =>
     {
         if (_configurationRefreshError)
         {
@@ -112,9 +123,7 @@ public sealed partial class MainWindow : Window
             _configurationRefreshError = false;
         }
         if (_lifecycle == WindowLifecycle.Running) StartWatchingFiles();
-        if (ContentFrame.Content is ServersPage serversPage) serversPage.RefreshView();
-        else if (ContentFrame.Content is ProxyPage proxyPage) proxyPage.RefreshServers();
-    }
+    });
 
     // Logoff, shutdown or a Restart Manager close: release the proxy and core before the
     // process is ended. A normal exit already in progress does its own cleanup.
@@ -155,15 +164,15 @@ public sealed partial class MainWindow : Window
         var settings = App.State.Settings;
         if (settings.ResumeCoreOnLaunch && !App.CoreService.IsRunning) await SwitchCoreAsync(starting: true);
         if (!settings.ResumeSystemProxyOnLaunch || settings.SystemProxyEnabled) return;
-        if (!App.CoreService.IsRunning || !settings.SystemProxyInboundEnabled)
+        if (!App.CoreService.IsRunning || !App.State.Profile.Capture.SystemProxy.Enabled)
         {
             settings.ResumeSystemProxyOnLaunch = false;
             try { await App.State.SavePreferencesAsync(); }
-            catch (Exception exception) { BackgroundSaveFailed(exception.Message); }
+            catch (Exception exception) { ShowSaveFailure(exception.Message); }
             return;
         }
         try { await App.ProxyCoordinator.SetSystemProxyEnabledAsync(true); }
-        catch (Exception exception) { ShowRecoveryMessage(Localization.Get("SystemProxySettingsControl_CannotSwitchSystemProxy") + ": " + LogReader.Redact(exception.Message, settings)); }
+        catch (Exception exception) { ShowRecoveryMessage(Localization.Get("SystemProxySettingsControl_CannotSwitchSystemProxy") + ": " + LogReader.Redact(exception.Message)); }
     }
 
     private async Task SwitchCoreAsync(bool starting)
@@ -177,8 +186,7 @@ public sealed partial class MainWindow : Window
             if (starting)
             {
                 if (ContentFrame.Content is IPendingConfigurationPage pending && !await pending.FlushPendingChangesAsync()) return;
-                await App.State.FlushPendingConfigurationAsync();
-                await App.CoreService.StartAsync(App.State.Settings);
+                await App.CoreService.StartAsync(App.State.Settings, App.State.Profile);
                 App.State.Settings.CoreOnlyEnabled = true;
                 RecoveryMessage.IsOpen = false;
             }
@@ -191,7 +199,7 @@ public sealed partial class MainWindow : Window
         catch (Exception exception)
         {
             App.State.Settings.CoreOnlyEnabled = App.CoreService.IsRunning;
-            RecoveryMessage.Message = Localization.Get("MainWindow_CannotSwitchSingBox") + LogReader.Redact(exception.Message, App.State.Settings);
+            RecoveryMessage.Message = Localization.Get("MainWindow_CannotSwitchSingBox") + LogReader.Redact(exception.Message);
             RecoveryMessage.IsOpen = true;
         }
         finally
@@ -202,7 +210,7 @@ public sealed partial class MainWindow : Window
         }
         App.State.Settings.ResumeCoreOnLaunch = App.State.Settings.CoreOnlyEnabled;
         try { await App.State.SavePreferencesAsync(); }
-        catch (Exception exception) { BackgroundSaveFailed(exception.Message); }
+        catch (Exception exception) { ShowSaveFailure(exception.Message); }
     }
 
     public Task<XamlRoot> WaitForXamlRootAsync() => _xamlRootReady.Task;
@@ -353,14 +361,13 @@ public sealed partial class MainWindow : Window
                 sender.SelectedItem = _selectedNavigationItem;
                 return;
             }
-            await App.State.FlushPendingConfigurationAsync();
             if (ContentFrame.Navigate(pageType)) _selectedNavigationItem = requestedItem;
             else sender.SelectedItem = _selectedNavigationItem;
         }
         catch (Exception exception)
         {
             sender.SelectedItem = _selectedNavigationItem;
-            RecoveryMessage.Message = Localization.Get("Settings_SaveFailed") + " " + LogReader.Redact(exception.Message, App.State.Settings);
+            RecoveryMessage.Message = Localization.Get("Settings_SaveFailed") + " " + LogReader.Redact(exception.Message);
             RecoveryMessage.IsOpen = true;
         }
         finally { sender.IsEnabled = true; _navigating = false; }
@@ -377,7 +384,7 @@ public sealed partial class MainWindow : Window
         _ => typeof(ServersPage)
     };
 
-    private void BackgroundSaveFailed(string message)
+    private void ShowSaveFailure(string message)
     {
         DispatcherQueue.TryEnqueue(() =>
         {
@@ -440,7 +447,7 @@ public sealed partial class MainWindow : Window
 
     public async Task InstallUpdateAsync()
     {
-        if (_lifecycle != WindowLifecycle.Running || _coreSwitchBusy || _navigating || App.CoreService.IsTransitioning || App.ProxyCoordinator.IsApplyingApplication)
+        if (_lifecycle != WindowLifecycle.Running || _coreSwitchBusy || _navigating || App.CoreService.IsTransitioning)
             throw new InvalidOperationException(Localization.Get("Updates_Busy"));
         await AppUpdateService.Current.ValidateInstallAsync();
         _installUpdate = true;
@@ -484,13 +491,12 @@ public sealed partial class MainWindow : Window
         AppUpdateService.Current.Stop();
         AppUpdateService.Current.Changed -= ApplicationUpdateChanged;
         AppUpdateService.Current.AutomaticInstallRequested -= AutomaticInstallRequested;
-        App.State.BackgroundSaveFailed -= BackgroundSaveFailed;
         _trayIcon?.Dispose();
         _trayIcon = null;
         _sessionEnd?.Dispose();
         _xamlRootReady.TrySetCanceled();
         _healthMonitor.Stop();
-        App.State.SettingsChanged -= RefreshCurrentPage;
+        App.State.ProfileChanged -= ProfileChanged;
         var watcher = _configFileWatcher;
         _configFileWatcher = null;
         watcher?.Dispose();

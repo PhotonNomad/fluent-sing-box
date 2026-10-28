@@ -2,7 +2,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml;
 using FluentSingBox.Client.Services;
 using Windows.Storage;
-using System.Text.Json.Nodes;
+using FluentSingBox.Configuration.Profiles;
 using Microsoft.UI.Xaml.Media;
 
 namespace FluentSingBox.Client.Views;
@@ -19,62 +19,40 @@ public sealed partial class LogsPage : Page
     public LogsPage()
     {
         InitializeComponent();
-        foreach (var level in new[] { "trace", "debug", "info", "warn", "error", "fatal", "panic" })
+        foreach (var level in Enum.GetValues<LogLevel>())
         {
-            var item = new ComboBoxItem { Content = level, Tag = level };
+            var item = new ComboBoxItem { Content = level.ToString().ToLowerInvariant(), Tag = level.ToString() };
             Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(item, "Logs_Level_" + level);
             LogLevelComboBox.Items.Add(item);
         }
-        Loaded += async (_, _) => { _timer.Start(); await LoadLogLevelAsync(); await RefreshAsync(); };
+        Loaded += async (_, _) => { _timer.Start(); LoadLogLevel(); await RefreshAsync(); };
         Unloaded += (_, _) => _timer.Stop();
         _timer.Tick += async (_, _) => await RefreshAsync();
     }
 
-    private async Task LoadLogLevelAsync()
+    private void LoadLogLevel()
     {
         _loadingLogLevel = true;
-        try
-        {
-            var path = await ConfigurationFileService.EnsureAsync(App.State.Settings, validateWithCore: false);
-            var document = JsonNode.Parse(await File.ReadAllTextAsync(path))!.AsObject();
-            LogLevelComboBox.SelectedValue = document["log"]?["level"]?.ToString() ?? "info";
-        }
-        catch (Exception exception)
-        {
-            ErrorBar.Message = LogReader.Redact(exception.Message, App.State.Settings);
-            ErrorBar.Severity = InfoBarSeverity.Error;
-            ErrorBar.IsOpen = true;
-        }
-        finally { _loadingLogLevel = false; }
+        LogLevelComboBox.SelectedValue = App.State.Profile.General.LogLevel.ToString();
+        _loadingLogLevel = false;
     }
 
     private async void LogLevel_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_loadingLogLevel || LogLevelComboBox.SelectedItem is not ComboBoxItem { Tag: string level }) return;
-        var previous = App.State.Settings.Configuration.LogLevel;
-        var committed = false;
-        await Task.Yield();
+        if (_loadingLogLevel || LogLevelComboBox.SelectedItem is not ComboBoxItem { Tag: string tag } || !Enum.TryParse<LogLevel>(tag, out var level)
+            || level == App.State.Profile.General.LogLevel) return;
         LogLevelComboBox.IsEnabled = false;
         try
         {
-            var path = await ConfigurationFileService.EnsureAsync(App.State.Settings, validateWithCore: false);
-            var source = await File.ReadAllTextAsync(path);
-            var document = JsonNode.Parse(source)!.AsObject();
-            document["log"] ??= new JsonObject();
-            document["log"]!["level"] = level;
-            App.State.Settings.Configuration.LogLevel = level;
-            await App.State.ImportConfigurationAsync(document.ToJsonString(), source);
-            committed = true;
-            await App.State.SavePreferencesAsync(configurationCommitted: true);
+            await App.State.UpdateAsync(profile => profile.General.LogLevel = level);
             ErrorBar.Message = Localization.Get("Logs_LevelSaved");
             ErrorBar.Severity = InfoBarSeverity.Informational;
             ErrorBar.IsOpen = true;
         }
         catch (Exception exception)
         {
-            if (!committed) App.State.Settings.Configuration.LogLevel = previous;
-            await LoadLogLevelAsync();
-            ErrorBar.Message = LogReader.Redact(exception.Message, App.State.Settings);
+            LoadLogLevel();
+            ErrorBar.Message = LogReader.Redact(exception.Message);
             ErrorBar.Severity = InfoBarSeverity.Error;
             ErrorBar.IsOpen = true;
         }
@@ -97,7 +75,7 @@ public sealed partial class LogsPage : Page
         {
             var text = await LogReader.ReadTailAsync(Path.Combine(AppPaths.DataDirectory, "sing-box", "sing-box.log"));
             if (!string.IsNullOrEmpty(_cleared) && text.StartsWith(_cleared, StringComparison.Ordinal)) text = text[_cleared.Length..];
-            _snapshot = LogReader.Redact(text, App.State.Settings);
+            _snapshot = LogReader.Redact(text);
             Render();
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

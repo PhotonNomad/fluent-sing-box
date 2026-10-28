@@ -1,13 +1,15 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using FluentSingBox.Client.Models;
 
 namespace FluentSingBox.Client.Services;
 
+// A sing-box outbound read from a share link or pasted JSON, before it becomes a node.
+public sealed record ImportedOutbound(string Name, JsonObject Outbound);
+
 public static class ServerLinkImporter
 {
-    public static IReadOnlyList<ServerProfile> Parse(string input)
+    public static IReadOnlyList<ImportedOutbound> Parse(string input)
     {
         var text = input.Trim();
         if (text.Length == 0) throw new FormatException(Localization.Get("ServerLinkImporter_PasteServerShareLinksOrSingBoxOutbound"));
@@ -22,7 +24,7 @@ public static class ServerLinkImporter
             }
             catch (FormatException) { }
         }
-        var result = new List<ServerProfile>();
+        var result = new List<ImportedOutbound>();
         foreach (var line in text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Where(line => !line.StartsWith('#')))
         {
             try { result.Add(ParseUri(line)); }
@@ -40,60 +42,12 @@ public static class ServerLinkImporter
         "direct", "block", "dns", "selector", "urltest"
     };
 
-    public static IReadOnlyList<ServerProfile> ExtractProxyServers(string json)
-    {
-        var root = JsonNode.Parse(json) ?? throw new JsonException(Localization.Get("ConfigurationFileService_TheConfigurationContainsInvalidJSON"));
-        var profiles = new List<ServerProfile>();
-        var tags = new HashSet<string>(StringComparer.Ordinal);
-        if (root is JsonObject configuration && configuration["type"] is null)
-        {
-            foreach (var section in new[] { "outbounds", "endpoints" })
-            {
-                if (configuration[section] is null) continue;
-                if (configuration[section] is not JsonArray entries) throw new JsonException(Localization.Get("ConfigurationFileService_TheConfigurationContainsInvalidJSON"));
-                AddEntries(section, entries);
-            }
-        }
-        else if (root is JsonArray array) AddEntries("outbounds", array);
-        else if (root is JsonObject single) AddEntries("outbounds", new JsonArray(single.DeepClone()));
-        else throw new JsonException(Localization.Get("ConfigurationFileService_TheConfigurationContainsInvalidJSON"));
-        return profiles;
-
-        void AddEntries(string section, JsonArray entries)
-        {
-            for (var index = 0; index < entries.Count; index++)
-            {
-                if (entries[index] is not JsonObject node
-                    || node["type"] is not JsonValue typeValue || !typeValue.TryGetValue<string>(out var type)
-                    || string.IsNullOrWhiteSpace(type)) throw new JsonException(Localization.Get("ConfigurationFileService_TheConfigurationContainsInvalidJSON"));
-                string? tag = null;
-                if (node["tag"] is { } tagNode)
-                {
-                    if (tagNode is not JsonValue value || !value.TryGetValue<string>(out tag))
-                        throw new JsonException(Localization.Get("ConfigurationFileService_TheConfigurationContainsInvalidJSON"));
-                    if (!tags.Add(tag)) throw new JsonException(Localization.Get("ConfigurationFileService_TheConfigurationContainsInvalidJSON"));
-                }
-                if (NonProxyOutboundTypes.Contains(type)) continue;
-                try
-                {
-                    var profile = CreateProfile((JsonObject)node.DeepClone(), null);
-                    // A source tag is identity, not a display name or a connection fingerprint.
-                    var identity = JsonSerializer.Serialize(new { section, tag, index = tag is null ? (int?)index : null });
-                    profile.Id = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(identity))).ToLowerInvariant();
-                    profile.ConfigSection = section;
-                    profiles.Add(profile);
-                }
-                catch (InvalidOperationException error) { throw new JsonException(Localization.Get("ConfigurationFileService_TheConfigurationContainsInvalidJSON"), error); }
-            }
-        }
-    }
-
-    private static IReadOnlyList<ServerProfile> ParseJson(string json)
+    private static IReadOnlyList<ImportedOutbound> ParseJson(string json)
     {
         var root = JsonNode.Parse(json) ?? throw new FormatException(Localization.Get("ServerLinkImporter_TheJSONContentIsEmpty"));
         if (root is JsonObject configuration && configuration["type"] is null && (configuration["outbounds"] is JsonArray || configuration["endpoints"] is JsonArray))
         {
-            var profiles = new List<ServerProfile>();
+            var profiles = new List<ImportedOutbound>();
             foreach (var section in new[] { "outbounds", "endpoints" })
                 if (configuration[section] is JsonArray entries)
                     foreach (var entry in entries)
@@ -101,9 +55,7 @@ public static class ServerLinkImporter
                         if (entry is not JsonObject node || string.IsNullOrWhiteSpace(node["type"]?.ToString())) throw new FormatException(Localization.Get("ServerLinkImporter_EveryConfigurationEntryMustBeAnObjectContaining"));
                         var type = node["type"]?.GetValue<string>();
                         if (!string.IsNullOrWhiteSpace(type) && NonProxyOutboundTypes.Contains(type)) continue;
-                        var profile = CreateProfile((JsonObject)node.DeepClone(), null);
-                        profile.ConfigSection = section;
-                        profiles.Add(profile);
+                        profiles.Add(CreateProfile((JsonObject)node.DeepClone(), null));
                     }
             return profiles.Count > 0 ? profiles : throw new FormatException(Localization.Get("ServerLinkImporter_TheConfigurationContainsNoServersOrEndpoints"));
         }
@@ -122,7 +74,7 @@ public static class ServerLinkImporter
         return nodes.Select(node => CreateProfile((JsonObject)node.DeepClone(), null)).ToArray();
     }
 
-    private static ServerProfile ParseUri(string link)
+    private static ImportedOutbound ParseUri(string link)
     {
         if (link.StartsWith("vmess://", StringComparison.OrdinalIgnoreCase)) return ParseVmess(link[8..]);
         if (link.StartsWith("ss://", StringComparison.OrdinalIgnoreCase)) link = ExpandLegacyShadowsocks(link);
@@ -216,7 +168,7 @@ public static class ServerLinkImporter
         return CreateProfile(outbound, name);
     }
 
-    private static ServerProfile ParseVmess(string encoded)
+    private static ImportedOutbound ParseVmess(string encoded)
     {
         var vmess = JsonNode.Parse(DecodeBase64(encoded))?.AsObject() ?? throw new FormatException(Localization.Get("ServerLinkImporter_TheVMessBase64ContentIsNotAJSON"));
         var host = vmess["add"]?.GetValue<string>() ?? throw new FormatException(Localization.Get("ServerLinkImporter_TheVMessLinkIsMissingTheAddServer"));
@@ -416,29 +368,13 @@ public static class ServerLinkImporter
     };
 
 
-    // Compatibility with references written before source identity was separated from connection metadata.
-    public static string GenerateStableId(string type, string host, int port, string? tag)
-    {
-        var raw = $"{type}:{host}:{port}:{tag}".ToLowerInvariant();
-        return Convert.ToHexString(System.Security.Cryptography.MD5.HashData(Encoding.UTF8.GetBytes(raw))).ToLowerInvariant();
-    }
-    private static ServerProfile CreateProfile(JsonObject outbound, string? preferredName)
+    private static ImportedOutbound CreateProfile(JsonObject outbound, string? preferredName)
     {
         var type = outbound["type"]?.GetValue<string>() ?? "sing-box";
         var host = outbound["server"]?.GetValue<string>() ?? string.Empty;
-        var port = int.TryParse(outbound["server_port"]?.ToString(), out var parsedPort) ? parsedPort : 0;
-        if (string.IsNullOrWhiteSpace(host) && outbound["peers"] is JsonArray peers && peers.FirstOrDefault() is JsonObject firstPeer)
-        {
-            host = firstPeer["server"]?.GetValue<string>() ?? string.Empty;
-            if (int.TryParse(firstPeer["server_port"]?.ToString(), out var peerPort)) port = peerPort;
-        }
+        var port = outbound["server_port"]?.ToString() ?? string.Empty;
         var tag = outbound["tag"]?.GetValue<string>();
-        return new ServerProfile
-        {
-            Name = string.IsNullOrWhiteSpace(preferredName) ? (string.IsNullOrWhiteSpace(tag) ? $"{type} {host}:{port}".Trim() : tag) : preferredName,
-            Address = host,
-            Port = port,
-            OutboundJson = outbound.ToJsonString(new JsonSerializerOptions { WriteIndented = true })
-        };
+        var name = string.IsNullOrWhiteSpace(preferredName) ? (string.IsNullOrWhiteSpace(tag) ? $"{type} {host}:{port}".Trim() : tag) : preferredName;
+        return new ImportedOutbound(name, outbound);
     }
 }

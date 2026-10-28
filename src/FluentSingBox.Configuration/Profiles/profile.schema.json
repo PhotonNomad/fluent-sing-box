@@ -1,0 +1,365 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fluent-sing-box.local/schemas/profile-1.schema.json",
+  "title": "fluent sing-box profile",
+  "description": "One self-contained configuration. Backend configurations are compiled from it. Must stay in step with Profiles/*.cs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["formatVersion", "id", "name"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "formatVersion": { "const": 1 },
+    "id": { "$ref": "#/$defs/id" },
+    "name": { "type": "string", "minLength": 1 },
+    "nodes": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+    "groups": { "type": "array", "items": { "$ref": "#/$defs/group" } },
+    "ruleSets": { "type": "array", "items": { "$ref": "#/$defs/ruleSet" } },
+    "rules": {
+      "description": "Matched top to bottom.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/routeRule" }
+    },
+    "final": {
+      "description": "Where unmatched traffic goes. Cannot be \"default\".",
+      "allOf": [{ "$ref": "#/$defs/target" }, { "not": { "const": "default" } }]
+    },
+    "dns": { "$ref": "#/$defs/dns" },
+    "capture": { "$ref": "#/$defs/capture" },
+    "general": { "$ref": "#/$defs/general" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$" },
+    "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+    "secret": { "type": "string", "x-secret": true },
+    "target": {
+      "description": "direct, block, default (the final target), node:<id> or group:<id>.",
+      "type": "string",
+      "pattern": "^(direct|block|default|node:[A-Za-z0-9_-]{1,64}|group:[A-Za-z0-9_-]{1,64})$"
+    },
+    "memberTarget": { "type": "string", "pattern": "^(node|group):[A-Za-z0-9_-]{1,64}$" },
+    "cidr": { "type": "string", "pattern": "^[0-9A-Fa-f:.]+/[0-9]{1,3}$" },
+
+    "node": {
+      "type": "object",
+      "required": ["protocol", "id", "name", "server", "port"],
+      "properties": {
+        "protocol": { "enum": ["vless", "vmess", "trojan", "shadowsocks", "hysteria2"] },
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "server": { "type": "string", "minLength": 1 },
+        "port": { "$ref": "#/$defs/port" }
+      },
+      "oneOf": [
+        { "$ref": "#/$defs/vlessNode" },
+        { "$ref": "#/$defs/vmessNode" },
+        { "$ref": "#/$defs/trojanNode" },
+        { "$ref": "#/$defs/shadowsocksNode" },
+        { "$ref": "#/$defs/hysteria2Node" }
+      ]
+    },
+    "vlessNode": {
+      "properties": {
+        "protocol": { "const": "vless" },
+        "id": true, "name": true, "server": true, "port": true,
+        "uuid": { "$ref": "#/$defs/secret" },
+        "flow": { "type": "string" },
+        "transport": { "$ref": "#/$defs/transport" },
+        "tls": { "$ref": "#/$defs/tls" }
+      },
+      "required": ["uuid"],
+      "additionalProperties": false
+    },
+    "vmessNode": {
+      "properties": {
+        "protocol": { "const": "vmess" },
+        "id": true, "name": true, "server": true, "port": true,
+        "uuid": { "$ref": "#/$defs/secret" },
+        "security": { "type": "string" },
+        "alterId": { "type": "integer", "minimum": 0 },
+        "transport": { "$ref": "#/$defs/transport" },
+        "tls": { "$ref": "#/$defs/tls" }
+      },
+      "required": ["uuid"],
+      "additionalProperties": false
+    },
+    "trojanNode": {
+      "properties": {
+        "protocol": { "const": "trojan" },
+        "id": true, "name": true, "server": true, "port": true,
+        "password": { "$ref": "#/$defs/secret" },
+        "transport": { "$ref": "#/$defs/transport" },
+        "tls": { "$ref": "#/$defs/tls" }
+      },
+      "required": ["password"],
+      "additionalProperties": false
+    },
+    "shadowsocksNode": {
+      "properties": {
+        "protocol": { "const": "shadowsocks" },
+        "id": true, "name": true, "server": true, "port": true,
+        "method": { "type": "string", "minLength": 1 },
+        "password": { "$ref": "#/$defs/secret" }
+      },
+      "required": ["method", "password"],
+      "additionalProperties": false
+    },
+    "hysteria2Node": {
+      "properties": {
+        "protocol": { "const": "hysteria2" },
+        "id": true, "name": true, "server": true, "port": true,
+        "password": { "$ref": "#/$defs/secret" },
+        "obfsPassword": { "$ref": "#/$defs/secret" },
+        "upMbps": { "type": "integer", "minimum": 1 },
+        "downMbps": { "type": "integer", "minimum": 1 },
+        "tls": { "$ref": "#/$defs/tls" }
+      },
+      "required": ["password", "tls"],
+      "additionalProperties": false
+    },
+
+    "transport": {
+      "description": "Absent means plain TCP.",
+      "oneOf": [
+        {
+          "type": "object", "additionalProperties": false, "required": ["type"],
+          "properties": { "type": { "const": "ws" }, "path": { "type": "string" }, "host": { "type": "string" } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "serviceName"],
+          "properties": { "type": { "const": "grpc" }, "serviceName": { "type": "string", "minLength": 1 } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type"],
+          "properties": { "type": { "const": "httpUpgrade" }, "path": { "type": "string" }, "host": { "type": "string" } }
+        }
+      ]
+    },
+    "tls": {
+      "description": "Absent means no TLS.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "serverName": { "type": "string" },
+        "insecure": { "type": "boolean" },
+        "alpn": { "type": "array", "items": { "type": "string" } },
+        "fingerprint": { "type": "string" },
+        "reality": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["publicKey"],
+          "properties": { "publicKey": { "type": "string", "minLength": 1 }, "shortId": { "type": "string" } }
+        }
+      }
+    },
+
+    "group": {
+      "type": "object",
+      "required": ["type", "id", "name", "members"],
+      "properties": {
+        "type": { "enum": ["select", "urlTest"] },
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "members": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/memberTarget" } },
+        "url": { "type": "string", "format": "uri" },
+        "intervalSeconds": { "type": "integer", "minimum": 10 },
+        "toleranceMilliseconds": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false,
+      "if": { "properties": { "type": { "const": "select" } } },
+      "then": { "properties": { "url": false, "intervalSeconds": false, "toleranceMilliseconds": false } }
+    },
+
+    "ruleSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "source"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "source": {
+          "oneOf": [
+            {
+              "type": "object", "additionalProperties": false, "required": ["type", "name"],
+              "properties": { "type": { "const": "builtIn" }, "name": { "type": "string", "minLength": 1 } }
+            },
+            {
+              "type": "object", "additionalProperties": false, "required": ["type", "url"],
+              "properties": {
+                "type": { "const": "remote" },
+                "url": { "type": "string", "format": "uri" },
+                "updateIntervalHours": { "type": "integer", "minimum": 1 },
+                "via": { "$ref": "#/$defs/target" }
+              }
+            },
+            {
+              "type": "object", "additionalProperties": false, "required": ["type", "path"],
+              "properties": { "type": { "const": "local" }, "path": { "type": "string", "minLength": 1 } }
+            }
+          ]
+        }
+      }
+    },
+
+    "routeRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "match", "target"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string" },
+        "enabled": { "type": "boolean" },
+        "match": { "$ref": "#/$defs/matcher" },
+        "target": { "$ref": "#/$defs/target" }
+      }
+    },
+    "matcher": {
+      "description": "Leaf matchers OR their own values; all/any/not combine matchers, at most 4 levels deep.",
+      "oneOf": [
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "values"],
+          "properties": {
+            "type": { "const": "domain" },
+            "mode": { "enum": ["exact", "suffix", "keyword", "regex"] },
+            "values": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "cidrs"],
+          "properties": { "type": { "const": "ip" }, "cidrs": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/cidr" } } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type"],
+          "properties": { "type": { "const": "privateIp" } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "ruleSetId"],
+          "properties": { "type": { "const": "ruleSet" }, "ruleSetId": { "$ref": "#/$defs/id" } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "values"],
+          "properties": {
+            "type": { "const": "process" },
+            "by": { "enum": ["name", "path"] },
+            "values": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "ports"],
+          "properties": {
+            "type": { "const": "port" },
+            "ports": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[0-9]{1,5}(-[0-9]{1,5})?$" } }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "network"],
+          "properties": { "type": { "const": "network" }, "network": { "enum": ["tcp", "udp"] } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "protocols"],
+          "properties": {
+            "type": { "const": "protocol" },
+            "protocols": {
+              "type": "array", "minItems": 1,
+              "items": { "enum": ["tls", "http", "quic", "stun", "dtls", "dns", "bittorrent", "ssh", "rdp", "ntp"] }
+            }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "matchers"],
+          "properties": { "type": { "enum": ["all", "any"] }, "matchers": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/matcher" } } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "matcher"],
+          "properties": { "type": { "const": "not" }, "matcher": { "$ref": "#/$defs/matcher" } }
+        }
+      ]
+    },
+
+    "dns": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "servers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "name", "type"],
+            "properties": {
+              "id": { "$ref": "#/$defs/id" },
+              "name": { "type": "string", "minLength": 1 },
+              "type": { "enum": ["system", "udp", "tcp", "tls", "https", "quic"] },
+              "address": { "type": "string" },
+              "port": { "$ref": "#/$defs/port" },
+              "serverName": { "type": "string" },
+              "path": { "type": "string" },
+              "via": { "$ref": "#/$defs/target" }
+            },
+            "if": { "properties": { "type": { "not": { "const": "system" } } } },
+            "then": { "required": ["address"] }
+          }
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "name", "match", "serverId"],
+            "properties": {
+              "id": { "$ref": "#/$defs/id" },
+              "name": { "type": "string" },
+              "enabled": { "type": "boolean" },
+              "match": { "$ref": "#/$defs/matcher" },
+              "serverId": { "$ref": "#/$defs/id" }
+            }
+          }
+        },
+        "finalServerId": { "$ref": "#/$defs/id" },
+        "strategy": { "enum": ["asIs", "preferIpv4", "preferIpv6", "ipv4Only", "ipv6Only"] },
+        "cacheEnabled": { "type": "boolean" }
+      }
+    },
+
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "systemProxy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "listen": { "type": "string" },
+            "port": { "$ref": "#/$defs/port" },
+            "authentication": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["username", "password"],
+              "properties": { "username": { "type": "string", "minLength": 1 }, "password": { "$ref": "#/$defs/secret" } }
+            }
+          }
+        },
+        "tun": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "stack": { "enum": ["system", "gvisor", "mixed"] },
+            "mtu": { "type": "integer", "minimum": 576, "maximum": 65535 },
+            "addresses": { "type": "array", "items": { "$ref": "#/$defs/cidr" } },
+            "strictRoute": { "type": "boolean" },
+            "excludedRoutes": { "type": "array", "items": { "$ref": "#/$defs/cidr" } }
+          }
+        }
+      }
+    },
+
+    "general": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "logLevel": { "enum": ["trace", "debug", "info", "warn", "error"] }
+      }
+    }
+  }
+}

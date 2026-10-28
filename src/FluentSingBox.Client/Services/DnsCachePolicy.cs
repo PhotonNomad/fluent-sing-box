@@ -2,7 +2,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using FluentSingBox.Client.Models;
 
 namespace FluentSingBox.Client.Services;
 
@@ -12,18 +11,17 @@ public static class DnsCachePolicy
     private static string IdentityPath => Path.Combine(DirectoryPath, "dns-cache-policy.json");
     private static string PendingPath => Path.Combine(DirectoryPath, "dns-cache-reset.pending");
 
-    // Invalidation survives restarts and includes source-form DNS edits.
+    // Invalidation survives restarts.
     // Delete only the app-owned cache, while no core owns it.
-    public static async Task TrackAsync(AppSettingsData settings, string json)
+    public static async Task TrackAsync(string json)
     {
         var config = JsonNode.Parse(json)!;
+        // Cached answers depend on the resolvers and on which outbound each lookup took.
         var identity = JsonSerializer.Serialize(new
         {
-            settings.DefaultServerId, settings.GlobalTunEnabled,
-            settings.Configuration.DirectDns, settings.Configuration.ProxyDns,
-            settings.Configuration.DnsStrategy, settings.Configuration.ChinaDnsDirect,
-            applications = settings.Applications.Select(app => new { app.Id, app.MatchMode, app.IsEnabled, app.ServerId, entries = app.MatchEntries.ToArray() }),
             dns = config["dns"],
+            final = config["route"]?["final"],
+            selectors = (config["outbounds"] as JsonArray)?.Where(item => item?["type"]?.ToString() is "selector" or "urltest").ToArray(),
             tun = (config["inbounds"] as JsonArray)?.Where(item => item?["type"]?.ToString() == "tun").ToArray()
         });
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));
@@ -44,7 +42,7 @@ public static class DnsCachePolicy
         DiagnosticsLog.Write(DiagnosticsCategory.DnsPolicy, "DNS cache cleared before core start.");
     }
 
-    public static void LogStrategy(AppSettingsData settings, string json)
+    public static void LogStrategy(string json)
     {
         var effective = JsonNode.Parse(json)?["dns"]?["strategy"]?.ToString();
         if (effective is null) return;

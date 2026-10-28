@@ -227,5 +227,5 @@ public sealed class AppUpdateService
     }
 
     private static void Log(Exception error) =>
-        DiagnosticsLog.Write(DiagnosticsCategory.Update, LogReader.Redact(error.Message, App.State.Settings));
+        DiagnosticsLog.Write(DiagnosticsCategory.Update, LogReader.Redact(error.Message));
 }

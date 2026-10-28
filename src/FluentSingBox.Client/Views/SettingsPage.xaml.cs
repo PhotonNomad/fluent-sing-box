@@ -68,7 +68,7 @@ public sealed partial class SettingsPage : Page
             ThemeComboBox.SelectedValue = previous;
             _loading = false;
             if (App.MainWindow?.Content is FrameworkElement restoredRoot) App.ThemeService.Apply(restoredRoot, previous);
-            await ShowMessageAsync(Localization.Get("Settings_SaveFailed"), LogReader.Redact(exception.Message, App.State.Settings));
+            await ShowMessageAsync(Localization.Get("Settings_SaveFailed"), LogReader.Redact(exception.Message));
         }
         finally { ThemeComboBox.IsEnabled = true; }
     }
@@ -109,7 +109,7 @@ public sealed partial class SettingsPage : Page
         catch (Exception exception)
         {
             App.State.Settings.SingBoxExecutablePath = previous;
-            await ShowMessageAsync(Localization.Get("Settings_SaveFailed"), LogReader.Redact(exception.Message, App.State.Settings));
+            await ShowMessageAsync(Localization.Get("Settings_SaveFailed"), LogReader.Redact(exception.Message));
         }
         finally
         {
@@ -142,7 +142,7 @@ public sealed partial class SettingsPage : Page
         catch (Exception exception)
         {
             RuleSetsDescription.Text = Localization.Get("RuleSets_UnavailableDescription");
-            RuleSetsStatus.Message = LogReader.Redact(exception.Message, App.State.Settings);
+            RuleSetsStatus.Message = LogReader.Redact(exception.Message);
             RuleSetsStatus.Severity = InfoBarSeverity.Error;
             RuleSetsStatus.IsOpen = true;
         }
@@ -166,7 +166,7 @@ public sealed partial class SettingsPage : Page
         catch (Exception exception)
         {
             RuleSetsStatus.Severity = InfoBarSeverity.Error;
-            RuleSetsStatus.Message = Localization.Get("RuleSets_UpdateFailed") + " " + LogReader.Redact(exception.Message, App.State.Settings);
+            RuleSetsStatus.Message = Localization.Get("RuleSets_UpdateFailed") + " " + LogReader.Redact(exception.Message);
         }
         finally { UpdateRuleSetsButton.IsEnabled = true; _updatingRuleSets = false; }
     }
@@ -243,7 +243,7 @@ public sealed partial class SettingsPage : Page
         UpdateStatus.Severity = state.Error is null ? InfoBarSeverity.Informational : InfoBarSeverity.Warning;
         UpdateStatus.Message = Localization.Get("Updates_State_" + state.Status)
             + (state.Release is { } release ? " " + release.Version : "")
-            + (state.Error is { } error ? " " + LogReader.Redact(error, App.State.Settings) : "")
+            + (state.Error is { } error ? " " + LogReader.Redact(error) : "")
             + (state.Status == "readyToInstall" && !service.SigningConfigured ? " " + Localization.Get("Updates_Unsigned") : "");
         UpdateProgress.Visibility = state.Status == "downloading" ? Visibility.Visible : Visibility.Collapsed;
         UpdateProgress.Value = service.Progress * 100;

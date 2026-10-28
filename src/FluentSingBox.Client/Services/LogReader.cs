@@ -1,7 +1,6 @@
 using System.Text;
-using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
-using FluentSingBox.Client.Models;
+using FluentSingBox.Configuration.Profiles;
 
 namespace FluentSingBox.Client.Services;
 
@@ -34,41 +33,14 @@ public static class LogReader
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { return string.Empty; }
     }
 
-    public static string Redact(string text, AppSettingsData settings)
+    // Credentials from the active profile, plus URI and query credentials that may come from
+    // core errors rather than saved nodes.
+    public static string Redact(string text)
     {
-        var secrets = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var server in settings.Servers)
-        {
-            if (!string.IsNullOrEmpty(server.UserId)) secrets.Add(server.UserId);
-            try { Collect(JsonNode.Parse(server.OutboundJson)); } catch (System.Text.Json.JsonException) { }
-        }
-        if (!string.IsNullOrEmpty(settings.SystemProxyPassword)) secrets.Add(settings.SystemProxyPassword);
-        if (!string.IsNullOrEmpty(settings.SystemProxyUsername)) secrets.Add(settings.SystemProxyUsername);
-        foreach (var section in settings.Configuration?.Sections.Values.AsEnumerable() ?? Enumerable.Empty<string>())
-            try { Collect(JsonNode.Parse(section)); } catch (System.Text.Json.JsonException) { }
-        try { Collect(JsonNode.Parse(settings.Configuration?.NativeJson ?? "{}")); } catch (System.Text.Json.JsonException) { }
-        try
-        {
-            if (!string.IsNullOrWhiteSpace(settings.Configuration?.ExternalFilePath))
-                Collect(JsonNode.Parse(File.ReadAllText(settings.Configuration.ExternalFilePath)));
-            if (!string.IsNullOrWhiteSpace(settings.Configuration?.NativeFilePath))
-                Collect(JsonNode.Parse(File.ReadAllText(settings.Configuration.NativeFilePath)));
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { }
+        // Replacing one- to three-character values would garble every message while hiding little.
+        var secrets = ProfileSecrets.Collect(AppState.Current.Profile).Where(secret => secret.Length >= 4);
         foreach (var secret in secrets.OrderByDescending(value => value.Length)) text = text.Replace(secret, "[REDACTED_SECRET]", StringComparison.Ordinal);
-        // URI user-info and common query credentials may come from core errors rather than saved nodes.
         text = Regex.Replace(text, @"(\w[\w+.-]*://)[^\s/@]+@", "$1[REDACTED_SECRET]@");
         return Regex.Replace(text, @"(?i)([?&](?:token|password|auth|key)=)[^\s&]+", "$1[REDACTED_SECRET]");
-
-        void Collect(JsonNode? node)
-        {
-            if (node is JsonObject obj)
-                foreach (var pair in obj)
-                {
-                    if (pair.Key is "password" or "uuid" or "username" or "private_key" or "private_key_passphrase" or "pre_shared_key" or "auth_key" or "psk" or "userkey" or "auth_str" or "auth" or "token" or "secret" or "api_key" && pair.Value is JsonValue value && value.TryGetValue<string>(out var secret) && secret.Length > 0) secrets.Add(secret);
-                    else Collect(pair.Value);
-                }
-            else if (node is JsonArray array) foreach (var child in array) Collect(child);
-        }
     }
 }

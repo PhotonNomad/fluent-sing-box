@@ -20,15 +20,11 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Compile the portable client logic without loading WinUI or starting the core. -->
-    <Compile Include="../../src/FluentSingBox.Client/Models/ObservableModel.cs" Link="Client/ObservableModel.cs" />
-    <Compile Include="../../src/FluentSingBox.Client/Models/ProxyModels.cs" Link="Client/ProxyModels.cs" />
-    <Compile Include="../../src/FluentSingBox.Client/Models/ConfigurationOptions.cs" Link="Client/ConfigurationOptions.cs" />
+    <Compile Include="../../src/FluentSingBox.Client/Models/AppSettings.cs" Link="Client/AppSettings.cs" />
     <Compile Include="../../src/FluentSingBox.Client/Services/Localization.cs" Link="Client/Localization.cs" />
+    <Compile Include="../../src/FluentSingBox.Client/Services/ProfileMessages.cs" Link="Client/ProfileMessages.cs" />
+    <Compile Include="../../src/FluentSingBox.Client/Services/ApplicationMatching.cs" Link="Client/ApplicationMatching.cs" />
     <Compile Include="../../src/FluentSingBox.Client/Services/ServerLinkImporter.cs" Link="Client/ServerLinkImporter.cs" />
-    <Compile Include="../../src/FluentSingBox.Client/Services/ServerMetadataComparer.cs" Link="Client/ServerMetadataComparer.cs" />
-    <Compile Include="../../src/FluentSingBox.Client/Services/SettingsCheckpoint.cs" Link="Client/SettingsCheckpoint.cs" />
-    <Compile Include="../../src/FluentSingBox.Client/Services/ServerCatalog.cs" Link="Client/ServerCatalog.cs" />
-    <Compile Include="../../src/FluentSingBox.Client/Services/ServerTags.cs" Link="Client/ServerTags.cs" />
     <Compile Include="../../src/FluentSingBox.Client/Services/ConfigFileWatcher.cs" Link="Client/ConfigFileWatcher.cs" />
     <Compile Include="../../src/FluentSingBox.Client/Services/ConfigFileRevisions.cs" Link="Client/ConfigFileRevisions.cs" />
     <Compile Include="../../src/FluentSingBox.Client/Services/SettingsStore.cs" Link="Client/SettingsStore.cs" />

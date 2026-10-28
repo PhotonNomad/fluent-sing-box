@@ -7,6 +7,12 @@
             <StackPanel Spacing="0">
                 <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" x:Uid="SettingsPage_TextBlock7" />
 
+                <local:SettingsSection x:Uid="Profiles_Section">
+                    <local:SettingsSection.SectionContent>
+                        <local:ConfigurationSettingsControl />
+                    </local:SettingsSection.SectionContent>
+                </local:SettingsSection>
+
                 <local:SettingsSection x:Uid="SettingsPage_SettingsSection8">
                     <local:SettingsSection.SectionContent>
                         <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
@@ -61,7 +67,6 @@
                                 </controls:SettingsCard.Description>
                                 <Button x:Name="SingBoxCorePathButton" Click="SingBoxCorePath_Click" x:Uid="SettingsPage_SingBoxCorePathButton" />
                             </controls:SettingsCard>
-                            <local:ConfigurationSettingsControl />
                             <controls:SettingsCard x:Uid="Settings_RuleSets">
                                 <controls:SettingsCard.HeaderIcon>
                                     <FontIcon Glyph="&#xE8A5;" />

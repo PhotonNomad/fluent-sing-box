@@ -22,25 +22,14 @@ public static class BundledRuleSets
     public static DateTimeOffset? LastUpdatedUtc => ReadActiveSnapshot() is { } active
         ? active.Manifest["downloadedAtUtc"]!.GetValue<DateTimeOffset>() : null;
 
-    // Keep editable/generated baselines pointing at the shipped snapshot. Only runtime
-    // configurations select downloaded versions, so updating never rewrites custom files.
-    public static void ApplyUpdates(JsonObject config)
+    // The newest verified copy of a built-in rule set: a downloaded update when one is active,
+    // otherwise the copy shipped with the app.
+    public static string ResolveCurrent(string tag)
     {
-        var entries = (config["route"]?["rule_set"] as JsonArray)?.OfType<JsonObject>()
-            .Where(entry => entry["type"]?.ToString() == "local" && (entry["format"]?.ToString() is null or "binary")
-                && IsManagedReference(entry["tag"]?.ToString(), entry["path"]?.ToString())).ToArray() ?? [];
-        if (entries.Length == 0 || ReadActiveSnapshot() is not { } active) return;
-        foreach (var entry in entries) entry["path"] = ResolveFrom(active.Directory, active.Manifest, entry["tag"]!.ToString());
-    }
-
-    private static bool IsManagedReference(string? tag, string? path)
-    {
-        if (!Sources.Any(source => source.Tag == tag) || string.IsNullOrWhiteSpace(path)) return false;
-        if (!Path.IsPathFullyQualified(path)) return false;
-        var fullPath = Path.GetFullPath(path);
-        if (!string.Equals(Path.GetFileName(fullPath), tag + ".srs", StringComparison.OrdinalIgnoreCase)) return false;
-        return string.Equals(fullPath, Path.Combine(DirectoryPath, tag + ".srs"), StringComparison.OrdinalIgnoreCase)
-            || fullPath.StartsWith(Path.GetFullPath(UpdateDirectory) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+        if (ReadActiveSnapshot() is { } active
+            && active.Manifest["files"]?.AsArray().Any(item => item?["tag"]?.GetValue<string>() == tag) == true)
+            return ResolveFrom(active.Directory, active.Manifest, tag);
+        return Resolve(tag);
     }
 
     private static (string Directory, JsonObject Manifest)? ReadActiveSnapshot()

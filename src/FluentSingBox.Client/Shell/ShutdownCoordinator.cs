@@ -13,7 +13,6 @@ internal static class ShutdownCoordinator
     {
         if (!await flushPendingPage())
             throw new InvalidOperationException(Localization.Get("Updates_SaveBeforeInstall"));
-        await App.State.FlushPendingConfigurationAsync();
         await App.State.SavePreferencesAsync();
         WindowsProxyService.Restore(App.State.Settings);
         await App.CoreService.ShutdownAsync();
@@ -38,18 +37,14 @@ internal static class ShutdownCoordinator
             App.CoreService.ReleaseStoppedResources();
         }
         App.State.Settings.CoreOnlyEnabled = false;
-        try
-        {
-            await App.State.FlushPendingConfigurationAsync();
-            await App.State.SavePreferencesAsync();
-        }
+        try { await App.State.SavePreferencesAsync(); }
         catch (Exception exception) { RecordExitFailure("settings-save", exception); }
     }
 
     // Session end (logoff, shutdown, Restart Manager): the same release order as a normal
     // exit, but synchronous, because the process may be ended as soon as this returns.
-    // Pending configuration is not regenerated here (that runs sing-box check); the model
-    // itself is persisted by the preference save, with a bounded wait.
+    // Every accepted profile change is already on disk; only preferences are saved here,
+    // with a bounded wait.
     public static void EndSession()
     {
         try { WindowsProxyService.Restore(App.State.Settings); }
@@ -67,7 +62,7 @@ internal static class ShutdownCoordinator
     }
 
     public static void RecordExitFailure(string stage, Exception exception) =>
-        DiagnosticsLog.Write(DiagnosticsCategory.ExitCleanup, $"{stage}: {LogReader.Redact(exception.ToString(), App.State.Settings)}");
+        DiagnosticsLog.Write(DiagnosticsCategory.ExitCleanup, $"{stage}: {LogReader.Redact(exception.ToString())}");
 
     private static void RecordUpdateTransition(string stage) => DiagnosticsLog.Write(DiagnosticsCategory.UpdateHandoff, stage);
 }

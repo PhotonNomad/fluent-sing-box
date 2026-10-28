@@ -13,9 +13,8 @@ public sealed class SettingsStoreTests : IDisposable
 
     [Theory]
     [InlineData("{")]
-    [InlineData("{\"Servers\":null}")]
-    [InlineData("{\"Configuration\":null}")]
-    [InlineData("{\"Servers\":[{\"Id\":\"a\"},{\"Id\":\"a\"}]}")]
+    [InlineData("{\"GroupSelections\":null}")]
+    [InlineData("{\"GroupSelections\":{\"p\":null}}")]
     public async Task StrictReloadDoesNotRecoverOrOverwriteAnInvalidFile(string json)
     {
         await File.WriteAllTextAsync(FilePath, json);
@@ -25,36 +24,28 @@ public sealed class SettingsStoreTests : IDisposable
     }
 
     [Fact]
-    public async Task SourceConnectionsAreOmittedButReferencesRemainPersisted()
+    public async Task ActiveProfileAndGroupChoicesArePersisted()
     {
-        var settings = new AppSettingsData
-        {
-            Servers = [new() { Id = "source", FromUserConfig = true }, new() { Id = "local" }],
-            DefaultServerId = "source",
-            Applications = [new() { ServerId = "source" }]
-        };
+        var settings = new AppSettingsData { ActiveProfileId = "home" };
+        settings.GroupSelections["home"] = new() { ["g"] = "node:a" };
         await SettingsStore.SaveAsync(FilePath, settings);
+
         var saved = await SettingsStore.ReadAsync(FilePath);
-        Assert.Equal("local", Assert.Single(saved.Servers).Id);
-        Assert.Equal("source", saved.DefaultServerId);
-        Assert.Equal("source", saved.Applications[0].ServerId);
-        Assert.Equal(2, settings.Servers.Count);
+
+        Assert.Equal("home", saved.ActiveProfileId);
+        Assert.Equal("node:a", saved.GroupSelections["home"]["g"]);
     }
 
+    // Settings written before profiles existed still load; their configuration fields are ignored.
     [Fact]
-    public async Task SourceNodesStayPersistedWhileTheirNameIsNotTheSourceTag()
+    public async Task SettingsFromBeforeProfilesStillLoad()
     {
-        var settings = new AppSettingsData
-        {
-            Servers =
-            [
-                new() { Id = "migrated", Name = "Alpha", FromUserConfig = true, OutboundJson = """{"type":"socks","tag":"proxy-old"}""" },
-                new() { Id = "synced", Name = "Beta", FromUserConfig = true, OutboundJson = """{"type":"socks","tag":"Beta"}""" }
-            ]
-        };
-        await SettingsStore.SaveAsync(FilePath, settings);
+        await File.WriteAllTextAsync(FilePath, """{"ThemeChoice":"dark","Servers":[{"Id":"a"}],"Configuration":{"LogLevel":"warn"}}""");
+
         var saved = await SettingsStore.ReadAsync(FilePath);
-        Assert.Equal("Alpha", Assert.Single(saved.Servers).Name);
+
+        Assert.Equal("dark", saved.ThemeChoice);
+        Assert.Null(saved.ActiveProfileId);
     }
 
     public void Dispose() => Directory.Delete(_directory, recursive: true);

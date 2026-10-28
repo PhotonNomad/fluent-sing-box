@@ -1,16 +1,27 @@
+using System.Text.Json;
 using FluentSingBox.Client.Models;
+using FluentSingBox.Configuration.Profiles;
+using FluentSingBox.Configuration.SingBox;
 
 namespace FluentSingBox.Client.Services;
 
-// Chooses how the core configuration is produced: composed from the user's configuration
-// file (with pending generated changes merged in) or generated directly from settings.
+// The one place the active profile becomes the core's configuration.
 public static class ConfigurationCompiler
 {
-    public static string Build(AppSettingsData settings, string logPath)
+    private static readonly JsonSerializerOptions Indented = new() { WriteIndented = true };
+
+    public static string Build(Profile profile, AppSettingsData settings, string logPath)
     {
-        var options = settings.Configuration ?? new ConfigurationOptions();
-        return options.UsesFileConfiguration
-            ? ConfigurationComposer.BuildNative(settings, logPath, json => ConfigurationFileService.ApplyPendingChanges(settings, json))
-            : new SingBoxConfigBuilder().BuildGenerated(settings, logPath);
+        try
+        {
+            return SingBoxCompiler.Build(profile, new SingBoxCompileOptions
+            {
+                LogPath = logPath,
+                BuiltInRuleSetPath = BundledRuleSets.ResolveCurrent,
+                ProcessPathPattern = ApplicationMatching.StorePathRegex,
+                GroupSelections = settings.GroupSelections.GetValueOrDefault(profile.Id) ?? new Dictionary<string, string>()
+            }).ToJsonString(Indented);
+        }
+        catch (ProfileCompileException error) { throw new InvalidOperationException(ProfileMessages.Describe(profile, error.Diagnostics), error); }
     }
 }

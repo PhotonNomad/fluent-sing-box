@@ -21,7 +21,7 @@
     <comment>Source: MainWindow.xaml</comment>
   </data>
   <data name="MainWindow_NavigationViewItem28.Content" xml:space="preserve">
-    <value>Servers</value>
+    <value>Nodes</value>
     <comment>Source: MainWindow.xaml</comment>
   </data>
   <data name="MainWindow_NavigationViewItem31.Content" xml:space="preserve">
@@ -112,14 +112,6 @@
     <value>System proxy</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
-  <data name="ProxyPage_SettingsCard13.Header" xml:space="preserve">
-    <value>Default server</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_DefaultServerComboBox.PlaceholderText" xml:space="preserve">
-    <value>Select server</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
   <data name="ProxyPage_SettingsSection18.Header" xml:space="preserve">
     <value>Global TUN</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
@@ -130,62 +122,6 @@
   </data>
   <data name="ProxyPage_SettingsCard20.Description" xml:space="preserve">
     <value>All programs enter one TUN and follow routing rules. Unmatched traffic follows the final policy. Application groups are ignored while enabled. This only saves configuration; restart the core with the bottom-left switch to apply it.</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsSection22.Header" xml:space="preserve">
-    <value>Application proxy</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsSection22.Description" xml:space="preserve">
-    <value>Group programs and pick a server for each group</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_EmptyApplicationsMessage.Text" xml:space="preserve">
-    <value>No applications added yet.</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsCard33.Header" xml:space="preserve">
-    <value>Enable application proxy</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_ToggleSwitch34.AutomationProperties.Name" xml:space="preserve">
-    <value>Enable application proxy</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsCard35.Header" xml:space="preserve">
-    <value>Proxy server</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_ComboBox36.PlaceholderText" xml:space="preserve">
-    <value>Select server</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsCard37.Header" xml:space="preserve">
-    <value>Included programs</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsCard42.Header" xml:space="preserve">
-    <value>Edit application group</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_Button43.Content" xml:space="preserve">
-    <value>Edit</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsCard44.Header" xml:space="preserve">
-    <value>Delete application group</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_Button45.Content" xml:space="preserve">
-    <value>Delete</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsCard46.Header" xml:space="preserve">
-    <value>Add application group</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_Button49.Content" xml:space="preserve">
-    <value>Add application group</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="RoutingPage_TextBlock4.Text" xml:space="preserve">
@@ -305,23 +241,19 @@
     <comment>Source: Views\RoutingPage.xaml</comment>
   </data>
   <data name="ServersPage_TextBlock4.Text" xml:space="preserve">
-    <value>Servers</value>
+    <value>Nodes</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_TextBlock7.Text" xml:space="preserve">
-    <value>Manage sing-box servers. Paste share links or import outbound JSON.</value>
-    <comment>Source: Views\ServersPage.xaml</comment>
-  </data>
-  <data name="ServersPage_SettingsSection9.Header" xml:space="preserve">
-    <value>Add server</value>
+    <value>Manage the nodes and node groups of the current profile.</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard12.Header" xml:space="preserve">
-    <value>Add servers from share links or configuration</value>
+    <value>Add nodes</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard12.Description" xml:space="preserve">
-    <value>Paste server share links, import outbound JSON or add servers manually.</value>
+    <value>Paste share links, or fill in a node by protocol.</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_Button16.Content" xml:space="preserve">
@@ -329,31 +261,27 @@
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_Button16.AutomationProperties.Name" xml:space="preserve">
-    <value>Import server links or configuration</value>
+    <value>Import share links</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_Button17.Content" xml:space="preserve">
-    <value>Add server</value>
+    <value>Add node</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsSection18.Header" xml:space="preserve">
-    <value>Server list</value>
+    <value>Nodes</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_EmptyMessage.Text" xml:space="preserve">
-    <value>No servers yet. Import share links or outbound JSON, or add a server manually by type.</value>
-    <comment>Source: Views\ServersPage.xaml</comment>
-  </data>
-  <data name="ServersPage_TextBlock33.Text" xml:space="preserve">
-    <value>· Default</value>
+    <value>No nodes yet. Paste share links or add one manually.</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Header" xml:space="preserve">
-    <value>Default server</value>
+    <value>Default outbound</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Description" xml:space="preserve">
-    <value>System proxy uses the default server; application groups can select their own.</value>
+    <value>Traffic that matches no rule goes here.</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_Button36.Content" xml:space="preserve">
@@ -365,35 +293,19 @@
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard37.Description" xml:space="preserve">
-    <value>Request Google HTTPS 204 through this server.</value>
+    <value>Request Google HTTPS 204 through this node.</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_Button38.Content" xml:space="preserve">
     <value>Test connection</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
-  <data name="ServersPage_SettingsCard39.Header" xml:space="preserve">
-    <value>Edit server</value>
-    <comment>Source: Views\ServersPage.xaml</comment>
-  </data>
-  <data name="ServersPage_SettingsCard39.Description" xml:space="preserve">
-    <value>View and change this server's protocol, connection and security settings.</value>
-    <comment>Source: Views\ServersPage.xaml</comment>
-  </data>
   <data name="ServersPage_Button40.Content" xml:space="preserve">
     <value>Edit</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
-  <data name="ServersPage_SettingsCard41.Header" xml:space="preserve">
-    <value>Copy server</value>
-    <comment>Source: Views\ServersPage.xaml</comment>
-  </data>
   <data name="ServersPage_Button42.Content" xml:space="preserve">
     <value>Copy</value>
-    <comment>Source: Views\ServersPage.xaml</comment>
-  </data>
-  <data name="ServersPage_SettingsCard43.Header" xml:space="preserve">
-    <value>Delete server</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_Button44.Content" xml:space="preserve">
@@ -597,12 +509,6 @@
   <data name="ProxyPage_GlobalTunSwitch.OffContent" xml:space="preserve">
     <value>Off</value>
   </data>
-  <data name="ProxyPage_ToggleSwitch34.OnContent" xml:space="preserve">
-    <value>On</value>
-  </data>
-  <data name="ProxyPage_ToggleSwitch34.OffContent" xml:space="preserve">
-    <value>Off</value>
-  </data>
   <data name="RoutingPage_ToggleSwitch33.OnContent" xml:space="preserve">
     <value>On</value>
   </data>
@@ -636,29 +542,23 @@
   <data name="ProxyPage_SystemProxyExpander.Header" xml:space="preserve">
     <value>System proxy</value>
   </data>
-  <data name="ConfigurationCard.Header" xml:space="preserve">
-    <value>Configuration</value>
-  </data>
-  <data name="ConfigurationCard.Description" xml:space="preserve">
-    <value>Changes take effect the next time the core starts.</value>
-  </data>
   <data name="ConfigurationCard_Edit.Content" xml:space="preserve">
     <value>Edit</value>
   </data>
   <data name="ConfigurationCard_Edit.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Open the configuration in the associated editor.</value>
+    <value>Open the profile file in the associated editor. Saved edits are checked and applied.</value>
   </data>
   <data name="ConfigurationCard_Import.Content" xml:space="preserve">
     <value>Import</value>
   </data>
   <data name="ConfigurationCard_Import.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Validate and replace the application configuration.</value>
+    <value>Restore a profile from a backup file.</value>
   </data>
   <data name="ConfigurationCard_Export.Content" xml:space="preserve">
     <value>Export</value>
   </data>
   <data name="ConfigurationCard_Export.ToolTipService.ToolTip" xml:space="preserve">
-    <value>Export the configuration, including node credentials.</value>
+    <value>Back up the current profile to a file.</value>
   </data>
   <data name="ConfigurationCard_Location.Header" xml:space="preserve">
     <value>Location</value>
@@ -714,12 +614,6 @@
   <data name="Updates_GitHubAccess.Content" xml:space="preserve">
     <value>GitHub access</value>
   </data>
-  <data name="ProxyPage_OutletSection.Header" xml:space="preserve">
-    <value>Outbound</value>
-  </data>
-  <data name="ProxyPage_OutletSection.Description" xml:space="preserve">
-    <value>Default server for proxied traffic</value>
-  </data>
   <data name="SystemProxySettingsControl_InboundCard.Header" xml:space="preserve">
     <value>Local inbound</value>
   </data>
@@ -737,5 +631,233 @@
   </data>
   <data name="SystemProxySettingsControl_InboundSwitch.OffContent" xml:space="preserve">
     <value>Off</value>
+  </data>
+  <data name="Servers_ManageCard.Header" xml:space="preserve">
+    <value>Manage</value>
+  </data>
+  <data name="Groups_Section.Header" xml:space="preserve">
+    <value>Node groups</value>
+  </data>
+  <data name="Groups_Section.Description" xml:space="preserve">
+    <value>A group can be used wherever a node can: pick a member by hand, or let it choose the fastest.</value>
+  </data>
+  <data name="Groups_AddCard.Header" xml:space="preserve">
+    <value>Add a node group</value>
+  </data>
+  <data name="Groups_Add.Content" xml:space="preserve">
+    <value>Add group</value>
+  </data>
+  <data name="Groups_ManageCard.Header" xml:space="preserve">
+    <value>Manage</value>
+  </data>
+  <data name="Groups_Member.PlaceholderText" xml:space="preserve">
+    <value>Select a member</value>
+  </data>
+  <data name="Routing_Description.Text" xml:space="preserve">
+    <value>Rules are checked from top to bottom and the first match wins. Drag rules to change their order.</value>
+  </data>
+  <data name="Routing_RulesSection.Header" xml:space="preserve">
+    <value>Rules</value>
+  </data>
+  <data name="Routing_AddCard.Header" xml:space="preserve">
+    <value>Add a rule</value>
+  </data>
+  <data name="Routing_AddCard.Description" xml:space="preserve">
+    <value>Domains, addresses, programs, ports and more; per-program proxying is a rule too.</value>
+  </data>
+  <data name="Routing_Add.Content" xml:space="preserve">
+    <value>Add rule</value>
+  </data>
+  <data name="Routing_Enabled.AutomationProperties.Name" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="Routing_More.AutomationProperties.Name" xml:space="preserve">
+    <value>More options</value>
+  </data>
+  <data name="Routing_More.ToolTipService.ToolTip" xml:space="preserve">
+    <value>More options</value>
+  </data>
+  <data name="Routing_Edit.Text" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Routing_Duplicate.Text" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Routing_MoveUp.Text" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="Routing_MoveDown.Text" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="Routing_MoveTop.Text" xml:space="preserve">
+    <value>Move to top</value>
+  </data>
+  <data name="Routing_MoveBottom.Text" xml:space="preserve">
+    <value>Move to bottom</value>
+  </data>
+  <data name="Routing_Delete.Text" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Routing_FinalCard.Header" xml:space="preserve">
+    <value>Everything else</value>
+  </data>
+  <data name="Routing_FinalCard.Description" xml:space="preserve">
+    <value>Where traffic that matches no rule goes.</value>
+  </data>
+  <data name="RuleSets_Section.Header" xml:space="preserve">
+    <value>Rule sets</value>
+  </data>
+  <data name="RuleSets_Section.Description" xml:space="preserve">
+    <value>Domain and address lists that rules can refer to.</value>
+  </data>
+  <data name="RuleSets_AddCard.Header" xml:space="preserve">
+    <value>Add a rule set</value>
+  </data>
+  <data name="RuleSets_AddCard.Description" xml:space="preserve">
+    <value>From a URL (downloaded by the core) or a local .srs / .json file.</value>
+  </data>
+  <data name="RuleSets_Add.Content" xml:space="preserve">
+    <value>Add rule set</value>
+  </data>
+  <data name="Dns_Description.Text" xml:space="preserve">
+    <value>DNS rules are checked from top to bottom; queries that match none use the default server.</value>
+  </data>
+  <data name="Dns_GeneralSection.Header" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Dns_FinalCard.Header" xml:space="preserve">
+    <value>Default server</value>
+  </data>
+  <data name="Dns_FinalCard.Description" xml:space="preserve">
+    <value>Used for queries that match no DNS rule.</value>
+  </data>
+  <data name="Dns_StrategyCard.Header" xml:space="preserve">
+    <value>Address strategy</value>
+  </data>
+  <data name="Dns_StrategyCard.Description" xml:space="preserve">
+    <value>Which address families lookups return.</value>
+  </data>
+  <data name="Dns_Strategy_Ipv4Only.Content" xml:space="preserve">
+    <value>IPv4 only</value>
+  </data>
+  <data name="Dns_Strategy_PreferIpv4.Content" xml:space="preserve">
+    <value>Prefer IPv4</value>
+  </data>
+  <data name="Dns_Strategy_PreferIpv6.Content" xml:space="preserve">
+    <value>Prefer IPv6</value>
+  </data>
+  <data name="Dns_Strategy_Ipv6Only.Content" xml:space="preserve">
+    <value>IPv6 only</value>
+  </data>
+  <data name="Dns_Strategy_AsIs.Content" xml:space="preserve">
+    <value>As returned</value>
+  </data>
+  <data name="Dns_CacheCard.Header" xml:space="preserve">
+    <value>DNS cache</value>
+  </data>
+  <data name="Dns_ServersSection.Header" xml:space="preserve">
+    <value>DNS servers</value>
+  </data>
+  <data name="Dns_AddServerCard.Header" xml:space="preserve">
+    <value>Add a DNS server</value>
+  </data>
+  <data name="Dns_AddServer.Content" xml:space="preserve">
+    <value>Add server</value>
+  </data>
+  <data name="Dns_RulesSection.Header" xml:space="preserve">
+    <value>DNS rules</value>
+  </data>
+  <data name="Dns_AddRuleCard.Header" xml:space="preserve">
+    <value>Add a DNS rule</value>
+  </data>
+  <data name="Dns_AddRule.Content" xml:space="preserve">
+    <value>Add rule</value>
+  </data>
+  <data name="SystemProxy_LanCard.Header" xml:space="preserve">
+    <value>Allow LAN devices</value>
+  </data>
+  <data name="SystemProxy_LanCard.Description" xml:space="preserve">
+    <value>Listen on all interfaces so other devices can use this proxy.</value>
+  </data>
+  <data name="Tun_EnabledCard.Header" xml:space="preserve">
+    <value>TUN mode</value>
+  </data>
+  <data name="Tun_EnabledCard.Description" xml:space="preserve">
+    <value>Take over all traffic through a virtual adapter; starting the core asks for administrator rights.</value>
+  </data>
+  <data name="Tun_Options.Header" xml:space="preserve">
+    <value>TUN options</value>
+  </data>
+  <data name="Tun_StackCard.Header" xml:space="preserve">
+    <value>Network stack</value>
+  </data>
+  <data name="Tun_MtuCard.Header" xml:space="preserve">
+    <value>MTU</value>
+  </data>
+  <data name="Tun_StrictRouteCard.Header" xml:space="preserve">
+    <value>Strict route</value>
+  </data>
+  <data name="Tun_StrictRouteCard.Description" xml:space="preserve">
+    <value>Prevent traffic from leaving through other adapters.</value>
+  </data>
+  <data name="Tun_PreferRoutesCard.Header" xml:space="preserve">
+    <value>Prefer TUN routes</value>
+  </data>
+  <data name="Tun_PreferRoutesCard.Description" xml:space="preserve">
+    <value>Use two /1 routes so TUN wins over other VPNs.</value>
+  </data>
+  <data name="Tun_AddressesCard.Header" xml:space="preserve">
+    <value>Adapter addresses</value>
+  </data>
+  <data name="Tun_AddressesCard.Description" xml:space="preserve">
+    <value>One CIDR per line.</value>
+  </data>
+  <data name="Tun_ExcludedRoutesCard.Header" xml:space="preserve">
+    <value>Excluded routes</value>
+  </data>
+  <data name="Tun_ExcludedRoutesCard.Description" xml:space="preserve">
+    <value>Addresses that never enter TUN, one CIDR per line.</value>
+  </data>
+  <data name="Tun_ExcludedRoutesTextBox.PlaceholderText" xml:space="preserve">
+    <value>192.168.0.0/16</value>
+  </data>
+  <data name="Profiles_Card.Header" xml:space="preserve">
+    <value>Active profile</value>
+  </data>
+  <data name="Profiles_Active.PlaceholderText" xml:space="preserve">
+    <value>Select a profile</value>
+  </data>
+  <data name="Profiles_ManageCard.Header" xml:space="preserve">
+    <value>Profiles</value>
+  </data>
+  <data name="Profiles_ManageCard.Description" xml:space="preserve">
+    <value>Each profile is complete and independent: its own nodes, rules, DNS and entry points.</value>
+  </data>
+  <data name="Profiles_New.Content" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="Profiles_Duplicate.Content" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Profiles_Rename.Content" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="Profiles_Delete.Content" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Profiles_BackupCard.Header" xml:space="preserve">
+    <value>Backup</value>
+  </data>
+  <data name="Profiles_BackupCard.Description" xml:space="preserve">
+    <value>Export the current profile, or restore one from a file.</value>
+  </data>
+  <data name="SystemProxy_LanSwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>Allow LAN devices</value>
+  </data>
+  <data name="Profiles_Section.Header" xml:space="preserve">
+    <value>Profiles</value>
+  </data>
+  <data name="Profiles_Card.Description" xml:space="preserve">
+    <value>Switch, manage and back up profiles.</value>
   </data>
 </root>

@@ -10,7 +10,7 @@
 - **隔离数据目录**：启动应用前设置 `FLUENTSINGBOX_DATA_DIR` 指向临时目录（放在会话 scratchpad 或 `artifacts/` 下），不碰 `%LOCALAPPDATA%/fluent sing-box`。用户机器上通常同时运行着已安装的正式版（`%LOCALAPPDATA%/Programs/fluent sing-box`）及其核心，不要结束它们。
 - **只结束自己启动的进程**：记下 `Start-Process -PassThru` 返回的 PID，用 PID 结束。
 - **配置校验不等于网络可用**：`sing-box check`、单元测试、本地夹具都不能证明真实节点、TUN、DNS 分流可用。汇报时分清「编译/测试通过」和「真实环境已验证」。
-- **不泄露凭据**：`settings.json`、`user-config.json`、日志可能含 UUID、密码、私钥、订阅地址，不要贴进提交、日志或对外内容。
+- **不泄露凭据**：`profiles/*.json`、日志可能含 UUID、密码、私钥、订阅地址，不要贴进提交、日志或对外内容。
 - **命令找不到时先查环境**：先看命令解析、PATH 和已知安装路径，分清「没装」和「无权限」，再决定是否建议安装；不要为了让命令可用而削弱沙箱。
 
 ## 2. 项目结构
@@ -19,26 +19,24 @@
 fluent sing-box.slnx              解决方案（Client、Configuration、Updates、Updater、Tests）
 release.json                      版本号、GitHub 仓库、发布者证书指纹、WiX 版本——发版改这里
 src/FluentSingBox.Client/         主程序 fluent sing-box.exe
-  App.xaml.cs                     启动：单实例、加载设置、补齐配置、建主窗口、初始化更新、恢复上次会话
+  App.xaml.cs                     启动：单实例、加载设置和当前配置、建主窗口、初始化更新、恢复上次会话
   Program.cs                      入口；也承载核心宿主模式（--fluent-sing-box-core-host）
   MainWindow.xaml(.cs)            导航、核心开关、托盘、退出流程、ResumeLastSessionAsync
-  Views/                          页面：服务器、代理、DNS、路由、日志、设置；Schema 驱动表单
-  Models/                         ProxyModels.cs（AppSettingsData = settings.json）、ConfigurationOptions
+  Views/                          页面：节点、代理、路由、DNS、日志、设置；编辑对话框（NodeEditorForm、MatcherEditor、Editor）
+  Models/                         AppSettings.cs（AppSettingsData = settings.json：偏好与运行状态）
   Services/                       业务服务（见下）
   Core/                           核心宿主协议、宿主运行、就绪探测、运行配置编译
   Shell/                          ShutdownCoordinator、CoreHealthMonitor、SessionEndHandler、更新通知
   Updates/                        ReleaseClient、UpdatePolicy、UpdateStateStore
   Resources/Strings*.resx         文案源文件（英文 + 简体中文）
   Strings/*/Resources.resw        由 resx 生成的 XAML 文案，纳入版本控制
-  Defaults/                       无节点的默认 settings.json / user-config.json 模板（随包、也嵌入程序）
   ThirdParty/                     内置 sing-box 1.14.2 及源码、Schema、SRS 规则集、各自许可证（必须随包保留）
-src/FluentSingBox.Configuration/  ConfigurationMerger：用户配置与生成配置的三方合并
+src/FluentSingBox.Configuration/  自有配置：Profiles/（模型、校验、存储、默认模板、profile.schema.json）、SingBox/（编译器、outbound 读取）
 src/FluentSingBox.Updates/        更新协议、GitHub 凭据、安装包哈希与 Authenticode 校验（客户端和更新器共用）
 src/FluentSingBox.Updater/        FluentSingBox.Update.exe：等主程序退出、校验并调用安装包、重启主程序
-tests/FluentSingBox.Tests/        xUnit：配置合并、更新协议及可移植客户端逻辑（不联网、不写用户运行目录、不启动核心）
+tests/FluentSingBox.Tests/        xUnit：配置模型/校验/编译、更新协议及可移植客户端逻辑（不联网、不写用户运行目录、不启动核心）
 installer/                        WiX 主题、安装器文案（.wxl）、许可页（License.rtf）；WiX 源由脚本生成
 tools/                            Build.ps1、Build-Installer.ps1、Setup-InstallerTools.ps1、Sync-LocalizationResources.ps1
-tools/ProcessName.Regression/     进程名匹配的手动回归小工具
 .github/workflows/                手动触发：build-installers.yml（未签名包）、publish-release.yml（需签名 secrets）
 .vscode/                          F5 调试（使用 artifacts/vscode-data 作为隔离数据目录）
 ```
@@ -47,15 +45,14 @@ tools/ProcessName.Regression/     进程名匹配的手动回归小工具
 
 | 位置 | 职责 |
 | --- | --- |
-| `Services/AppState.cs` | 活动模型的配置提交、外部重载和导入入口；400ms 防抖保存并校验（`SaveAsync`）；`SavePreferencesAsync` 只存偏好 |
-| `Services/ConfigurationFileService.cs` | 维护 `user-config.json`、备份与恢复、导入时用实际核心校验 |
-| `Services/ServerCatalog.cs`、`ServerTags.cs` | 在候选快照中协调节点身份、迁移引用与默认选择；统一输出标签和旧引用别名 |
-| `Services/ConfigFileWatcher.cs`、`ConfigFileRevisions.cs` | 精确监听当前两个配置路径、串行防抖回调；用成功写入的内容摘要识别回声，不设全局忽略窗口 |
-| `Services/SingBoxConfigBuilder.cs`、`ConfigurationCompiler.cs`、`ConfigurationParts.cs`、`ConfigurationComposer.cs` | 从模型生成配置，合并进用户配置，产出核心实际读取的 `config.json` |
-| `Services/ConfigurationSchema.cs`、`Views/SchemaObjectForm.cs`、`Views/ConfigurationSectionForm.cs` | 按核心的 JSON Schema 动态生成 DNS/路由/TUN 表单 |
+| `Configuration/Profiles/` | 自有配置模型（`Profile`）、`ProfileValidator`、`ProfileJson`（读写、导出去凭据）、`ProfileLibrary`（`profiles/<id>.json`）、`ProfileSecrets` |
+| `Configuration/SingBox/` | `SingBoxCompiler`：Profile → sing-box 1.14 配置（确定性输出）；`SingBoxOutboundReader`：分享链接/outbound → 节点 |
+| `Services/AppState.cs` | 当前配置的唯一入口：`UpdateAsync`/`CommitAsync` 在副本上修改 → 校验 + `sing-box check` → 写文件 → 发布 `ProfileChanged`；多配置切换、新建、导入导出；`SavePreferencesAsync` 只存 `settings.json` |
+| `Services/ConfigurationCompiler.cs`、`ProfileMessages.cs`、`ProfileText.cs` | 调用编译器并接上内置规则集和 Store 路径；校验错误转成指名对象的文案；界面显示文本 |
+| `Services/ConfigFileWatcher.cs`、`ConfigFileRevisions.cs` | 监听当前配置文件、串行防抖回调；用成功写入的内容摘要识别回声，不设全局忽略窗口 |
 | `Services/SingBoxCoreService.cs` + `Core/` | 核心启停、需要 TUN 时经 UAC 启动提权宿主、命名管道 READY/STOP/ERROR 协议、Job Object |
 | `Services/ProxyCoordinator.cs`、`WindowsProxyService.cs`、`ProxyOwnership.cs` | Windows 系统代理的开关、快照与恢复（只恢复仍归本应用所有的设置） |
-| `Views/TunConfigurationForm.cs`、`Services/TunRoutePreference.cs`、`TunShutdownCheck.cs` | TUN 入站表单、/1 路由偏好、退出时确认 TUN 网卡已消失 |
+| `Services/TunShutdownCheck.cs` | 退出时确认 TUN 网卡已消失 |
 | `Services/AppUpdateService.cs` + `Updates/` | 检查 GitHub Releases、下载、校验，退出后交给更新器 |
 | `Services/Localization.cs` | C# 文案读取（`Localization.Get/Format`） |
 | `Services/DiagnosticsLog.cs` | 各类诊断日志的统一写入 |
@@ -70,23 +67,25 @@ tools/ProcessName.Regression/     进程名匹配的手动回归小工具
 
 | 文件 | 内容 |
 | --- | --- |
-| `settings.json` | 偏好、节点、应用组、上次会话状态（`ResumeCoreOnLaunch`、`ResumeSystemProxyOnLaunch`） |
-| `sing-box/user-config.json` | 用户可编辑的完整配置（含 `.backup`） |
-| `sing-box/config.json` | 核心下次启动读取的运行配置 |
-| `sing-box/schema.json`、日志、`cache.db`、`rule-sets/` | 当前核心的 Schema、运行日志、缓存、更新过的规则集 |
+| `settings.json` | 偏好与运行状态：当前配置 ID、节点组的手动选择、系统代理快照、上次会话（`Resume*`）；不含任何配置内容 |
+| `profiles/<id>.json` | 一套完整独立的配置（含 `.backup`）；可手改，`$schema` 指向随包的 `Schemas/profile.schema.json`；删除的配置移到 `profiles/deleted/` |
+| `sing-box/config.json` | 编译产物：核心下次启动读取的运行配置，只写不读 |
+| `sing-box/` 日志、`cache.db`、`rule-sets/` | 运行日志、缓存、更新过的规则集 |
 | `sing-box/failures/<时间>/` | 核心启动失败或意外退出时的现场：sing-box.log、core-host.log 末尾、预检报告、报错文本；只保留最近 10 份，不复制配置和设置文件 |
 | `updates/` | 更新状态与下载缓存 |
 
 ## 3. 行为约定（改代码前必须知道）
 
-- **配置不热加载**：页面修改会自动校验并保存到 `user-config.json` 和 `config.json`，但正在运行的核心要重启才生效。校验失败时保留上次有效文件，界面回滚并提示。
-- **保护用户配置**：生成内容通过 `ConfigurationMerger` 合并，不得用模板覆盖整个文件；保留用户自定义字段、规则顺序和标签引用。规则顺序决定分流结果。
-- **外部配置同步**：外部文件只读入候选快照，经 `AppState` 原位发布；解析失败或读取失败保留活动状态，不执行核心校验或自动回写。外部重载不覆盖未保存的本地编辑，也不替换活动集合或重放系统代理恢复。`FromUserConfig` 节点不重复存入设置，但其 ID 引用保留；显示名与源标签不同的节点（迁移或改名后尚未保存）仍写入设置，直到保存把名字写成标签。已发布版本写出的 `proxy-<本地 ID>` 标签按 ID 认领原节点并保留其名字；同步后本地分组里的成员引用随标签改写。源节点 ID 按区段和大小写敏感的标签生成，无标签时只能按区段内位置识别，分享链接导入则每次分配独立本地 ID。
-- **核心与系统代理相互独立**：系统代理只在本地 mixed 入站（标签 `system-http`）开启时可用；关闭入站会先恢复 Windows 代理。启动时只在核心已运行时恢复系统代理，避免 Windows 指向无人监听的端口。
+- **自有配置是唯一来源**：界面、导入导出和手改都只针对 `profiles/<id>.json`；sing-box 配置由 `SingBoxCompiler` 单向生成，从不读回，也没有合并。模型只描述意图（节点、节点组、规则、DNS、接入方式），sing-box 细节（sniff、resolve、hijack-dns、标签）由编译器决定；以后换核心只加编译器。没有原生 JSON 逃生口，需要新能力就加进模型。
+- **配置不热加载**：修改先在副本上校验（`ProfileValidator` + `sing-box check`），通过才写文件并刷新界面；失败时文件和界面都不变，编辑对话框保持打开并显示原因。正在运行的核心要重启才生效。
+- **引用只用 ID**：规则、节点组、DNS 用 `node:<id>`/`group:<id>` 等目标引用，名称只用于显示和生成标签；删除仍被引用的对象会被校验拒绝并指出引用位置。规则顺序就是优先级（拖动排序），按应用代理就是普通的进程规则。
+- **外部修改与导入**：监听到当前配置文件被外部修改时，通过同样的校验后整份替换；不合法时保留原配置并在窗口顶部提示。导入是从备份恢复：整份替换当前配置或添加为新配置，不做合并。每套配置完全独立，节点不在配置之间共享。
+- **核心与系统代理相互独立**：系统代理只在本地 mixed 入站（标签 `system-http`）开启时可用；入站关闭、端口变化或切换配置时，`AppState` 会同步恢复或改指 Windows 代理。启动时只在核心已运行时恢复系统代理，避免 Windows 指向无人监听的端口。
 - **上次会话恢复**：只有用户手动开关核心或系统代理时才更新 `Resume*` 字段；退出、注销、更新交接不清除它们；核心崩溃或启动失败会清除。TUN 写在配置里，随核心一起恢复（会触发 UAC）。
 - **退出清理顺序**（`Shell/ShutdownCoordinator.cs`）：恢复系统代理 → 停止核心 → 保存偏好。顺序是清理契约的一部分，不要调整。
-- **默认分流**：新配置让局域网、国内域名（`geosite-geolocation-cn`）、国内 IP（`geoip-cn`，排除 `geosite-geolocation-!cn`）直连，其余走默认节点；DNS 国内用 `local`（114 UDP 直连），其余用 `proxy-dns`（1.1.1.1 DoH，经 `proxy` 选择器）；`hijack-dns` 只在有 TUN 时生成。已有配置不被重置。
-- **按应用代理**：名称匹配必须是完整 `.exe` 名且大小写与磁盘一致（sing-box 区分大小写）；Store 应用路径转换为只放宽版本号的 `process_path_regex`。
+- **默认分流**（`Configuration/Profiles/default-profile.json`）：局域网、国内域名、国内 IP（排除境外域名）直连，QUIC/STUN/DoT 拦截规则默认关闭，其余走默认出口；DNS 国内域名用 114 UDP，其余用 1.1.1.1 DoH（经默认出口）；`hijack-dns` 只在开启 TUN 时生成。
+- **进程规则**：名称匹配必须是完整 `.exe` 名且大小写与磁盘一致（sing-box 区分大小写）；Store 应用路径编译成只放宽版本号的 `process_path_regex`。
+- **节点组**：`select` 组的当前成员是运行状态，存在 `settings.json`，改它不改配置；编译时写成 selector 的 `default`，并用 `cache_id` 让缓存里的旧选择失效。
 - **后台工作**：更新检查在启动约 30 秒后开始；隔离数据目录和便携副本不跑后台更新、不执行安装。
 
 ## 4. 编码规范
@@ -123,7 +122,7 @@ dotnet build src/FluentSingBox.Client -c Debug -p:Platform=x64      # 日常编�
 dotnet test tests/FluentSingBox.Tests -p:Platform=x64
 ```
 
-单元测试覆盖配置合并、更新协议，以及通过链接源码测试的客户端节点解析/协调、标签引用、设置快照/持久化和文件监听。客户端离线测试不加载 WinUI，文件夹具只写独立临时目录；活动窗口和 AppState 集成仍需启动应用验证。界面改动按以下方式启动目视核对：
+单元测试覆盖配置模型、校验、编译（含快照式断言）、配置存储、更新协议，以及通过链接源码测试的设置持久化、进程名规范化、文案完整性和文件监听。客户端离线测试不加载 WinUI，文件夹具只写独立临时目录；活动窗口和 AppState 集成仍需启动应用验证。界面改动按以下方式启动目视核对：
 
 ```powershell
 $env:FLUENTSINGBOX_DATA_DIR = '<临时目录>'
@@ -136,6 +135,8 @@ $p = Start-Process -FilePath 'src\FluentSingBox.Client\bin\x64\Debug\net10.0-win
 - 不抢前台的步骤（已实测）：带 `FLUENTSINGBOX_TEST_BACKGROUND=1` 启动、`SetWindowPos`、`PrintWindow`。
 - **切换页面会抢前台**：导航项（AutomationId `Navigation_Servers/Proxy/Routing/DNS/Logs/Settings`）只支持 `SelectionItemPattern`，没有 `InvokePattern`；调用 `Select()` 会激活测试窗口。只截启动页（服务器页）时不要切换；需要其他页面时，告诉用户这一步会短暂抢走焦点。展开（`ExpandCollapsePattern`）和滚动（`ScrollPattern`）是否抢前台尚未单独测出。
 - **先切页面，再缩窗口**：窗口变窄（高 DPI 下 1150 物理像素也算窄）后导航栏收成汉堡菜单，导航项从自动化树里消失，只剩 `NavigationPaneToggleButton`。所以先在默认尺寸下 `Select()`，再 `SetWindowPos` 改尺寸。
+- **切换页面后窗口可能被最小化**：`Select()` 之后再移到屏幕外，窗口有时变成最小化（`IsIconic`），`PrintWindow` 只能抓到一小条。截图前检查 `IsIconic`，是就用 `ShowWindow(hwnd, 4)`（`SW_SHOWNOACTIVATE`）恢复。
+- 编辑对话框的按钮和输入框可以用 `InvokePattern`/`ValuePattern` 操作；屏幕外窗口里 ComboBox 弹层的选项不接受 `SelectionItemPattern.Select()`。
 - 页面元素的 AutomationId 多数在 XAML 或代码里用 `AutomationProperties.SetAutomationId` 设置，搜索 `AutomationId` 可以找到。
 - 无法在测试中验证的：核心启停与提权宿主、真实节点联网、TUN/DNS 实际分流、UAC、安装与升级、联网检查更新。改到这些地方时，明确告诉用户哪些没验证。
 
@@ -177,11 +178,9 @@ $p = Start-Process -FilePath 'src\FluentSingBox.Client\bin\x64\Debug\net10.0-win
 
 - 更新器：Burn 返回 3010（需要重启）也被当作成功，且只核对 `release.json` 版本；等待主程序退出 2 分钟超时后的错误信息不易理解；`CheckAndPrepareInstallAsync` 存在竞态，手动检查可能被跳过；每次启动都会覆盖 `AutoCheck`、`AllowMetered`。
 - 系统代理端口填非法值后，错误提示会被随后的「已保存」覆盖。
-- `SingBoxConfigBuilder.BuildGenerated` 的 `validateApplicationPaths` 所有调用点都传 false，相关分支永远不执行。
-- `ConfigurationMerger` 的合并语义（已有测试固定）：next 里的 `null` 会写成 JSON null 而不是删除；用户删掉的键在生成值变化后会回来；用户改过的生成规则会保留，新规则插在最前。
-- 多文件写入不是事务；节点改名后应用代理行的描述不会刷新；`core-host.log` 由提权宿主自行写入。
-- `TunAdapterCleanup` 和 `SingBoxCoreService.RunStoppedMaintenanceAsync` 已没有界面入口，属于可删除的遗留代码。
-- 未使用的资源键：`SingBoxCoreService_TheNewConfigurationFailedToStartAndThe`、`SingBoxCoreService_TheNewConfigurationFailedToStartTheCore`、`SingBoxCoreService_CannotReadTheSingBoxVersion`、`SingBoxCoreService_UnrecognizedSingBoxVersionOutput0`，以及 `TunCleanup_*` 中只剩 `TunCleanup_StopCore` 仍在使用。
+- `core-host.log` 由提权宿主自行写入。
+- 条件编辑器只能编辑「全部/任一 + 可取反的单项条件」两层结构；更深的嵌套（手改文件写出的）在界面里只读显示，原样保留。
+- `ThirdParty/Schemas/sing-box-1.14.2.schema.json` 已没有代码使用（原先给 Schema 表单用），仍随包发布。
 - 没有 CI 测试流程；内置 sing-box 版本为 1.14.2，升级时要同时更新 `ThirdParty/SingBox` 下的二进制、源码包、Schema 和许可说明。
 
 ## 11. 许可

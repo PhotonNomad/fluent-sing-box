@@ -21,7 +21,7 @@
     <comment>Source: MainWindow.xaml</comment>
   </data>
   <data name="MainWindow_NavigationViewItem28.Content" xml:space="preserve">
-    <value>服务器</value>
+    <value>节点</value>
     <comment>Source: MainWindow.xaml</comment>
   </data>
   <data name="MainWindow_NavigationViewItem31.Content" xml:space="preserve">
@@ -112,14 +112,6 @@
     <value>系统代理</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
-  <data name="ProxyPage_SettingsCard13.Header" xml:space="preserve">
-    <value>默认服务器</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_DefaultServerComboBox.PlaceholderText" xml:space="preserve">
-    <value>选择服务器</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
   <data name="ProxyPage_SettingsSection18.Header" xml:space="preserve">
     <value>全局 TUN</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
@@ -130,62 +122,6 @@
   </data>
   <data name="ProxyPage_SettingsCard20.Description" xml:space="preserve">
     <value>所有程序进入同一个 TUN，按路由规则处理，未匹配流量使用默认服务器。开启时忽略应用组；仅保存配置，在左下角重新启动核心后生效。</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsSection22.Header" xml:space="preserve">
-    <value>应用代理</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsSection22.Description" xml:space="preserve">
-    <value>按程序分组，各自选择服务器</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_EmptyApplicationsMessage.Text" xml:space="preserve">
-    <value>还没有添加应用。</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsCard33.Header" xml:space="preserve">
-    <value>启用应用代理</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_ToggleSwitch34.AutomationProperties.Name" xml:space="preserve">
-    <value>启用应用代理</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsCard35.Header" xml:space="preserve">
-    <value>代理服务器</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_ComboBox36.PlaceholderText" xml:space="preserve">
-    <value>选择服务器</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsCard37.Header" xml:space="preserve">
-    <value>包含的程序</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsCard42.Header" xml:space="preserve">
-    <value>编辑应用组</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_Button43.Content" xml:space="preserve">
-    <value>编辑</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsCard44.Header" xml:space="preserve">
-    <value>删除应用组</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_Button45.Content" xml:space="preserve">
-    <value>删除</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_SettingsCard46.Header" xml:space="preserve">
-    <value>添加应用组</value>
-    <comment>Source: Views\ProxyPage.xaml</comment>
-  </data>
-  <data name="ProxyPage_Button49.Content" xml:space="preserve">
-    <value>添加应用组</value>
     <comment>Source: Views\ProxyPage.xaml</comment>
   </data>
   <data name="RoutingPage_TextBlock4.Text" xml:space="preserve">
@@ -305,23 +241,19 @@
     <comment>Source: Views\RoutingPage.xaml</comment>
   </data>
   <data name="ServersPage_TextBlock4.Text" xml:space="preserve">
-    <value>服务器</value>
+    <value>节点</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_TextBlock7.Text" xml:space="preserve">
-    <value>管理 sing-box 服务器；可粘贴分享链接，也可导入 outbound JSON。</value>
-    <comment>Source: Views\ServersPage.xaml</comment>
-  </data>
-  <data name="ServersPage_SettingsSection9.Header" xml:space="preserve">
-    <value>添加服务器</value>
+    <value>管理当前配置的节点和节点组。</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard12.Header" xml:space="preserve">
-    <value>从分享链接或配置添加服务器</value>
+    <value>添加节点</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard12.Description" xml:space="preserve">
-    <value>支持粘贴服务器分享链接、导入 outbound JSON，或手动添加。</value>
+    <value>粘贴分享链接，或按协议手动填写。</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_Button16.Content" xml:space="preserve">
@@ -329,31 +261,27 @@
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_Button16.AutomationProperties.Name" xml:space="preserve">
-    <value>导入服务器链接或配置</value>
+    <value>导入分享链接</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_Button17.Content" xml:space="preserve">
-    <value>添加服务器</value>
+    <value>添加节点</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsSection18.Header" xml:space="preserve">
-    <value>服务器列表</value>
+    <value>节点</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_EmptyMessage.Text" xml:space="preserve">
-    <value>还没有服务器。可导入分享链接、outbound JSON，或按类型手动添加。</value>
-    <comment>Source: Views\ServersPage.xaml</comment>
-  </data>
-  <data name="ServersPage_TextBlock33.Text" xml:space="preserve">
-    <value>· 默认</value>
+    <value>还没有节点。可粘贴分享链接，或手动添加。</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Header" xml:space="preserve">
-    <value>默认服务器</value>
+    <value>默认出口</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Description" xml:space="preserve">
-    <value>系统代理使用默认服务器；应用组可单独选择。</value>
+    <value>未匹配任何规则的流量走这里。</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_Button36.Content" xml:space="preserve">
@@ -365,35 +293,19 @@
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard37.Description" xml:space="preserve">
-    <value>通过此服务器请求 Google HTTPS 204。</value>
+    <value>通过此节点请求 Google HTTPS 204。</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_Button38.Content" xml:space="preserve">
     <value>测试连接</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
-  <data name="ServersPage_SettingsCard39.Header" xml:space="preserve">
-    <value>编辑服务器</value>
-    <comment>Source: Views\ServersPage.xaml</comment>
-  </data>
-  <data name="ServersPage_SettingsCard39.Description" xml:space="preserve">
-    <value>查看和修改服务器的协议、连接与安全设置。</value>
-    <comment>Source: Views\ServersPage.xaml</comment>
-  </data>
   <data name="ServersPage_Button40.Content" xml:space="preserve">
     <value>编辑</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
-  <data name="ServersPage_SettingsCard41.Header" xml:space="preserve">
-    <value>复制服务器</value>
-    <comment>Source: Views\ServersPage.xaml</comment>
-  </data>
   <data name="ServersPage_Button42.Content" xml:space="preserve">
     <value>复制</value>
-    <comment>Source: Views\ServersPage.xaml</comment>
-  </data>
-  <data name="ServersPage_SettingsCard43.Header" xml:space="preserve">
-    <value>删除服务器</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_Button44.Content" xml:space="preserve">
@@ -597,12 +509,6 @@
   <data name="ProxyPage_GlobalTunSwitch.OffContent" xml:space="preserve">
     <value>关</value>
   </data>
-  <data name="ProxyPage_ToggleSwitch34.OnContent" xml:space="preserve">
-    <value>开</value>
-  </data>
-  <data name="ProxyPage_ToggleSwitch34.OffContent" xml:space="preserve">
-    <value>关</value>
-  </data>
   <data name="RoutingPage_ToggleSwitch33.OnContent" xml:space="preserve">
     <value>开</value>
   </data>
@@ -636,29 +542,23 @@
   <data name="ProxyPage_SystemProxyExpander.Header" xml:space="preserve">
     <value>系统代理</value>
   </data>
-  <data name="ConfigurationCard.Header" xml:space="preserve">
-    <value>配置</value>
-  </data>
-  <data name="ConfigurationCard.Description" xml:space="preserve">
-    <value>更改在下次启动核心时生效。</value>
-  </data>
   <data name="ConfigurationCard_Edit.Content" xml:space="preserve">
     <value>编辑</value>
   </data>
   <data name="ConfigurationCard_Edit.ToolTipService.ToolTip" xml:space="preserve">
-    <value>使用关联的编辑器打开配置。</value>
+    <value>用关联的编辑器打开配置文件；保存后会校验并生效。</value>
   </data>
   <data name="ConfigurationCard_Import.Content" xml:space="preserve">
     <value>导入</value>
   </data>
   <data name="ConfigurationCard_Import.ToolTipService.ToolTip" xml:space="preserve">
-    <value>校验后替换应用配置。</value>
+    <value>从备份文件恢复配置。</value>
   </data>
   <data name="ConfigurationCard_Export.Content" xml:space="preserve">
     <value>导出</value>
   </data>
   <data name="ConfigurationCard_Export.ToolTipService.ToolTip" xml:space="preserve">
-    <value>导出配置，包含节点凭据。</value>
+    <value>把当前配置备份到文件。</value>
   </data>
   <data name="ConfigurationCard_Location.Header" xml:space="preserve">
     <value>位置</value>
@@ -714,12 +614,6 @@
   <data name="Updates_GitHubAccess.Content" xml:space="preserve">
     <value>GitHub 访问</value>
   </data>
-  <data name="ProxyPage_OutletSection.Header" xml:space="preserve">
-    <value>出口</value>
-  </data>
-  <data name="ProxyPage_OutletSection.Description" xml:space="preserve">
-    <value>代理流量的默认服务器</value>
-  </data>
   <data name="SystemProxySettingsControl_InboundCard.Header" xml:space="preserve">
     <value>本地入口</value>
   </data>
@@ -737,5 +631,233 @@
   </data>
   <data name="SystemProxySettingsControl_InboundSwitch.OffContent" xml:space="preserve">
     <value>关</value>
+  </data>
+  <data name="Servers_ManageCard.Header" xml:space="preserve">
+    <value>管理</value>
+  </data>
+  <data name="Groups_Section.Header" xml:space="preserve">
+    <value>节点组</value>
+  </data>
+  <data name="Groups_Section.Description" xml:space="preserve">
+    <value>节点组可以用在任何能选节点的地方：手动选择成员，或自动选最快的。</value>
+  </data>
+  <data name="Groups_AddCard.Header" xml:space="preserve">
+    <value>添加节点组</value>
+  </data>
+  <data name="Groups_Add.Content" xml:space="preserve">
+    <value>添加节点组</value>
+  </data>
+  <data name="Groups_ManageCard.Header" xml:space="preserve">
+    <value>管理</value>
+  </data>
+  <data name="Groups_Member.PlaceholderText" xml:space="preserve">
+    <value>选择成员</value>
+  </data>
+  <data name="Routing_Description.Text" xml:space="preserve">
+    <value>规则从上到下依次匹配，命中第一条即停止。拖动可以调整顺序。</value>
+  </data>
+  <data name="Routing_RulesSection.Header" xml:space="preserve">
+    <value>规则</value>
+  </data>
+  <data name="Routing_AddCard.Header" xml:space="preserve">
+    <value>添加规则</value>
+  </data>
+  <data name="Routing_AddCard.Description" xml:space="preserve">
+    <value>可按域名、地址、程序、端口等匹配；按应用代理也是一条规则。</value>
+  </data>
+  <data name="Routing_Add.Content" xml:space="preserve">
+    <value>添加规则</value>
+  </data>
+  <data name="Routing_Enabled.AutomationProperties.Name" xml:space="preserve">
+    <value>启用</value>
+  </data>
+  <data name="Routing_More.AutomationProperties.Name" xml:space="preserve">
+    <value>更多选项</value>
+  </data>
+  <data name="Routing_More.ToolTipService.ToolTip" xml:space="preserve">
+    <value>更多选项</value>
+  </data>
+  <data name="Routing_Edit.Text" xml:space="preserve">
+    <value>编辑</value>
+  </data>
+  <data name="Routing_Duplicate.Text" xml:space="preserve">
+    <value>复制</value>
+  </data>
+  <data name="Routing_MoveUp.Text" xml:space="preserve">
+    <value>上移</value>
+  </data>
+  <data name="Routing_MoveDown.Text" xml:space="preserve">
+    <value>下移</value>
+  </data>
+  <data name="Routing_MoveTop.Text" xml:space="preserve">
+    <value>移到最前</value>
+  </data>
+  <data name="Routing_MoveBottom.Text" xml:space="preserve">
+    <value>移到最后</value>
+  </data>
+  <data name="Routing_Delete.Text" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="Routing_FinalCard.Header" xml:space="preserve">
+    <value>其余流量</value>
+  </data>
+  <data name="Routing_FinalCard.Description" xml:space="preserve">
+    <value>未匹配任何规则的流量走向。</value>
+  </data>
+  <data name="RuleSets_Section.Header" xml:space="preserve">
+    <value>规则集</value>
+  </data>
+  <data name="RuleSets_Section.Description" xml:space="preserve">
+    <value>可供规则引用的域名和地址列表。</value>
+  </data>
+  <data name="RuleSets_AddCard.Header" xml:space="preserve">
+    <value>添加规则集</value>
+  </data>
+  <data name="RuleSets_AddCard.Description" xml:space="preserve">
+    <value>来自网址（由核心下载）或本地 .srs / .json 文件。</value>
+  </data>
+  <data name="RuleSets_Add.Content" xml:space="preserve">
+    <value>添加规则集</value>
+  </data>
+  <data name="Dns_Description.Text" xml:space="preserve">
+    <value>DNS 规则从上到下依次匹配；都不匹配时使用默认服务器。</value>
+  </data>
+  <data name="Dns_GeneralSection.Header" xml:space="preserve">
+    <value>常规</value>
+  </data>
+  <data name="Dns_FinalCard.Header" xml:space="preserve">
+    <value>默认服务器</value>
+  </data>
+  <data name="Dns_FinalCard.Description" xml:space="preserve">
+    <value>未匹配任何 DNS 规则的查询使用它。</value>
+  </data>
+  <data name="Dns_StrategyCard.Header" xml:space="preserve">
+    <value>地址策略</value>
+  </data>
+  <data name="Dns_StrategyCard.Description" xml:space="preserve">
+    <value>解析时返回哪类地址。</value>
+  </data>
+  <data name="Dns_Strategy_Ipv4Only.Content" xml:space="preserve">
+    <value>仅 IPv4</value>
+  </data>
+  <data name="Dns_Strategy_PreferIpv4.Content" xml:space="preserve">
+    <value>优先 IPv4</value>
+  </data>
+  <data name="Dns_Strategy_PreferIpv6.Content" xml:space="preserve">
+    <value>优先 IPv6</value>
+  </data>
+  <data name="Dns_Strategy_Ipv6Only.Content" xml:space="preserve">
+    <value>仅 IPv6</value>
+  </data>
+  <data name="Dns_Strategy_AsIs.Content" xml:space="preserve">
+    <value>不限制</value>
+  </data>
+  <data name="Dns_CacheCard.Header" xml:space="preserve">
+    <value>DNS 缓存</value>
+  </data>
+  <data name="Dns_ServersSection.Header" xml:space="preserve">
+    <value>DNS 服务器</value>
+  </data>
+  <data name="Dns_AddServerCard.Header" xml:space="preserve">
+    <value>添加 DNS 服务器</value>
+  </data>
+  <data name="Dns_AddServer.Content" xml:space="preserve">
+    <value>添加服务器</value>
+  </data>
+  <data name="Dns_RulesSection.Header" xml:space="preserve">
+    <value>DNS 规则</value>
+  </data>
+  <data name="Dns_AddRuleCard.Header" xml:space="preserve">
+    <value>添加 DNS 规则</value>
+  </data>
+  <data name="Dns_AddRule.Content" xml:space="preserve">
+    <value>添加规则</value>
+  </data>
+  <data name="SystemProxy_LanCard.Header" xml:space="preserve">
+    <value>允许局域网设备连接</value>
+  </data>
+  <data name="SystemProxy_LanCard.Description" xml:space="preserve">
+    <value>在所有网卡上监听，让其他设备也能使用此代理。</value>
+  </data>
+  <data name="Tun_EnabledCard.Header" xml:space="preserve">
+    <value>TUN 模式</value>
+  </data>
+  <data name="Tun_EnabledCard.Description" xml:space="preserve">
+    <value>通过虚拟网卡接管全部流量；启动核心时需要管理员权限。</value>
+  </data>
+  <data name="Tun_Options.Header" xml:space="preserve">
+    <value>TUN 选项</value>
+  </data>
+  <data name="Tun_StackCard.Header" xml:space="preserve">
+    <value>网络栈</value>
+  </data>
+  <data name="Tun_MtuCard.Header" xml:space="preserve">
+    <value>MTU</value>
+  </data>
+  <data name="Tun_StrictRouteCard.Header" xml:space="preserve">
+    <value>严格路由</value>
+  </data>
+  <data name="Tun_StrictRouteCard.Description" xml:space="preserve">
+    <value>防止流量绕过 TUN 从其他网卡发出。</value>
+  </data>
+  <data name="Tun_PreferRoutesCard.Header" xml:space="preserve">
+    <value>优先 TUN 路由</value>
+  </data>
+  <data name="Tun_PreferRoutesCard.Description" xml:space="preserve">
+    <value>使用两条 /1 路由，优先于其他 VPN。</value>
+  </data>
+  <data name="Tun_AddressesCard.Header" xml:space="preserve">
+    <value>网卡地址</value>
+  </data>
+  <data name="Tun_AddressesCard.Description" xml:space="preserve">
+    <value>每行一个 CIDR。</value>
+  </data>
+  <data name="Tun_ExcludedRoutesCard.Header" xml:space="preserve">
+    <value>排除路由</value>
+  </data>
+  <data name="Tun_ExcludedRoutesCard.Description" xml:space="preserve">
+    <value>不进入 TUN 的地址，每行一个 CIDR。</value>
+  </data>
+  <data name="Tun_ExcludedRoutesTextBox.PlaceholderText" xml:space="preserve">
+    <value>192.168.0.0/16</value>
+  </data>
+  <data name="Profiles_Card.Header" xml:space="preserve">
+    <value>当前配置</value>
+  </data>
+  <data name="Profiles_Active.PlaceholderText" xml:space="preserve">
+    <value>选择配置</value>
+  </data>
+  <data name="Profiles_ManageCard.Header" xml:space="preserve">
+    <value>配置管理</value>
+  </data>
+  <data name="Profiles_ManageCard.Description" xml:space="preserve">
+    <value>每套配置完整且独立：各自有节点、规则、DNS 和接入设置。</value>
+  </data>
+  <data name="Profiles_New.Content" xml:space="preserve">
+    <value>新建</value>
+  </data>
+  <data name="Profiles_Duplicate.Content" xml:space="preserve">
+    <value>复制</value>
+  </data>
+  <data name="Profiles_Rename.Content" xml:space="preserve">
+    <value>重命名</value>
+  </data>
+  <data name="Profiles_Delete.Content" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="Profiles_BackupCard.Header" xml:space="preserve">
+    <value>备份</value>
+  </data>
+  <data name="Profiles_BackupCard.Description" xml:space="preserve">
+    <value>导出当前配置，或从文件恢复。</value>
+  </data>
+  <data name="SystemProxy_LanSwitch.AutomationProperties.Name" xml:space="preserve">
+    <value>允许局域网设备连接</value>
+  </data>
+  <data name="Profiles_Section.Header" xml:space="preserve">
+    <value>配置</value>
+  </data>
+  <data name="Profiles_Card.Description" xml:space="preserve">
+    <value>切换、管理和备份配置。</value>
   </data>
 </root>

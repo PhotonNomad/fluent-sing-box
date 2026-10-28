@@ -36,8 +36,6 @@
   <ItemGroup>
     <None Include="..\..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <PRIResource Include="Strings\**\*.resw" />
-    <None Update="Defaults\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <EmbeddedResource Include="Defaults\user-config.json" LogicalName="FluentSingBox.Client.Resources.default-user-config.json" />
     <None Update="ThirdParty\Schemas\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Update="Assets\fluent-sing-box.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Update="Assets\fluent-sing-box.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

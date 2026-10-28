@@ -4,6 +4,7 @@ using System.IO.Pipes;
 using System.Text;
 using System.Text.Json;
 using FluentSingBox.Client.Models;
+using FluentSingBox.Configuration.Profiles;
 using static FluentSingBox.Client.Services.ProcessUtils;
 
 namespace FluentSingBox.Client.Services;
@@ -26,17 +27,6 @@ public sealed class SingBoxCoreService : IDisposable
     public CoreStatus Status => _status == CoreStatus.Running && !IsRunning ? CoreStatus.Faulted : _status;
     public bool IsTransitioning => _operationGate.CurrentCount == 0 || _status is CoreStatus.Starting or CoreStatus.Stopping;
 
-    public async Task RunStoppedMaintenanceAsync(Func<Task> maintenance)
-    {
-        await _operationGate.WaitAsync();
-        try
-        {
-            if (IsRunning) throw new InvalidOperationException(Localization.Get("TunCleanup_StopCore"));
-            await maintenance();
-        }
-        finally { _operationGate.Release(); }
-    }
-
     public async Task ShutdownAsync()
     {
         await _operationGate.WaitAsync();
@@ -44,30 +34,25 @@ public sealed class SingBoxCoreService : IDisposable
         finally { _operationGate.Release(); }
     }
 
-    public async Task ValidateAsync(AppSettingsData settings)
-        => await BuildValidatedConfigurationAsync(settings);
-
-    // Prepare the exact next-start configuration without changing the running core.
-    public Task<string> BuildValidatedConfigurationAsync(AppSettingsData settings) => CoreConfigurationCompiler.BuildValidatedAsync(settings);
-
-    public async Task StartAsync(AppSettingsData settings)
+    public async Task StartAsync(AppSettingsData settings, Profile profile)
     {
         settings = JsonSerializer.Deserialize<AppSettingsData>(JsonSerializer.Serialize(settings))!;
+        profile = AppState.Clone(profile);
         await _operationGate.WaitAsync();
-        try { await StartGuardedAsync(settings); }
+        try { await StartGuardedAsync(settings, profile); }
         finally { _operationGate.Release(); }
     }
 
-    private async Task StartGuardedAsync(AppSettingsData settings)
+    private async Task StartGuardedAsync(AppSettingsData settings, Profile profile)
     {
         if (IsRunning) return;
         _status = CoreStatus.Starting;
         var attemptStarted = DateTime.UtcNow;
-        try { await StartInternalAsync(settings); _status = CoreStatus.Running; }
+        try { await StartInternalAsync(settings, profile); _status = CoreStatus.Running; }
         catch (Exception exception)
         {
             _status = CoreStatus.Faulted;
-            var message = LogReader.Redact(exception.Message, settings);
+            var message = LogReader.Redact(exception.Message);
             StartupPreflight.WriteReport("failed", message);
             var snapshot = await CoreFailureSnapshot.SaveAsync(message, attemptStarted);
             if (snapshot is null) throw;
@@ -75,11 +60,9 @@ public sealed class SingBoxCoreService : IDisposable
         }
     }
 
-    private async Task StartInternalAsync(AppSettingsData settings)
+    private async Task StartInternalAsync(AppSettingsData settings, Profile profile)
     {
         if (IsRunning) return;
-        if (!string.IsNullOrWhiteSpace(settings.Configuration.ExternalFilePath) && !File.Exists(settings.Configuration.ExternalFilePath))
-            await ConfigurationFileService.EnsureAsync(settings);
         CleanupHandles();
         var executablePath = await SingBoxCoreBundle.ResolveExecutablePathAsync(settings.SingBoxExecutablePath);
 
@@ -87,26 +70,27 @@ public sealed class SingBoxCoreService : IDisposable
         Directory.CreateDirectory(directory);
         var configPath = Path.Combine(directory, "config.json");
         var logPath = Path.Combine(directory, "sing-box.log");
-        var configText = ConfigurationCompiler.Build(settings, logPath);
+        var configText = ConfigurationCompiler.Build(profile, settings, logPath);
+        var proxyPort = profile.Capture.SystemProxy.Port;
         var candidatePath = Path.Combine(directory, "config.candidate.json");
         await File.WriteAllTextAsync(candidatePath, configText);
         await CoreCommand.CheckAsync(executablePath, candidatePath);
         await Task.Run(CoreProcessLease.Recover);
-        StartupPreflight.CheckResources(configText, ConfigurationComposer.ManagedListenerPort(configText));
+        StartupPreflight.CheckResources(configText, RuntimeConfiguration.ManagedListenerPort(configText));
         StartupPreflight.WriteReport("passed");
         if (File.Exists(configPath)) File.Copy(configPath, configPath + ".previous", overwrite: true);
         File.Move(candidatePath, configPath, overwrite: true);
         _runningTunNames = TunShutdownCheck.Names(configText);
         if (File.Exists(logPath)) File.Copy(logPath, logPath + ".previous", overwrite: true);
         if (File.Exists(logPath)) File.Delete(logPath);
-        await DnsCachePolicy.TrackAsync(settings, configText);
+        await DnsCachePolicy.TrackAsync(configText);
         DnsCachePolicy.ClearBeforeStart();
-        DnsCachePolicy.LogStrategy(settings, configText);
+        DnsCachePolicy.LogStrategy(configText);
 
-        var requiresElevation = ConfigurationComposer.RequiresElevation(configText);
+        var requiresElevation = RuntimeConfiguration.RequiresElevation(configText);
         if (!requiresElevation)
         {
-            await StartCoreDirectlyAsync(executablePath, directory, logPath, settings.SystemProxyPort, configText);
+            await StartCoreDirectlyAsync(executablePath, directory, logPath, proxyPort, configText);
             return;
         }
 
@@ -121,7 +105,7 @@ public sealed class SingBoxCoreService : IDisposable
             WindowStyle = ProcessWindowStyle.Hidden
         };
         // ArgumentList is also honored by ShellExecute ("runas") and quotes each value correctly.
-        foreach (var argument in new[] { "--fluent-sing-box-core-host", executablePath, configPath, pipeName, settings.SystemProxyPort.ToString(System.Globalization.CultureInfo.InvariantCulture) })
+        foreach (var argument in new[] { "--fluent-sing-box-core-host", executablePath, configPath, pipeName, proxyPort.ToString(System.Globalization.CultureInfo.InvariantCulture) })
             startInfo.ArgumentList.Add(argument);
         if (requiresElevation) startInfo.Verb = "runas";
 

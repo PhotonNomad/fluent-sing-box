@@ -1,361 +1,257 @@
-using System.Collections.Specialized;
-using System.ComponentModel;
 using FluentSingBox.Client.Models;
+using FluentSingBox.Configuration.Profiles;
 
 namespace FluentSingBox.Client.Services;
 
+// Owns settings.json and the active profile. A profile change is built on a copy, checked by
+// the validator and the core, written, and only then published; a rejected change leaves the
+// active profile, the file and the pages untouched.
 public sealed class AppState
 {
-    private readonly SemaphoreSlim _saveGate = new(1, 1);
-    private readonly HashSet<INotifyPropertyChanged> _observed = new(ReferenceEqualityComparer.Instance);
-    private readonly List<Action> _removeCollectionObservers = [];
+    private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly SemaphoreSlim _settingsGate = new(1, 1);
     private string _settingsPath = string.Empty;
-    private AppSettingsData? _committedSettings;
-    private bool _restoring;
-    private static readonly TimeSpan SaveDebounce = TimeSpan.FromMilliseconds(400);
-    private readonly object _scheduleLock = new();
-    private CancellationTokenSource? _debounce;
-    private Task _drain = Task.CompletedTask;
-    private bool _draining;
-    private bool _dirty;
+    private string _publishedJson = string.Empty;
 
     public static AppState Current { get; } = new();
     public AppSettingsData Settings { get; private set; } = new();
+    public Profile Profile { get; private set; } = new() { Id = "unloaded", Name = "" };
+    public ProfileLibrary Library { get; private set; } = new(Path.Combine(AppPaths.DataDirectory, "profiles"));
+    public string ProfilePath => Library.PathFor(Profile.Id);
     public bool IsLoaded => _settingsPath.Length > 0;
-    public event Action<string>? BackgroundSaveFailed;
-    public event Action? SettingsChanged;
-    public bool IsRefreshing => _restoring;
+    // A problem found while loading that did not stop the app, shown once the window exists.
+    public string? StartupWarning { get; private set; }
+    public event Action? ProfileChanged;
 
     public async Task LoadAsync()
     {
         var directory = AppPaths.DataDirectory;
         Directory.CreateDirectory(directory);
         var settingsPath = Path.Combine(directory, "settings.json");
-        var settings = await SettingsStore.LoadAsync(settingsPath);
+        Settings = await SettingsStore.LoadAsync(settingsPath);
         // Saving stays disabled until a successful read, so an unreadable file is never
         // overwritten by empty defaults.
         _settingsPath = settingsPath;
-        foreach (var remove in _removeCollectionObservers) remove();
-        _removeCollectionObservers.Clear();
-        foreach (var item in _observed) item.PropertyChanged -= ObservedPropertyChanged;
-        _observed.Clear();
-        Settings = settings;
         Settings.CoreOnlyEnabled = false;
         Localization.Configure(Settings.LanguageChoice, Windows.Globalization.ApplicationLanguages.Languages.FirstOrDefault());
         Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = Localization.Language;
-
-        Settings.RemoveLegacyGeoRules();
         // A previous abrupt shutdown must not leave Windows pointing at a dead local proxy.
         if (Settings.HasSystemProxySnapshot) WindowsProxyService.Restore(Settings);
 
-        try
-        {
-            var initial = SettingsCheckpoint.Snapshot(Settings);
-            if (await ConfigurationFileService.ReadServersAsync(initial) is { } servers)
-                ServerCatalog.Synchronize(initial, servers);
-            SettingsCheckpoint.Restore(Settings, initial);
-        }
-        catch (Exception error) when (error is System.Text.Json.JsonException or IOException or UnauthorizedAccessException)
-        {
-            DiagnosticsLog.Write(DiagnosticsCategory.SettingsSave, LogReader.Redact(error.Message, Settings));
-        }
-        Settings.EnsureBuiltInRules();
-        ServerCatalog.RefreshSelections(Settings);
-        foreach (var app in Settings.Applications) Observe(app);
-
-        ObserveCollection(Settings.Servers);
-        ObserveCollection(Settings.RoutingRules);
-        ObserveCollection(Settings.Applications);
-        foreach (var item in Settings.Servers) Observe(item);
-        foreach (var item in Settings.RoutingRules) Observe(item);
+        Library = new ProfileLibrary(Path.Combine(directory, "profiles"));
+        Profile = LoadActiveProfile();
+        _publishedJson = ProfileJson.Serialize(Profile);
+        Settings.ActiveProfileId = Profile.Id;
         await SavePreferencesAsync();
-        _committedSettings = ConfigurationFileService.Snapshot(Settings);
     }
 
-    public Task ReloadSettingsAsync() => RefreshExternalFilesAsync(reloadSettings: true);
+    // A broken file is never overwritten: another profile is used, or a new default is created.
+    private Profile LoadActiveProfile()
+    {
+        if (Settings.ActiveProfileId is { Length: > 0 } active && File.Exists(Library.PathFor(active)))
+        {
+            try { return Library.Load(active); }
+            catch (Exception error) when (error is System.Text.Json.JsonException or IOException or UnauthorizedAccessException or InvalidDataException)
+            {
+                StartupWarning = Localization.Format("Profiles_ActiveUnreadable", Library.PathFor(active), LogReader.Redact(error.Message));
+            }
+        }
+        var fallback = Library.List().FirstOrDefault(entry => entry.Error is null);
+        if (fallback is not null) return Library.Load(fallback.Id);
+        var profile = ProfileJson.CreateDefault();
+        profile.Name = Localization.Get("Profiles_DefaultName");
+        Write(profile);
+        return profile;
+    }
 
-    public async Task RefreshExternalFilesAsync(bool reloadSettings = false)
+    public static Profile Clone(Profile profile) => ProfileJson.Deserialize(ProfileJson.Serialize(profile));
+
+    public Task UpdateAsync(Action<Profile> edit)
+    {
+        var candidate = Clone(Profile);
+        edit(candidate);
+        return CommitAsync(candidate);
+    }
+
+    // Throws with a user-facing message when the candidate is rejected.
+    public async Task CommitAsync(Profile candidate)
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            if (candidate.Id != Profile.Id) throw new InvalidOperationException("A commit must target the active profile.");
+            await ValidateAsync(candidate);
+            Write(candidate);
+            await PublishAsync(candidate);
+        }
+        finally { _gate.Release(); }
+    }
+
+    // The same checks as starting the core, without starting it.
+    public Task ValidateAsync(Profile candidate)
+    {
+        var diagnostics = ProfileValidator.Validate(candidate);
+        if (diagnostics.Count > 0) throw new InvalidOperationException(ProfileMessages.Describe(candidate, diagnostics));
+        return CoreConfigurationCompiler.BuildValidatedAsync(Settings, candidate);
+    }
+
+    // Hand-edited profiles get completion and checks from the schema shipped with the app.
+    private static string? SchemaPath => Path.Combine(AppContext.BaseDirectory, "Schemas", "profile.schema.json") is var path && File.Exists(path) ? path : null;
+
+    private void Write(Profile profile)
+    {
+        profile.Schema = SchemaPath;
+        var bytes = Library.Save(profile);
+        ConfigFileRevisions.Record(Library.PathFor(profile.Id), bytes);
+    }
+
+    private async Task PublishAsync(Profile profile)
+    {
+        var previous = Profile;
+        Profile = profile;
+        _publishedJson = ProfileJson.Serialize(profile);
+        await KeepWindowsProxyConsistentAsync(previous.Capture.SystemProxy, profile.Capture.SystemProxy);
+        try { ProfileChanged?.Invoke(); }
+        catch (Exception error) { DiagnosticsLog.Write(DiagnosticsCategory.ClientErrors, LogReader.Redact(error.Message)); }
+    }
+
+    // Windows must never keep pointing at a listener the profile no longer has.
+    private async Task KeepWindowsProxyConsistentAsync(SystemProxyCapture previous, SystemProxyCapture next)
+    {
+        if (!Settings.SystemProxyEnabled) return;
+        if (!next.Enabled)
+        {
+            WindowsProxyService.Restore(Settings);
+            Settings.ResumeSystemProxyOnLaunch = false;
+        }
+        else if (previous.Port != next.Port) WindowsProxyService.Enable(Settings, next.Port);
+        else return;
+        await SavePreferencesAsync();
+    }
+
+    // External edits replace the profile as a whole once they pass the same checks as a save.
+    public async Task ReloadFromDiskAsync()
+    {
+        if (!IsLoaded) return;
+        await _gate.WaitAsync();
+        try
+        {
+            var path = ProfilePath;
+            if (!File.Exists(path) || await ConfigFileRevisions.MatchesAsync(path)) return;
+            var text = await File.ReadAllTextAsync(path);
+            var candidate = ProfileJson.Deserialize(text);
+            candidate.Id = Profile.Id;
+            if (ProfileJson.Serialize(candidate) == _publishedJson) return;
+            await ValidateAsync(candidate);
+            await PublishAsync(candidate);
+        }
+        finally { _gate.Release(); }
+    }
+
+    public IReadOnlyList<ProfileEntry> ListProfiles() => Library.List();
+
+    public async Task SwitchProfileAsync(string id)
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            if (id == Profile.Id) return;
+            var candidate = Library.Load(id);
+            var diagnostics = ProfileValidator.Validate(candidate);
+            if (diagnostics.Count > 0) throw new InvalidOperationException(ProfileMessages.Describe(candidate, diagnostics));
+            Settings.ActiveProfileId = id;
+            await SavePreferencesAsync();
+            await PublishAsync(candidate);
+        }
+        finally { _gate.Release(); }
+    }
+
+    // A new profile starts from the default template or as a copy, and becomes active.
+    public async Task CreateProfileAsync(string name, Profile? source)
+    {
+        var profile = source is null ? ProfileJson.CreateDefault() : Clone(source);
+        profile.Id = ProfileLibrary.NewId();
+        profile.Name = name;
+        await AddAsync(profile, validateWithCore: false);
+    }
+
+    // Import is a restore: the file replaces the active profile, or is added as a new one.
+    public async Task ImportProfileAsync(string json, bool replaceActive)
+    {
+        var profile = ProfileJson.Deserialize(json);
+        if (profile.FormatVersion != Profile.CurrentFormatVersion)
+            throw new InvalidOperationException(Localization.Format("Profiles_UnsupportedVersion", profile.FormatVersion));
+        if (replaceActive)
+        {
+            profile.Id = Profile.Id;
+            await CommitAsync(profile);
+        }
+        else
+        {
+            profile.Id = ProfileLibrary.NewId();
+            await AddAsync(profile, validateWithCore: true);
+        }
+    }
+
+    private async Task AddAsync(Profile profile, bool validateWithCore)
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            if (validateWithCore) await ValidateAsync(profile);
+            Write(profile);
+            Settings.ActiveProfileId = profile.Id;
+            await SavePreferencesAsync();
+            await PublishAsync(profile);
+        }
+        finally { _gate.Release(); }
+    }
+
+    public Task RenameProfileAsync(string name) => UpdateAsync(profile => profile.Name = name);
+
+    // The active profile hands over to another one first; the last profile cannot be deleted.
+    public async Task DeleteProfileAsync(string id)
+    {
+        if (id == Profile.Id)
+        {
+            var next = ListProfiles().FirstOrDefault(entry => entry.Id != id && entry.Error is null)
+                ?? throw new InvalidOperationException(Localization.Get("Profiles_CannotDeleteLast"));
+            await SwitchProfileAsync(next.Id);
+        }
+        await _gate.WaitAsync();
+        try
+        {
+            Library.Delete(id);
+            if (Settings.GroupSelections.Remove(id)) await SavePreferencesAsync();
+        }
+        finally { _gate.Release(); }
+    }
+
+    public Task ExportProfileAsync(string path, bool includeSecrets)
+    {
+        // The schema path belongs to this installation, not to the backup.
+        var copy = Clone(Profile);
+        copy.Schema = null;
+        return File.WriteAllTextAsync(path, ProfileJson.Serialize(copy, includeSecrets));
+    }
+
+    public string? GroupSelection(string groupId) =>
+        Settings.GroupSelections.GetValueOrDefault(Profile.Id)?.GetValueOrDefault(groupId);
+
+    public async Task SetGroupSelectionAsync(string groupId, Target member)
+    {
+        if (!Settings.GroupSelections.TryGetValue(Profile.Id, out var groups))
+            Settings.GroupSelections[Profile.Id] = groups = new(StringComparer.Ordinal);
+        groups[groupId] = member.ToString();
+        await SavePreferencesAsync();
+    }
+
+    // Closing must not depend on reading, compiling or validating the profile.
+    public async Task SavePreferencesAsync()
     {
         if (string.IsNullOrEmpty(_settingsPath)) return;
-        await _saveGate.WaitAsync();
-        try
-        {
-            // A pending local edit wins; never replace a draft from a watcher callback.
-            if (_dirty) return;
-            var original = SettingsCheckpoint.Snapshot(Settings);
-            var candidate = reloadSettings ? await SettingsStore.ReadAsync(_settingsPath) : SettingsCheckpoint.Snapshot(Settings);
-            if (await ConfigurationFileService.ReadServersAsync(candidate) is not { } servers) return;
-            ServerCatalog.Synchronize(candidate, servers);
-            candidate.EnsureBuiltInRules();
-            if (!SettingsCheckpoint.SameContent(Settings, original)) return;
-            Publish(candidate);
-            _committedSettings = SettingsCheckpoint.Snapshot(Settings);
-        }
-        finally { _saveGate.Release(); }
-    }
-
-    public async Task ImportConfigurationAsync(string json, string? expectedSource = null)
-    {
-        await _saveGate.WaitAsync();
-        try
-        {
-            var original = SettingsCheckpoint.Snapshot(Settings);
-            var candidate = SettingsCheckpoint.Snapshot(Settings);
-            await ConfigurationFileService.ImportAsync(candidate, json, expectedSource);
-            _committedSettings = candidate;
-            if (SettingsCheckpoint.SameContent(Settings, original)) Publish(candidate);
-            await SettingsStore.SaveAsync(_settingsPath, candidate);
-        }
-        finally { _saveGate.Release(); }
-    }
-
-    private void Publish(AppSettingsData candidate)
-    {
-        _restoring = true;
-        try
-        {
-            SettingsCheckpoint.ApplyReload(Settings, candidate);
-            ServerCatalog.RefreshSelections(Settings);
-        }
-        finally { _restoring = false; }
-        try { SettingsChanged?.Invoke(); }
-        catch (Exception error)
-        {
-            DiagnosticsLog.Write(DiagnosticsCategory.ClientErrors, LogReader.Redact(error.Message, Settings));
-        }
-    }
-
-    public void AddServer(ServerProfile server)
-    {
-        Settings.Servers.Add(server);
-        foreach (var app in Settings.Applications)
-        {
-            app.AvailableServers.Add(server);
-            if (string.IsNullOrEmpty(app.ServerId)) app.ServerId = server.Id;
-        }
-        Settings.DefaultServerId ??= server.Id;
-        server.IsDefault = server.Id == Settings.DefaultServerId;
-        ScheduleSave();
-    }
-
-    public void AddApplication(ApplicationProxyProfile profile)
-    {
-        foreach (var server in Settings.Servers) profile.AvailableServers.Add(server);
-        if (!Settings.Servers.Any(server => server.Id == profile.ServerId))
-        {
-            profile.ServerId = Settings.DefaultServerId ?? Settings.Servers.FirstOrDefault()?.Id ?? string.Empty;
-        }
-        Settings.Applications.Add(profile);
-        ScheduleSave();
-    }
-
-    public void RemoveServer(ServerProfile server)
-    {
-        Settings.Servers.Remove(server);
-        if (Settings.DefaultServerId == server.Id)
-        {
-            Settings.DefaultServerId = Settings.Servers.FirstOrDefault()?.Id;
-        }
-        foreach (var item in Settings.Servers) item.IsDefault = item.Id == Settings.DefaultServerId;
-        foreach (var app in Settings.Applications)
-        {
-            app.AvailableServers.Remove(server);
-            if (app.ServerId == server.Id) app.ServerId = Settings.DefaultServerId ?? string.Empty;
-        }
-        foreach (var rule in Settings.RoutingRules)
-        {
-            if (rule.ServerId == server.Id) rule.ServerId = Settings.DefaultServerId;
-        }
-        ServerCatalog.RefreshSelections(Settings);
-        ScheduleSave();
-    }
-
-    public void RemoveApplication(ApplicationProxyProfile profile)
-    {
-        Settings.Applications.Remove(profile);
-        ScheduleSave();
-    }
-
-    public ServerProfile? FindServer(string? id) => Settings.Servers.FirstOrDefault(server => server.Id == id);
-
-    public void SetDefaultServer(ServerProfile server)
-    {
-        Settings.DefaultServerId = server.Id;
-        foreach (var item in Settings.Servers) item.IsDefault = item.Id == server.Id;
-        foreach (var app in Settings.Applications)
-        {
-            if (string.IsNullOrWhiteSpace(app.ServerId)) app.ServerId = server.Id;
-        }
-        ScheduleSave();
-    }
-
-    public async Task SaveAsync()
-    {
-        if (string.IsNullOrEmpty(_settingsPath)) return;
-        await _saveGate.WaitAsync();
-        AppSettingsData? original = null;
-        try
-        {
-            // The snapshot below includes every edit made so far; a pending debounced save
-            // would only validate the same model again.
-            lock (_scheduleLock)
-            {
-                _dirty = false;
-                _debounce?.Cancel();
-            }
-            original = SettingsCheckpoint.Snapshot(Settings);
-            var candidate = SettingsCheckpoint.Snapshot(Settings);
-            var committedSource = await ConfigurationFileService.SynchronizeAsync(candidate);
-            if (committedSource is not null)
-                ServerCatalog.Synchronize(candidate, ServerLinkImporter.ExtractProxyServers(committedSource));
-            await SettingsStore.SaveAsync(_settingsPath, candidate);
-            if (SettingsCheckpoint.SameContent(Settings, original)) Publish(candidate);
-            _committedSettings = candidate;
-        }
-        catch
-        {
-            if (_committedSettings is not null && original is not null && SettingsCheckpoint.SameContent(Settings, original))
-                Publish(SettingsCheckpoint.Snapshot(_committedSettings));
-            throw;
-        }
-        finally
-        {
-            _saveGate.Release();
-        }
-    }
-
-    // Closing must not depend on reading, rebuilding or validating core configuration.
-    public async Task SavePreferencesAsync(bool configurationCommitted = false)
-    {
-        if (string.IsNullOrEmpty(_settingsPath)) return;
-        await _saveGate.WaitAsync();
-        try
-        {
-            await SettingsStore.SaveAsync(_settingsPath, Settings);
-            // Source-form edits have already passed ImportAsync; retain their disabled
-            // entries and TUN preferences as part of the next rollback checkpoint.
-            if (configurationCommitted) _committedSettings = ConfigurationFileService.Snapshot(Settings);
-        }
-        finally { _saveGate.Release(); }
-    }
-
-    private void ObserveCollection<T>(System.Collections.ObjectModel.ObservableCollection<T> collection)
-        where T : System.ComponentModel.INotifyPropertyChanged
-    {
-        void Changed(object? sender, NotifyCollectionChangedEventArgs args)
-        {
-            if (args.OldItems is not null)
-                foreach (INotifyPropertyChanged item in args.OldItems) Unobserve(item);
-            if (args.Action == NotifyCollectionChangedAction.Reset)
-            {
-                var retained = Settings.Servers.Cast<INotifyPropertyChanged>()
-                    .Concat(Settings.RoutingRules).Concat(Settings.Applications)
-                    .ToHashSet(ReferenceEqualityComparer.Instance);
-                foreach (var item in _observed.Where(item => !retained.Contains(item)).ToArray()) Unobserve(item);
-            }
-            if (args.NewItems is not null)
-            {
-                foreach (INotifyPropertyChanged item in args.NewItems) Observe(item);
-            }
-            ScheduleSave();
-        }
-        collection.CollectionChanged += Changed;
-        _removeCollectionObservers.Add(() => collection.CollectionChanged -= Changed);
-    }
-
-    private void Observe(INotifyPropertyChanged item)
-    {
-        if (_observed.Add(item)) item.PropertyChanged += ObservedPropertyChanged;
-    }
-
-    private void Unobserve(INotifyPropertyChanged item)
-    {
-        if (_observed.Remove(item)) item.PropertyChanged -= ObservedPropertyChanged;
-    }
-
-    private void ObservedPropertyChanged(object? sender, PropertyChangedEventArgs args) => ScheduleSave();
-
-    // Model notifications cannot await persistence. Changes are debounced so one UI edit
-    // (or a loop of property writes) triggers a single configuration commit, and only one
-    // commit runs at a time; edits made during a commit schedule at most one more.
-    private void ScheduleSave()
-    {
-        if (_restoring) return;
-        CancellationToken token;
-        lock (_scheduleLock)
-        {
-            _dirty = true;
-            _debounce?.Cancel();
-            _debounce = new CancellationTokenSource();
-            token = _debounce.Token;
-        }
-        _ = DebouncedSaveAsync(token);
-    }
-
-    private async Task DebouncedSaveAsync(CancellationToken token)
-    {
-        try { await Task.Delay(SaveDebounce, token); }
-        catch (OperationCanceledException) { return; }
-        await DrainSavesAsync();
-    }
-
-    // Cancels the debounce and waits until every pending change has been committed.
-    // Failures are reported through BackgroundSaveFailed, never thrown.
-    public Task FlushPendingConfigurationAsync()
-    {
-        lock (_scheduleLock) { _debounce?.Cancel(); }
-        return DrainSavesAsync();
-    }
-
-    private Task DrainSavesAsync()
-    {
-        lock (_scheduleLock)
-        {
-            if (!_draining)
-            {
-                _draining = true;
-                _drain = DrainLoopAsync();
-            }
-            return _drain;
-        }
-    }
-
-    private async Task DrainLoopAsync()
-    {
-        // Started under _scheduleLock; leave it before running any save code.
-        await Task.Yield();
-        try
-        {
-            while (true)
-            {
-                lock (_scheduleLock)
-                {
-                    if (!_dirty)
-                    {
-                        _draining = false;
-                        return;
-                    }
-                    _dirty = false;
-                }
-                await SaveObservedAsync();
-            }
-        }
-        catch
-        {
-            // Only failure reporting itself can reach here; never leave later saves stuck.
-            lock (_scheduleLock) { _draining = false; }
-        }
-    }
-
-    private async Task SaveObservedAsync()
-    {
-        try { await SaveAsync(); }
-        catch (Exception exception)
-        {
-            var message = LogReader.Redact(exception.Message, Settings);
-            DiagnosticsLog.Write(DiagnosticsCategory.SettingsSave, message);
-            try { BackgroundSaveFailed?.Invoke(message); }
-            catch { }
-        }
+        await _settingsGate.WaitAsync();
+        try { await SettingsStore.SaveAsync(_settingsPath, Settings); }
+        finally { _settingsGate.Release(); }
     }
 }

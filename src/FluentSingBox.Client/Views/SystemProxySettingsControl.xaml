@@ -18,6 +18,9 @@
                 <controls:SettingsCard x:Name="PortCard" x:Uid="SystemProxySettingsControl_SettingsCard7">
                     <TextBox x:Name="PortTextBox" AutomationProperties.AutomationId="Proxy_PortTextBox" MinWidth="{StaticResource SettingActionControlMinWidth}" PlaceholderText="10809" InputScope="Number" />
                 </controls:SettingsCard>
+                <controls:SettingsCard x:Name="LanCard" x:Uid="SystemProxy_LanCard">
+                    <ToggleSwitch x:Name="LanSwitch" AutomationProperties.AutomationId="Proxy_LanSwitch" Toggled="LanSwitch_Toggled" x:Uid="SystemProxy_LanSwitch" />
+                </controls:SettingsCard>
                 <controls:SettingsCard x:Name="AuthenticationCard" x:Uid="SystemProxySettingsControl_SettingsCard9">
                     <ToggleSwitch x:Name="AuthenticationSwitch" AutomationProperties.AutomationId="Proxy_AuthenticationSwitch" Toggled="AuthenticationSwitch_Toggled" x:Uid="SystemProxySettingsControl_AuthenticationSwitch" />
                 </controls:SettingsCard>

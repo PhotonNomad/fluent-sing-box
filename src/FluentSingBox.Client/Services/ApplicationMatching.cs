@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using FluentSingBox.Client.Models;
 
 namespace FluentSingBox.Client.Services;
 
@@ -43,6 +42,21 @@ public static class ApplicationMatching
         return actual ?? throw new InvalidOperationException(Localization.Get("ApplicationMatch_NameHelp"));
     }
 
+    // Resolves extensionless entries from running processes or PATH. Explicit .exe names keep
+    // their casing because sing-box matches process names case-sensitively.
+    public static IReadOnlyList<string> NormalizeNames(IEnumerable<string> entries)
+    {
+        var list = entries.ToArray();
+        var resolved = RunningProcesses().Select(item => item.Name).ToList();
+        foreach (var directory in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries))
+            foreach (var entry in list.Where(item => !System.IO.Path.HasExtension(item) && item.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) < 0))
+            {
+                try { resolved.AddRange(Directory.EnumerateFiles(directory, entry + ".exe").Select(System.IO.Path.GetFileName).OfType<string>()); }
+                catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException) { }
+            }
+        return list.Select(entry => NormalizeName(entry, resolved)).Distinct(StringComparer.Ordinal).ToArray();
+    }
+
     public static IReadOnlyList<RunningApplication> RunningProcesses()
     {
         var result = new List<RunningApplication>();
@@ -64,8 +78,4 @@ public static class ApplicationMatching
         return result.DistinctBy(item => item.Display, StringComparer.Ordinal).OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
-    public static IEnumerable<string> PathWarnings(AppSettingsData settings) => settings.Applications
-        .Where(profile => profile.MatchMode == "path")
-        .SelectMany(profile => profile.ExecutablePaths.Where(path => !File.Exists(path))
-            .Select(path => Localization.Format("ApplicationMatch_MissingPath", profile.Name, path)));
 }

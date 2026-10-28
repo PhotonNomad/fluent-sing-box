@@ -4,4 +4,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Profiles\default-profile.json" LogicalName="FluentSingBox.Configuration.default-profile.json" />
+    <None Include="Profiles\profile.schema.json" Link="Schemas\profile.schema.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

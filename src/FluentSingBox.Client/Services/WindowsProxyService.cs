@@ -14,7 +14,7 @@ public static class WindowsProxyService
     // cleanup restore the proxy while the switch may be on screen.
     public static event Action? StateChanged;
 
-    public static void Capture(AppSettingsData settings)
+    public static void Capture(AppSettingsData settings, int port)
     {
         using var key = Registry.CurrentUser.CreateSubKey(InternetSettingsKey, writable: true)
             ?? throw new InvalidOperationException(Localization.Get("WindowsProxyService_CannotOpenTheCurrentUserSWindowsNetwork"));
@@ -29,16 +29,16 @@ public static class WindowsProxyService
             settings.PreviousAutoConfigUrl = key.GetValue("AutoConfigURL") as string;
             settings.HasSystemProxySnapshot = true;
         }
-        settings.OwnedProxyServer = $"127.0.0.1:{settings.SystemProxyPort}";
+        settings.OwnedProxyServer = $"127.0.0.1:{port}";
     }
 
-    public static void Enable(AppSettingsData settings)
+    public static void Enable(AppSettingsData settings, int port)
     {
-        Capture(settings);
+        Capture(settings, port);
         using var key = Registry.CurrentUser.CreateSubKey(InternetSettingsKey, writable: true)
             ?? throw new InvalidOperationException(Localization.Get("WindowsProxyService_CannotOpenTheCurrentUserSWindowsNetwork"));
 
-        key.SetValue("ProxyServer", $"127.0.0.1:{settings.SystemProxyPort}", RegistryValueKind.String);
+        key.SetValue("ProxyServer", settings.OwnedProxyServer!, RegistryValueKind.String);
         key.SetValue("ProxyOverride", "localhost;127.*;[::1]", RegistryValueKind.String);
         key.DeleteValue("AutoConfigURL", throwOnMissingValue: false);
         key.SetValue("ProxyEnable", 1, RegistryValueKind.DWord);
@@ -59,7 +59,7 @@ public static class WindowsProxyService
 
         if (!ProxyOwnership.Matches(Convert.ToInt32(key.GetValue("ProxyEnable", 0)), key.GetValue("ProxyServer") as string,
             key.GetValue("ProxyOverride") as string, key.GetValue("AutoConfigURL") as string,
-            settings.OwnedProxyServer ?? $"127.0.0.1:{settings.SystemProxyPort}"))
+            settings.OwnedProxyServer ?? ""))
         {
             settings.HasSystemProxySnapshot = false;
             settings.OwnedProxyServer = null;
