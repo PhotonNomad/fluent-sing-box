@@ -20,8 +20,12 @@
       "items": { "$ref": "#/$defs/routeRule" }
     },
     "final": {
-      "description": "Where unmatched traffic goes. Cannot be \"default\".",
-      "allOf": [{ "$ref": "#/$defs/target" }, { "not": { "const": "default" } }]
+      "description": "Where traffic that matches no rule goes.",
+      "$ref": "#/$defs/target"
+    },
+    "defaultServer": {
+      "description": "The node or group the built-in \"proxy\" target stands for; absent means proxy goes direct.",
+      "$ref": "#/$defs/memberTarget"
     },
     "dns": { "$ref": "#/$defs/dns" },
     "capture": { "$ref": "#/$defs/capture" },
@@ -32,9 +36,9 @@
     "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
     "secret": { "type": "string", "x-secret": true },
     "target": {
-      "description": "direct, block, default (the final target), node:<id> or group:<id>.",
+      "description": "direct, block, proxy (the default server), node:<id> or group:<id>.",
       "type": "string",
-      "pattern": "^(direct|block|default|node:[A-Za-z0-9_-]{1,64}|group:[A-Za-z0-9_-]{1,64})$"
+      "pattern": "^(direct|block|proxy|node:[A-Za-z0-9_-]{1,64}|group:[A-Za-z0-9_-]{1,64})$"
     },
     "memberTarget": { "type": "string", "pattern": "^(node|group):[A-Za-z0-9_-]{1,64}$" },
     "cidr": { "type": "string", "pattern": "^[0-9A-Fa-f:.]+/[0-9]{1,3}$" },
@@ -43,7 +47,7 @@
       "type": "object",
       "required": ["protocol", "id", "name", "server", "port"],
       "properties": {
-        "protocol": { "enum": ["vless", "vmess", "trojan", "shadowsocks", "hysteria2"] },
+        "protocol": { "enum": ["vless", "vmess", "trojan", "shadowsocks", "hysteria2", "tuic", "anyTls", "socks", "http"] },
         "id": { "$ref": "#/$defs/id" },
         "name": { "type": "string", "minLength": 1 },
         "server": { "type": "string", "minLength": 1 },
@@ -54,7 +58,11 @@
         { "$ref": "#/$defs/vmessNode" },
         { "$ref": "#/$defs/trojanNode" },
         { "$ref": "#/$defs/shadowsocksNode" },
-        { "$ref": "#/$defs/hysteria2Node" }
+        { "$ref": "#/$defs/hysteria2Node" },
+        { "$ref": "#/$defs/tuicNode" },
+        { "$ref": "#/$defs/anyTlsNode" },
+        { "$ref": "#/$defs/socksNode" },
+        { "$ref": "#/$defs/httpNode" }
       ]
     },
     "vlessNode": {
@@ -63,8 +71,10 @@
         "id": true, "name": true, "server": true, "port": true,
         "uuid": { "$ref": "#/$defs/secret" },
         "flow": { "type": "string" },
+        "packetEncoding": { "enum": ["xudp", "packetaddr"] },
         "transport": { "$ref": "#/$defs/transport" },
-        "tls": { "$ref": "#/$defs/tls" }
+        "tls": { "$ref": "#/$defs/tls" },
+        "multiplex": { "$ref": "#/$defs/multiplex" }
       },
       "required": ["uuid"],
       "additionalProperties": false
@@ -76,8 +86,12 @@
         "uuid": { "$ref": "#/$defs/secret" },
         "security": { "type": "string" },
         "alterId": { "type": "integer", "minimum": 0 },
+        "packetEncoding": { "enum": ["xudp", "packetaddr"] },
+        "authenticatedLength": { "type": "boolean" },
+        "globalPadding": { "type": "boolean" },
         "transport": { "$ref": "#/$defs/transport" },
-        "tls": { "$ref": "#/$defs/tls" }
+        "tls": { "$ref": "#/$defs/tls" },
+        "multiplex": { "$ref": "#/$defs/multiplex" }
       },
       "required": ["uuid"],
       "additionalProperties": false
@@ -88,7 +102,8 @@
         "id": true, "name": true, "server": true, "port": true,
         "password": { "$ref": "#/$defs/secret" },
         "transport": { "$ref": "#/$defs/transport" },
-        "tls": { "$ref": "#/$defs/tls" }
+        "tls": { "$ref": "#/$defs/tls" },
+        "multiplex": { "$ref": "#/$defs/multiplex" }
       },
       "required": ["password"],
       "additionalProperties": false
@@ -98,7 +113,11 @@
         "protocol": { "const": "shadowsocks" },
         "id": true, "name": true, "server": true, "port": true,
         "method": { "type": "string", "minLength": 1 },
-        "password": { "$ref": "#/$defs/secret" }
+        "password": { "$ref": "#/$defs/secret" },
+        "plugin": { "type": "string" },
+        "pluginOptions": { "type": "string" },
+        "udpOverTcp": { "type": "boolean" },
+        "multiplex": { "$ref": "#/$defs/multiplex" }
       },
       "required": ["method", "password"],
       "additionalProperties": false
@@ -111,10 +130,70 @@
         "obfsPassword": { "$ref": "#/$defs/secret" },
         "upMbps": { "type": "integer", "minimum": 1 },
         "downMbps": { "type": "integer", "minimum": 1 },
+        "serverPorts": { "type": "array", "items": { "type": "string", "pattern": "^[0-9]{1,5}(-[0-9]{1,5})?$" } },
+        "hopIntervalSeconds": { "type": "integer", "minimum": 1 },
         "tls": { "$ref": "#/$defs/tls" }
       },
       "required": ["password", "tls"],
       "additionalProperties": false
+    },
+    "tuicNode": {
+      "properties": {
+        "protocol": { "const": "tuic" },
+        "id": true, "name": true, "server": true, "port": true,
+        "uuid": { "$ref": "#/$defs/secret" },
+        "password": { "$ref": "#/$defs/secret" },
+        "congestionControl": { "type": "string" },
+        "udpRelayMode": { "type": "string" },
+        "zeroRttHandshake": { "type": "boolean" },
+        "heartbeatSeconds": { "type": "integer", "minimum": 1 },
+        "tls": { "$ref": "#/$defs/tls" }
+      },
+      "required": ["uuid", "tls"],
+      "additionalProperties": false
+    },
+    "anyTlsNode": {
+      "properties": {
+        "protocol": { "const": "anyTls" },
+        "id": true, "name": true, "server": true, "port": true,
+        "password": { "$ref": "#/$defs/secret" },
+        "tls": { "$ref": "#/$defs/tls" }
+      },
+      "required": ["password", "tls"],
+      "additionalProperties": false
+    },
+    "socksNode": {
+      "properties": {
+        "protocol": { "const": "socks" },
+        "id": true, "name": true, "server": true, "port": true,
+        "version": { "enum": ["5", "4a", "4"] },
+        "username": { "type": "string" },
+        "password": { "$ref": "#/$defs/secret" },
+        "udpOverTcp": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "httpNode": {
+      "properties": {
+        "protocol": { "const": "http" },
+        "id": true, "name": true, "server": true, "port": true,
+        "username": { "type": "string" },
+        "password": { "$ref": "#/$defs/secret" },
+        "tls": { "$ref": "#/$defs/tls" }
+      },
+      "additionalProperties": false
+    },
+    "multiplex": {
+      "description": "The server must run the same multiplex protocol.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "protocol": { "enum": ["h2mux", "smux", "yamux"] },
+        "maxConnections": { "type": "integer", "minimum": 1 },
+        "minStreams": { "type": "integer", "minimum": 1 },
+        "maxStreams": { "type": "integer", "minimum": 1 },
+        "padding": { "type": "boolean" }
+      }
     },
 
     "transport": {
@@ -122,7 +201,10 @@
       "oneOf": [
         {
           "type": "object", "additionalProperties": false, "required": ["type"],
-          "properties": { "type": { "const": "ws" }, "path": { "type": "string" }, "host": { "type": "string" } }
+          "properties": {
+            "type": { "const": "ws" }, "path": { "type": "string" }, "host": { "type": "string" },
+            "maxEarlyData": { "type": "integer", "minimum": 1 }, "earlyDataHeaderName": { "type": "string" }
+          }
         },
         {
           "type": "object", "additionalProperties": false, "required": ["type", "serviceName"],
@@ -131,6 +213,14 @@
         {
           "type": "object", "additionalProperties": false, "required": ["type"],
           "properties": { "type": { "const": "httpUpgrade" }, "path": { "type": "string" }, "host": { "type": "string" } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type"],
+          "properties": { "type": { "const": "http" }, "hosts": { "type": "array", "items": { "type": "string" } }, "path": { "type": "string" } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type"],
+          "properties": { "type": { "const": "quic" } }
         }
       ]
     },
@@ -141,6 +231,12 @@
       "properties": {
         "serverName": { "type": "string" },
         "insecure": { "type": "boolean" },
+        "certificate": {
+          "description": "PEM certificate(s) trusted instead of the system pool.",
+          "type": "string"
+        },
+        "certificatePublicKeySha256": { "type": "array", "items": { "type": "string" } },
+        "disableSni": { "type": "boolean" },
         "alpn": { "type": "array", "items": { "type": "string" } },
         "fingerprint": { "type": "string" },
         "reality": {

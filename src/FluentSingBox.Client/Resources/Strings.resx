@@ -241,10 +241,6 @@
     <value>The Shadowsocks link requires method:password.</value>
     <comment>Source: Services\ServerLinkImporter.cs</comment>
   </data>
-  <data name="ServerLinkImporter_ThisShadowsocksShareLinkUsesPluginOptionsImport" xml:space="preserve">
-    <value>This Shadowsocks share link uses plugin options. Import sing-box outbound JSON instead.</value>
-    <comment>Source: Services\ServerLinkImporter.cs</comment>
-  </data>
   <data name="ServerLinkImporter_SingBoxDoesNotSupportV2RayMKCPTransport" xml:space="preserve">
     <value>sing-box does not support V2Ray mKCP transport. The link was not imported.</value>
     <comment>Source: Services\ServerLinkImporter.cs</comment>
@@ -1132,11 +1128,11 @@ Windows: {0}
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Header" xml:space="preserve">
-    <value>Default outbound</value>
+    <value>Default server</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Description" xml:space="preserve">
-    <value>Traffic that matches no rule goes here.</value>
+    <value>Use this node when rules send traffic to "Proxy".</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_Button36.Content" xml:space="preserve">
@@ -1647,7 +1643,7 @@ Windows: {0}
     <value>Manage</value>
   </data>
   <data name="Servers_IsDefault" xml:space="preserve">
-    <value>Default outbound</value>
+    <value>Default server</value>
   </data>
   <data name="Servers_DeleteHint" xml:space="preserve">
     <value>Anything that still uses it must be changed first; the error names it.</value>
@@ -1708,6 +1704,9 @@ Windows: {0}
   </data>
   <data name="NodeEditor_Insecure" xml:space="preserve">
     <value>Skip certificate verification</value>
+  </data>
+  <data name="NodeEditor_Certificate" xml:space="preserve">
+    <value>Server certificate (PEM)</value>
   </data>
   <data name="NodeEditor_Fingerprint" xml:space="preserve">
     <value>TLS fingerprint</value>
@@ -1816,9 +1815,6 @@ Windows: {0}
   </data>
   <data name="Target_Block" xml:space="preserve">
     <value>Block</value>
-  </data>
-  <data name="Target_Default" xml:space="preserve">
-    <value>Default outbound ({0})</value>
   </data>
   <data name="Target_GroupLabel" xml:space="preserve">
     <value>{0} (group)</value>
@@ -2435,9 +2431,6 @@ Windows: {0}
   <data name="ProfileError_UnknownDnsServer" xml:space="preserve">
     <value>refers to a DNS server that does not exist</value>
   </data>
-  <data name="ProfileError_InvalidFinalTarget" xml:space="preserve">
-    <value>cannot be the default outbound itself</value>
-  </data>
   <data name="ProfileError_InvalidGroupMember" xml:space="preserve">
     <value>members must be nodes or node groups</value>
   </data>
@@ -2476,5 +2469,92 @@ Windows: {0}
   </data>
   <data name="Profiles_Card.Description" xml:space="preserve">
     <value>Switch, manage and back up profiles.</value>
+  </data>
+  <data name="NodeEditor_ZeroRtt" xml:space="preserve">
+    <value>0-RTT handshake</value>
+  </data>
+  <data name="NodeEditor_HeartbeatSeconds" xml:space="preserve">
+    <value>Heartbeat (seconds)</value>
+  </data>
+  <data name="NodeEditor_ServerPorts" xml:space="preserve">
+    <value>Port hopping (ranges, comma-separated)</value>
+  </data>
+  <data name="NodeEditor_HopIntervalSeconds" xml:space="preserve">
+    <value>Hop interval (seconds)</value>
+  </data>
+  <data name="NodeEditor_PacketEncoding" xml:space="preserve">
+    <value>UDP packet encoding</value>
+  </data>
+  <data name="NodeEditor_PacketEncodingNone" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="NodeEditor_AuthenticatedLength" xml:space="preserve">
+    <value>Authenticated length</value>
+  </data>
+  <data name="NodeEditor_GlobalPadding" xml:space="preserve">
+    <value>Global padding</value>
+  </data>
+  <data name="NodeEditor_Plugin" xml:space="preserve">
+    <value>Plugin</value>
+  </data>
+  <data name="NodeEditor_PluginOptions" xml:space="preserve">
+    <value>Plugin options</value>
+  </data>
+  <data name="NodeEditor_SocksVersion" xml:space="preserve">
+    <value>SOCKS version</value>
+  </data>
+  <data name="NodeEditor_UdpOverTcp" xml:space="preserve">
+    <value>UDP over TCP</value>
+  </data>
+  <data name="NodeEditor_Multiplex" xml:space="preserve">
+    <value>Multiplexing (the server must support it)</value>
+  </data>
+  <data name="NodeEditor_MultiplexProtocol" xml:space="preserve">
+    <value>Multiplex protocol</value>
+  </data>
+  <data name="NodeEditor_MultiplexMaxConnections" xml:space="preserve">
+    <value>Max connections</value>
+  </data>
+  <data name="NodeEditor_MultiplexMinStreams" xml:space="preserve">
+    <value>Min streams per connection</value>
+  </data>
+  <data name="NodeEditor_MultiplexMaxStreams" xml:space="preserve">
+    <value>Max streams per connection</value>
+  </data>
+  <data name="NodeEditor_MultiplexPadding" xml:space="preserve">
+    <value>Padding</value>
+  </data>
+  <data name="NodeEditor_PublicKeyPins" xml:space="preserve">
+    <value>Public key SHA-256 pins (one per line)</value>
+  </data>
+  <data name="NodeEditor_DisableSni" xml:space="preserve">
+    <value>Do not send SNI</value>
+  </data>
+  <data name="NodeEditor_NumberInvalid" xml:space="preserve">
+    <value>Enter a positive whole number.</value>
+  </data>
+  <data name="ProfileError_InvalidOption" xml:space="preserve">
+    <value>unsupported value</value>
+  </data>
+  <data name="Target_Proxy" xml:space="preserve">
+    <value>Proxy ({0})</value>
+  </data>
+  <data name="Target_ProxyUnset" xml:space="preserve">
+    <value>Proxy (no default server, goes direct)</value>
+  </data>
+  <data name="ProfileError_InvalidDefaultServer" xml:space="preserve">
+    <value>must be a node or a node group</value>
+  </data>
+  <data name="ProfileLocation_DefaultServer" xml:space="preserve">
+    <value>Default server</value>
+  </data>
+  <data name="Servers_DefaultCard.Header" xml:space="preserve">
+    <value>Default server</value>
+  </data>
+  <data name="Servers_DefaultCard.Description" xml:space="preserve">
+    <value>Used by rules that send traffic to "Proxy".</value>
+  </data>
+  <data name="Servers_DefaultServer.PlaceholderText" xml:space="preserve">
+    <value>Not set</value>
   </data>
 </root>

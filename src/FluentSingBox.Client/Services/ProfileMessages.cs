@@ -30,6 +30,7 @@ public static partial class ProfileMessages
             return Localization.Format(key, string.IsNullOrWhiteSpace(name) ? $"#{index + 1}" : name);
         }
         if (path == "final") return Localization.Get("ProfileLocation_Final");
+        if (path == "defaultServer") return Localization.Get("ProfileLocation_DefaultServer");
         if (path.StartsWith("capture", StringComparison.Ordinal)) return Localization.Get("ProfileLocation_Capture");
         return Localization.Get("ProfileLocation_Profile");
     }

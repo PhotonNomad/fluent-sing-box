@@ -48,7 +48,7 @@
       "target": "direct"
     }
   ],
-  "final": "direct",
+  "final": "proxy",
   "dns": {
     "servers": [
       { "id": "local", "name": "国内 DNS", "type": "udp", "address": "114.114.114.114", "port": 53 },
@@ -61,7 +61,7 @@
         "port": 443,
         "serverName": "cloudflare-dns.com",
         "path": "/dns-query",
-        "via": "default"
+        "via": "proxy"
       }
     ],
     "rules": [

@@ -120,7 +120,8 @@ public static class SingBoxCompiler
             TargetKind.Block => null,
             TargetKind.Node => _nodeTags[target.Id!],
             TargetKind.Group => _groupTags[target.Id!],
-            _ => OutboundTag(profile.Final)
+            // Without a default server, proxied traffic goes out directly rather than failing.
+            _ => profile.DefaultServer is { } server ? OutboundTag(server) : "direct"
         };
 
         private JsonObject Group(NodeGroup group)
@@ -145,30 +146,42 @@ public static class SingBoxCompiler
             var outbound = new JsonObject { ["type"] = "", ["tag"] = _nodeTags[node.Id], ["server"] = node.Server, ["server_port"] = node.Port };
             Transport? transport = null;
             TlsSettings? tls = null;
+            MultiplexSettings? multiplex = null;
             switch (node)
             {
                 case VlessNode vless:
                     outbound["type"] = "vless";
                     outbound["uuid"] = vless.Uuid;
                     if (!string.IsNullOrEmpty(vless.Flow)) outbound["flow"] = vless.Flow;
-                    (transport, tls) = (vless.Transport, vless.Tls);
+                    if (!string.IsNullOrEmpty(vless.PacketEncoding)) outbound["packet_encoding"] = vless.PacketEncoding;
+                    (transport, tls, multiplex) = (vless.Transport, vless.Tls, vless.Multiplex);
                     break;
                 case VmessNode vmess:
                     outbound["type"] = "vmess";
                     outbound["uuid"] = vmess.Uuid;
                     outbound["security"] = vmess.Security;
                     outbound["alter_id"] = vmess.AlterId;
-                    (transport, tls) = (vmess.Transport, vmess.Tls);
+                    if (!string.IsNullOrEmpty(vmess.PacketEncoding)) outbound["packet_encoding"] = vmess.PacketEncoding;
+                    if (vmess.AuthenticatedLength) outbound["authenticated_length"] = true;
+                    if (vmess.GlobalPadding) outbound["global_padding"] = true;
+                    (transport, tls, multiplex) = (vmess.Transport, vmess.Tls, vmess.Multiplex);
                     break;
                 case TrojanNode trojan:
                     outbound["type"] = "trojan";
                     outbound["password"] = trojan.Password;
-                    (transport, tls) = (trojan.Transport, trojan.Tls);
+                    (transport, tls, multiplex) = (trojan.Transport, trojan.Tls, trojan.Multiplex);
                     break;
                 case ShadowsocksNode shadowsocks:
                     outbound["type"] = "shadowsocks";
                     outbound["method"] = shadowsocks.Method;
                     outbound["password"] = shadowsocks.Password;
+                    if (!string.IsNullOrEmpty(shadowsocks.Plugin))
+                    {
+                        outbound["plugin"] = shadowsocks.Plugin;
+                        if (!string.IsNullOrEmpty(shadowsocks.PluginOptions)) outbound["plugin_opts"] = shadowsocks.PluginOptions;
+                    }
+                    if (shadowsocks.UdpOverTcp) outbound["udp_over_tcp"] = true;
+                    multiplex = shadowsocks.Multiplex;
                     break;
                 case Hysteria2Node hysteria:
                     outbound["type"] = "hysteria2";
@@ -177,6 +190,11 @@ public static class SingBoxCompiler
                         outbound["obfs"] = new JsonObject { ["type"] = "salamander", ["password"] = hysteria.ObfsPassword };
                     if (hysteria.UpMbps is { } up) outbound["up_mbps"] = up;
                     if (hysteria.DownMbps is { } down) outbound["down_mbps"] = down;
+                    if (hysteria.ServerPorts.Count > 0)
+                    {
+                        outbound["server_ports"] = Strings(hysteria.ServerPorts.Select(ports => ports.Contains('-') ? ports.Replace('-', ':') : ports + ":" + ports));
+                        if (hysteria.HopIntervalSeconds is { } hop) outbound["hop_interval"] = hop + "s";
+                    }
                     tls = hysteria.Tls;
                     break;
                 case TuicNode tuic:
@@ -185,6 +203,8 @@ public static class SingBoxCompiler
                     if (!string.IsNullOrEmpty(tuic.Password)) outbound["password"] = tuic.Password;
                     if (!string.IsNullOrEmpty(tuic.CongestionControl)) outbound["congestion_control"] = tuic.CongestionControl;
                     if (!string.IsNullOrEmpty(tuic.UdpRelayMode)) outbound["udp_relay_mode"] = tuic.UdpRelayMode;
+                    if (tuic.ZeroRttHandshake) outbound["zero_rtt_handshake"] = true;
+                    if (tuic.HeartbeatSeconds is { } heartbeat) outbound["heartbeat"] = heartbeat + "s";
                     tls = tuic.Tls;
                     break;
                 case AnyTlsNode anyTls:
@@ -194,9 +214,10 @@ public static class SingBoxCompiler
                     break;
                 case SocksNode socks:
                     outbound["type"] = "socks";
-                    outbound["version"] = "5";
+                    outbound["version"] = socks.Version;
                     if (!string.IsNullOrEmpty(socks.Username)) outbound["username"] = socks.Username;
                     if (!string.IsNullOrEmpty(socks.Password)) outbound["password"] = socks.Password;
+                    if (socks.UdpOverTcp) outbound["udp_over_tcp"] = true;
                     break;
                 case HttpNode http:
                     outbound["type"] = "http";
@@ -209,7 +230,18 @@ public static class SingBoxCompiler
             }
             if (tls is not null) outbound["tls"] = Tls(tls, transport);
             if (transport is not null) outbound["transport"] = TransportJson(transport);
+            if (multiplex is not null) outbound["multiplex"] = Multiplex(multiplex);
             return outbound;
+        }
+
+        private static JsonObject Multiplex(MultiplexSettings multiplex)
+        {
+            var result = new JsonObject { ["enabled"] = true, ["protocol"] = multiplex.Protocol };
+            if (multiplex.MaxConnections is { } connections) result["max_connections"] = connections;
+            if (multiplex.MinStreams is { } minStreams) result["min_streams"] = minStreams;
+            if (multiplex.MaxStreams is { } maxStreams) result["max_streams"] = maxStreams;
+            if (multiplex.Padding) result["padding"] = true;
+            return result;
         }
 
         private static JsonObject Tls(TlsSettings tls, Transport? transport)
@@ -224,6 +256,9 @@ public static class SingBoxCompiler
             };
             if (!string.IsNullOrEmpty(serverName)) result["server_name"] = serverName;
             if (tls.Insecure) result["insecure"] = true;
+            if (!string.IsNullOrEmpty(tls.Certificate)) result["certificate"] = tls.Certificate;
+            if (tls.CertificatePublicKeySha256.Count > 0) result["certificate_public_key_sha256"] = Strings(tls.CertificatePublicKeySha256);
+            if (tls.DisableSni) result["disable_sni"] = true;
             if (tls.Alpn.Count > 0) result["alpn"] = Strings(tls.Alpn);
             if (!string.IsNullOrEmpty(tls.Fingerprint)) result["utls"] = new JsonObject { ["enabled"] = true, ["fingerprint"] = tls.Fingerprint };
             if (tls.Reality is { } reality)
@@ -249,6 +284,13 @@ public static class SingBoxCompiler
                     return result;
                 case GrpcTransport grpc:
                     return new JsonObject { ["type"] = "grpc", ["service_name"] = grpc.ServiceName };
+                case Http2Transport h2:
+                    var h2Result = new JsonObject { ["type"] = "http" };
+                    if (h2.Hosts.Count > 0) h2Result["host"] = Strings(h2.Hosts);
+                    if (!string.IsNullOrEmpty(h2.Path)) h2Result["path"] = h2.Path;
+                    return h2Result;
+                case QuicTransport:
+                    return new JsonObject { ["type"] = "quic" };
                 case HttpUpgradeTransport upgrade:
                     var http = new JsonObject { ["type"] = "httpupgrade", ["path"] = upgrade.Path };
                     if (!string.IsNullOrEmpty(upgrade.Host)) http["host"] = upgrade.Host;

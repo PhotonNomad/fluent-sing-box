@@ -9,12 +9,14 @@ namespace FluentSingBox.Client.Views;
 public sealed partial class DnsPage : Page
 {
     private readonly ObservableCollection<RuleRow> _rules = [];
+    private readonly ObservableCollection<SimpleRow> _servers = [];
     private bool _loading;
 
     public DnsPage()
     {
         InitializeComponent();
         RuleList.ItemsSource = _rules;
+        ServerList.ItemsSource = _servers;
         Loaded += (_, _) => { App.State.ProfileChanged += Refresh; Refresh(); };
         Unloaded += (_, _) => App.State.ProfileChanged -= Refresh;
     }
@@ -28,11 +30,10 @@ public sealed partial class DnsPage : Page
         _loading = true;
         var profile = Profile;
         var dns = profile.Dns;
-        FinalComboBox.ItemsSource = dns.Servers.Select(server => new MemberChoice(server.Id, server.Name)).ToArray();
-        FinalComboBox.SelectedValue = dns.FinalServerId ?? dns.Servers.FirstOrDefault()?.Id;
+        Rows.SetChoices(FinalComboBox, dns.Servers.Select(server => new MemberChoice(server.Id, server.Name)).ToArray(), dns.FinalServerId ?? dns.Servers.FirstOrDefault()?.Id);
         StrategyComboBox.SelectedValue = dns.Strategy.ToString();
         CacheSwitch.IsOn = dns.CacheEnabled;
-        ServerList.ItemsSource = dns.Servers.Select(server => new SimpleRow
+        Rows.Sync(_servers, dns.Servers.Select(server => new SimpleRow
         {
             Id = server.Id, Name = server.Name, AutomationPrefix = "DnsServer",
             Description = string.Join(" · ", new[]
@@ -40,14 +41,12 @@ public sealed partial class DnsPage : Page
                 server.Type == DnsServerType.System ? Localization.Get("Dns_TypeSystem") : $"{server.Type.ToString().ToUpperInvariant()} {server.Address}",
                 server.Via is { } via ? Localization.Format("Dns_ViaLabel", ProfileText.Target(profile, via)) : null
             }.OfType<string>())
-        }).ToArray();
-        _rules.Clear();
-        foreach (var rule in dns.Rules)
-            _rules.Add(new RuleRow
-            {
-                Id = rule.Id, Name = string.IsNullOrWhiteSpace(rule.Name) ? Localization.Get("Routing_Unnamed") : rule.Name,
-                Description = ProfileText.Matcher(profile, rule.Match), Target = "→ " + ServerName(profile, rule.ServerId), Enabled = rule.Enabled
-            });
+        }).ToArray(), row => row.Id);
+        Rows.Sync(_rules, dns.Rules.Select(rule => new RuleRow
+        {
+            Id = rule.Id, Name = string.IsNullOrWhiteSpace(rule.Name) ? Localization.Get("Routing_Unnamed") : rule.Name,
+            Description = ProfileText.Matcher(profile, rule.Match), Target = "→ " + ServerName(profile, rule.ServerId), Enabled = rule.Enabled
+        }).ToArray(), row => row.Id);
         _loading = false;
     });
 
@@ -115,7 +114,7 @@ public sealed partial class DnsPage : Page
         var port = Editor.Text(Localization.Get("NodeEditor_Port"), server?.Port?.ToString(), "DnsEditor_Port", placeholder: Localization.Get("Dns_DefaultPort"));
         var sni = Editor.Text(Localization.Get("NodeEditor_ServerName"), server?.ServerName, "DnsEditor_ServerName");
         var path = Editor.Text(Localization.Get("NodeEditor_Path"), server?.Path, "DnsEditor_Path", placeholder: "/dns-query");
-        var via = Editor.Choice(Localization.Get("Dns_Via"), ProfileText.Targets(profile, includeDefault: true, includeBlock: false), server?.Via ?? Target.Direct, "DnsEditor_Via");
+        var via = Editor.Choice(Localization.Get("Dns_Via"), ProfileText.Targets(profile, includeBlock: false), server?.Via ?? Target.Direct, "DnsEditor_Via");
         void Update()
         {
             var selected = Editor.Selected<DnsServerType>(type);

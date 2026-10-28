@@ -11,6 +11,12 @@
                 <local:SettingsSection x:Uid="ServersPage_SettingsSection18">
                     <local:SettingsSection.SectionContent>
                         <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
+                            <controls:SettingsCard x:Uid="Servers_DefaultCard">
+                                <controls:SettingsCard.HeaderIcon>
+                                    <FontIcon Glyph="&#xE734;" />
+                                </controls:SettingsCard.HeaderIcon>
+                                <ComboBox x:Name="DefaultServerComboBox" MinWidth="{StaticResource SettingActionControlMinWidth}" DisplayMemberPath="Label" SelectedValuePath="Value" SelectionChanged="DefaultServer_SelectionChanged" AutomationProperties.AutomationId="Servers_DefaultServer" x:Uid="Servers_DefaultServer" />
+                            </controls:SettingsCard>
                             <controls:SettingsCard x:Uid="ServersPage_SettingsCard12">
                                 <controls:SettingsCard.HeaderIcon>
                                     <FontIcon Glyph="&#xE710;" />

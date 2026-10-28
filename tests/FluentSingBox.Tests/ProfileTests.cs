@@ -10,7 +10,8 @@ public class ProfileTests
           "formatVersion": 1, "id": "p1", "name": "test",
           "nodes": [
             { "id": "a", "name": "A", "server": "a.example", "port": 443, "protocol": "vless", "uuid": "11111111-1111-1111-1111-111111111111",
-              "transport": { "path": "/ws", "type": "ws" }, "tls": { "serverName": "a.example" } },
+              "transport": { "path": "/ws", "type": "ws" },
+              "tls": { "serverName": "a.example", "certificate": "-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----" } },
             { "protocol": "shadowsocks", "id": "b", "name": "B", "server": "b.example", "port": 8388, "method": "aes-128-gcm", "password": "pw" }
           ],
           "groups": [ { "type": "select", "id": "g", "name": "G", "members": ["node:a", "node:b"] } ],
@@ -55,7 +56,7 @@ public class ProfileTests
     [Fact]
     public void MalformedTargetIsRejected()
     {
-        Assert.Throws<JsonException>(() => ProfileJson.Deserialize("""{"formatVersion":1,"id":"p","name":"n","final":"proxy"}"""));
+        Assert.Throws<JsonException>(() => ProfileJson.Deserialize("""{"formatVersion":1,"id":"p","name":"n","final":"nowhere"}"""));
     }
 
     [Fact]
@@ -64,13 +65,22 @@ public class ProfileTests
         var profile = WithNodes();
         profile.Nodes.RemoveAt(1);
         profile.Rules.Add(new RouteRule { Id = "r2", Name = "x", Match = new RuleSetMatcher { RuleSetId = "missing" }, Target = Target.Direct });
-        profile.Final = Target.Default;
+        profile.DefaultServer = Target.Direct;
 
         var errors = ProfileValidator.Validate(profile);
 
         Assert.Contains(new ProfileDiagnostic("groups[0].members[1]", ProfileError.UnknownNode), errors);
         Assert.Contains(new ProfileDiagnostic("rules[1].match.ruleSetId", ProfileError.UnknownRuleSet), errors);
-        Assert.Contains(new ProfileDiagnostic("final", ProfileError.InvalidFinalTarget), errors);
+        Assert.Contains(new ProfileDiagnostic("defaultServer", ProfileError.InvalidDefaultServer), errors);
+    }
+
+    // Profiles written by the first builds used "default" for the same built-in.
+    [Fact]
+    public void LegacyDefaultTargetReadsAsProxy()
+    {
+        var profile = ProfileJson.Deserialize("""{"formatVersion":1,"id":"p","name":"n","final":"default"}""");
+        Assert.Equal(Target.Proxy, profile.Final);
+        Assert.Contains("\"final\": \"proxy\"", ProfileJson.Serialize(profile));
     }
 
     [Fact]
@@ -97,5 +107,7 @@ public class ProfileTests
         Assert.Equal("", shadowsocks.Password);
         Assert.Equal("aes-128-gcm", shadowsocks.Method);
         Assert.Equal("a.example", vless.Server);
+        // A server certificate is public and must survive an export.
+        Assert.Equal("-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----", vless.Tls!.Certificate);
     }
 }

@@ -277,11 +277,11 @@
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Header" xml:space="preserve">
-    <value>Default outbound</value>
+    <value>Default server</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Description" xml:space="preserve">
-    <value>Traffic that matches no rule goes here.</value>
+    <value>Use this node when rules send traffic to "Proxy".</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_Button36.Content" xml:space="preserve">
@@ -859,5 +859,14 @@
   </data>
   <data name="Profiles_Card.Description" xml:space="preserve">
     <value>Switch, manage and back up profiles.</value>
+  </data>
+  <data name="Servers_DefaultCard.Header" xml:space="preserve">
+    <value>Default server</value>
+  </data>
+  <data name="Servers_DefaultCard.Description" xml:space="preserve">
+    <value>Used by rules that send traffic to "Proxy".</value>
+  </data>
+  <data name="Servers_DefaultServer.PlaceholderText" xml:space="preserve">
+    <value>Not set</value>
   </data>
 </root>

@@ -277,11 +277,11 @@
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Header" xml:space="preserve">
-    <value>默认出口</value>
+    <value>默认服务器</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Description" xml:space="preserve">
-    <value>未匹配任何规则的流量走这里。</value>
+    <value>规则选择「代理」时使用此节点。</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_Button36.Content" xml:space="preserve">
@@ -859,5 +859,14 @@
   </data>
   <data name="Profiles_Card.Description" xml:space="preserve">
     <value>切换、管理和备份配置。</value>
+  </data>
+  <data name="Servers_DefaultCard.Header" xml:space="preserve">
+    <value>默认服务器</value>
+  </data>
+  <data name="Servers_DefaultCard.Description" xml:space="preserve">
+    <value>规则选择「代理」时使用的节点或节点组。</value>
+  </data>
+  <data name="Servers_DefaultServer.PlaceholderText" xml:space="preserve">
+    <value>未设置</value>
   </data>
 </root>

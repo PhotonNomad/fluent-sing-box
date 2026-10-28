@@ -25,17 +25,21 @@ public static class ProfileText
     {
         TargetKind.Direct => Localization.Get("Target_Direct"),
         TargetKind.Block => Localization.Get("Target_Block"),
-        TargetKind.Default => Localization.Format("Target_Default", Target(profile, profile.Final)),
+        TargetKind.Proxy => profile.DefaultServer is { } server
+            ? Localization.Format("Target_Proxy", Target(profile, server))
+            : Localization.Get("Target_ProxyUnset"),
         TargetKind.Node => profile.Nodes.FirstOrDefault(node => node.Id == target.Id)?.Name ?? target.ToString(),
         _ => profile.Groups.FirstOrDefault(group => group.Id == target.Id)?.Name ?? target.ToString()
     };
 
-    // The targets a rule can choose; final-only callers leave out "default".
-    public static IReadOnlyList<(Target Value, string Label)> Targets(Profile profile, bool includeDefault, bool includeBlock = true)
+    // The built-ins first, then groups and nodes.
+    public static IReadOnlyList<(Target Value, string Label)> Targets(Profile profile, bool includeBlock = true)
     {
-        var targets = new List<(Target, string)>();
-        if (includeDefault) targets.Add((Configuration.Profiles.Target.Default, Target(profile, Configuration.Profiles.Target.Default)));
-        targets.Add((Configuration.Profiles.Target.Direct, Localization.Get("Target_Direct")));
+        var targets = new List<(Target, string)>
+        {
+            (Configuration.Profiles.Target.Proxy, Target(profile, Configuration.Profiles.Target.Proxy)),
+            (Configuration.Profiles.Target.Direct, Localization.Get("Target_Direct"))
+        };
         if (includeBlock) targets.Add((Configuration.Profiles.Target.Block, Localization.Get("Target_Block")));
         targets.AddRange(profile.Groups.Select(group => (Configuration.Profiles.Target.Group(group.Id), Localization.Format("Target_GroupLabel", group.Name))));
         targets.AddRange(profile.Nodes.Select(node => (Configuration.Profiles.Target.Node(node.Id), node.Name)));

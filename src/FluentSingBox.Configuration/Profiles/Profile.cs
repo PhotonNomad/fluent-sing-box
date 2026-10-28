@@ -23,8 +23,11 @@ public sealed class Profile
     // Matched top to bottom; the order is the user's priority and is never rearranged.
     public List<RouteRule> Rules { get; set; } = [];
 
-    // Where unmatched traffic goes; rules reach it through the "default" target.
-    public Target Final { get; set; } = Target.Direct;
+    // The node or group the built-in "proxy" target stands for; unset means proxy goes direct.
+    public Target? DefaultServer { get; set; }
+
+    // Where traffic that matches no rule goes; independent of the default server.
+    public Target Final { get; set; } = Target.Proxy;
 
     public DnsSettings Dns { get; set; } = new();
     public CaptureSettings Capture { get; set; } = new();

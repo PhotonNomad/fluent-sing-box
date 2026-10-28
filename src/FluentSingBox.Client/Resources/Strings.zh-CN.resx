@@ -241,10 +241,6 @@
     <value>Shadowsocks 链接需要 method:password。</value>
     <comment>Source: Services\ServerLinkImporter.cs</comment>
   </data>
-  <data name="ServerLinkImporter_ThisShadowsocksShareLinkUsesPluginOptionsImport" xml:space="preserve">
-    <value>此 Shadowsocks 分享链接使用了插件参数，请改用 sing-box outbound JSON 导入。</value>
-    <comment>Source: Services\ServerLinkImporter.cs</comment>
-  </data>
   <data name="ServerLinkImporter_SingBoxDoesNotSupportV2RayMKCPTransport" xml:space="preserve">
     <value>sing-box 不支持 V2Ray mKCP 传输；链接未导入。</value>
     <comment>Source: Services\ServerLinkImporter.cs</comment>
@@ -1132,11 +1128,11 @@ Windows: {0}
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Header" xml:space="preserve">
-    <value>默认出口</value>
+    <value>默认服务器</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_SettingsCard35.Description" xml:space="preserve">
-    <value>未匹配任何规则的流量走这里。</value>
+    <value>规则选择「代理」时使用此节点。</value>
     <comment>Source: Views\ServersPage.xaml</comment>
   </data>
   <data name="ServersPage_Button36.Content" xml:space="preserve">
@@ -1647,7 +1643,7 @@ Windows: {0}
     <value>管理</value>
   </data>
   <data name="Servers_IsDefault" xml:space="preserve">
-    <value>默认出口</value>
+    <value>默认服务器</value>
   </data>
   <data name="Servers_DeleteHint" xml:space="preserve">
     <value>仍被引用时无法删除，错误信息会指出引用它的位置。</value>
@@ -1708,6 +1704,9 @@ Windows: {0}
   </data>
   <data name="NodeEditor_Insecure" xml:space="preserve">
     <value>跳过证书验证</value>
+  </data>
+  <data name="NodeEditor_Certificate" xml:space="preserve">
+    <value>服务器证书 (PEM)</value>
   </data>
   <data name="NodeEditor_Fingerprint" xml:space="preserve">
     <value>TLS 指纹</value>
@@ -1816,9 +1815,6 @@ Windows: {0}
   </data>
   <data name="Target_Block" xml:space="preserve">
     <value>拦截</value>
-  </data>
-  <data name="Target_Default" xml:space="preserve">
-    <value>默认出口（{0}）</value>
   </data>
   <data name="Target_GroupLabel" xml:space="preserve">
     <value>{0}（节点组）</value>
@@ -2435,9 +2431,6 @@ Windows: {0}
   <data name="ProfileError_UnknownDnsServer" xml:space="preserve">
     <value>引用了不存在的 DNS 服务器</value>
   </data>
-  <data name="ProfileError_InvalidFinalTarget" xml:space="preserve">
-    <value>不能指向“默认出口”本身</value>
-  </data>
   <data name="ProfileError_InvalidGroupMember" xml:space="preserve">
     <value>成员只能是节点或节点组</value>
   </data>
@@ -2476,5 +2469,92 @@ Windows: {0}
   </data>
   <data name="Profiles_Card.Description" xml:space="preserve">
     <value>切换、管理和备份配置。</value>
+  </data>
+  <data name="NodeEditor_ZeroRtt" xml:space="preserve">
+    <value>0-RTT 握手</value>
+  </data>
+  <data name="NodeEditor_HeartbeatSeconds" xml:space="preserve">
+    <value>心跳间隔（秒）</value>
+  </data>
+  <data name="NodeEditor_ServerPorts" xml:space="preserve">
+    <value>端口跳跃（端口范围，逗号分隔）</value>
+  </data>
+  <data name="NodeEditor_HopIntervalSeconds" xml:space="preserve">
+    <value>跳跃间隔（秒）</value>
+  </data>
+  <data name="NodeEditor_PacketEncoding" xml:space="preserve">
+    <value>UDP 包编码</value>
+  </data>
+  <data name="NodeEditor_PacketEncodingNone" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="NodeEditor_AuthenticatedLength" xml:space="preserve">
+    <value>长度认证（authenticated_length）</value>
+  </data>
+  <data name="NodeEditor_GlobalPadding" xml:space="preserve">
+    <value>全局填充（global_padding）</value>
+  </data>
+  <data name="NodeEditor_Plugin" xml:space="preserve">
+    <value>插件</value>
+  </data>
+  <data name="NodeEditor_PluginOptions" xml:space="preserve">
+    <value>插件参数</value>
+  </data>
+  <data name="NodeEditor_SocksVersion" xml:space="preserve">
+    <value>SOCKS 版本</value>
+  </data>
+  <data name="NodeEditor_UdpOverTcp" xml:space="preserve">
+    <value>UDP over TCP</value>
+  </data>
+  <data name="NodeEditor_Multiplex" xml:space="preserve">
+    <value>多路复用（需服务端支持）</value>
+  </data>
+  <data name="NodeEditor_MultiplexProtocol" xml:space="preserve">
+    <value>多路复用协议</value>
+  </data>
+  <data name="NodeEditor_MultiplexMaxConnections" xml:space="preserve">
+    <value>最大连接数</value>
+  </data>
+  <data name="NodeEditor_MultiplexMinStreams" xml:space="preserve">
+    <value>每连接最少流数</value>
+  </data>
+  <data name="NodeEditor_MultiplexMaxStreams" xml:space="preserve">
+    <value>每连接最多流数</value>
+  </data>
+  <data name="NodeEditor_MultiplexPadding" xml:space="preserve">
+    <value>填充</value>
+  </data>
+  <data name="NodeEditor_PublicKeyPins" xml:space="preserve">
+    <value>证书公钥 SHA-256 固定值（每行一个）</value>
+  </data>
+  <data name="NodeEditor_DisableSni" xml:space="preserve">
+    <value>不发送 SNI</value>
+  </data>
+  <data name="NodeEditor_NumberInvalid" xml:space="preserve">
+    <value>请填写正整数。</value>
+  </data>
+  <data name="ProfileError_InvalidOption" xml:space="preserve">
+    <value>不支持的取值</value>
+  </data>
+  <data name="Target_Proxy" xml:space="preserve">
+    <value>代理（{0}）</value>
+  </data>
+  <data name="Target_ProxyUnset" xml:space="preserve">
+    <value>代理（未设置默认服务器，按直连处理）</value>
+  </data>
+  <data name="ProfileError_InvalidDefaultServer" xml:space="preserve">
+    <value>只能是节点或节点组</value>
+  </data>
+  <data name="ProfileLocation_DefaultServer" xml:space="preserve">
+    <value>默认服务器</value>
+  </data>
+  <data name="Servers_DefaultCard.Header" xml:space="preserve">
+    <value>默认服务器</value>
+  </data>
+  <data name="Servers_DefaultCard.Description" xml:space="preserve">
+    <value>规则选择「代理」时使用的节点或节点组。</value>
+  </data>
+  <data name="Servers_DefaultServer.PlaceholderText" xml:space="preserve">
+    <value>未设置</value>
   </data>
 </root>

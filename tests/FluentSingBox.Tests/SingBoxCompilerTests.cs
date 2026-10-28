@@ -25,7 +25,7 @@ public class SingBoxCompilerTests
             Id = "a", Name = "HK", Server = "hk.example", Port = 443, Uuid = "11111111-1111-1111-1111-111111111111",
             Transport = new WebSocketTransport { Path = "/ws", Host = "cdn.example" }, Tls = new TlsSettings { Fingerprint = "chrome" }
         });
-        profile.Final = Target.Node("a");
+        profile.DefaultServer = Target.Node("a");
         return profile;
     }
 
@@ -51,10 +51,10 @@ public class SingBoxCompilerTests
     }
 
     [Fact]
-    public void RulesUseNodeNamesAsTagsAndDefaultFollowsFinal()
+    public void RulesUseNodeNamesAsTagsAndProxyIsTheDefaultServer()
     {
         var profile = WithNode();
-        profile.Rules.Add(new RouteRule { Id = "x", Name = "x", Match = new DomainMatcher { Values = ["example.com"] }, Target = Target.Default });
+        profile.Rules.Add(new RouteRule { Id = "x", Name = "x", Match = new DomainMatcher { Values = ["example.com"] }, Target = Target.Proxy });
 
         var config = Compile(profile);
 
@@ -66,6 +66,30 @@ public class SingBoxCompilerTests
         Assert.Equal("HK", config["route"]!["final"]!.ToString());
         Assert.Equal("HK", config["dns"]!["servers"]![2]!["detour"]!.ToString());
         Assert.Null(config["dns"]!["servers"]![0]!["detour"]);
+    }
+
+    // Unmatched traffic going direct must not send proxied rules or foreign DNS direct too.
+    [Fact]
+    public void FinalDirectLeavesProxyOnTheDefaultServer()
+    {
+        var profile = WithNode();
+        profile.Final = Target.Direct;
+        profile.Rules.Add(new RouteRule { Id = "x", Name = "x", Match = new DomainMatcher { Values = ["example.com"] }, Target = Target.Proxy });
+
+        var config = Compile(profile);
+
+        Assert.Equal("direct", config["route"]!["final"]!.ToString());
+        Assert.Equal("HK", RouteRules(config)[^1]!["outbound"]!.ToString());
+        Assert.Equal("HK", config["dns"]!["servers"]![2]!["detour"]!.ToString());
+    }
+
+    [Fact]
+    public void ProxyWithoutADefaultServerGoesDirect()
+    {
+        var config = Compile(ProfileJson.CreateDefault());
+
+        Assert.Equal("direct", config["route"]!["final"]!.ToString());
+        Assert.Null(config["dns"]!["servers"]![2]!["detour"]);
     }
 
     [Fact]
@@ -196,7 +220,7 @@ public class SingBoxCompilerTests
     public void ImportedOutboundsRoundTripThroughTheModel()
     {
         var profile = WithNode();
-        profile.Nodes.Add(new Hysteria2Node { Id = "h", Name = "H", Server = "h", Port = 443, Password = "p", ObfsPassword = "o", UpMbps = 50, Tls = new() { ServerName = "sni", Alpn = ["h3"] } });
+        profile.Nodes.Add(new Hysteria2Node { Id = "h", Name = "H", Server = "h", Port = 443, Password = "p", ObfsPassword = "o", UpMbps = 50, Tls = new() { ServerName = "sni", Alpn = ["h3"], Certificate = "-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----" } });
         profile.Nodes.Add(new VmessNode { Id = "v", Name = "V", Server = "v", Port = 443, Uuid = "u", Transport = new GrpcTransport { ServiceName = "s" }, Tls = new() { Reality = new() { PublicKey = "k", ShortId = "1" } } });
         var outbounds = Compile(profile)["outbounds"]!.AsArray().Take(3).Cast<JsonObject>().ToArray();
 
@@ -207,10 +231,77 @@ public class SingBoxCompilerTests
         Assert.Equal(outbounds.Select(item => item.ToJsonString()), Compile(restored)["outbounds"]!.AsArray().Take(3).Select(item => item!.ToJsonString()));
     }
 
+    // Every field the editor can set must survive compile → read, or editing an imported node loses it.
+    [Fact]
+    public void EveryModelledFieldRoundTrips()
+    {
+        var mux = new MultiplexSettings { Protocol = "smux", MaxConnections = 4, MinStreams = 2, MaxStreams = 8, Padding = true };
+        var tls = new TlsSettings { ServerName = "sni", CertificatePublicKeySha256 = ["pin1", "pin2"], DisableSni = true };
+        var profile = ProfileJson.CreateDefault();
+        profile.Nodes.AddRange(
+        [
+            new VlessNode { Id = "a", Name = "A", Server = "a", Port = 443, Uuid = "u", PacketEncoding = "xudp", Transport = new Http2Transport { Hosts = ["h1", "h2"], Path = "/p" }, Tls = tls, Multiplex = mux },
+            new VmessNode { Id = "b", Name = "B", Server = "b", Port = 443, Uuid = "u", PacketEncoding = "packetaddr", AuthenticatedLength = true, GlobalPadding = true, Transport = new QuicTransport(), Tls = new() },
+            new TrojanNode { Id = "c", Name = "C", Server = "c", Port = 443, Password = "p", Tls = new(), Multiplex = new() },
+            new ShadowsocksNode { Id = "d", Name = "D", Server = "d", Port = 8388, Method = "aes-128-gcm", Password = "p", Plugin = "obfs-local", PluginOptions = "obfs=http;obfs-host=x", UdpOverTcp = true },
+            new Hysteria2Node { Id = "e", Name = "E", Server = "e", Port = 443, Password = "p", ServerPorts = ["20000-30000", "443"], HopIntervalSeconds = 30, Tls = new() },
+            new TuicNode { Id = "f", Name = "F", Server = "f", Port = 443, Uuid = "u", ZeroRttHandshake = true, HeartbeatSeconds = 10, Tls = new() },
+            new SocksNode { Id = "g", Name = "G", Server = "g", Port = 1080, Version = "4a", UdpOverTcp = true }
+        ]);
+        profile.Final = Target.Node("a");
+        var outbounds = Compile(profile)["outbounds"]!.AsArray().Take(profile.Nodes.Count).Cast<JsonObject>().ToArray();
+
+        var restored = ProfileJson.CreateDefault();
+        restored.Nodes.AddRange(outbounds.Select((outbound, index) => SingBoxOutboundReader.Read(outbound, profile.Nodes[index].Id, profile.Nodes[index].Name)));
+        restored.Id = profile.Id;
+        restored.Final = profile.Final;
+
+        Assert.Equal(ProfileJson.Serialize(profile), ProfileJson.Serialize(restored));
+        Assert.Equal("""["20000:30000","443:443"]""", outbounds[4]["server_ports"]!.ToJsonString());
+        Assert.Equal("30s", outbounds[4]["hop_interval"]!.ToString());
+    }
+
+    [Fact]
+    public void UnknownOptionValuesAreReported()
+    {
+        var profile = WithNode();
+        profile.Nodes.Add(new SocksNode { Id = "s", Name = "S", Server = "s", Port = 1, Version = "6" });
+        profile.Nodes.Add(new Hysteria2Node { Id = "h", Name = "H", Server = "h", Port = 1, Password = "p", ServerPorts = ["9-x"], Tls = new() });
+
+        var errors = ProfileValidator.Validate(profile);
+
+        Assert.Contains(new ProfileDiagnostic("nodes[1].version", ProfileError.InvalidOption), errors);
+        Assert.Contains(new ProfileDiagnostic("nodes[2].serverPorts[0]", ProfileError.InvalidPortRange), errors);
+    }
+
     [Fact]
     public void UnsupportedOutboundsAreRejected()
     {
         Assert.Throws<NotSupportedException>(() => SingBoxOutboundReader.Read(JsonNode.Parse("""{"type":"wireguard","server":"a","server_port":1}""")!.AsObject(), "x", "x"));
+    }
+
+    [Fact]
+    public void Hysteria2KeepsItsServerCertificate()
+    {
+        var outbound = JsonNode.Parse("""
+            {
+              "type": "hysteria2", "server": "h", "server_port": 443, "password": "p",
+              "tls": {
+                "enabled": true, "server_name": "sni",
+                "certificate": ["-----BEGIN CERTIFICATE-----", "MIIB", "-----END CERTIFICATE-----"]
+              }
+            }
+            """)!.AsObject();
+
+        var node = Assert.IsType<Hysteria2Node>(SingBoxOutboundReader.Read(outbound, "h", "H"));
+
+        // Providers split the PEM over one array entry per line.
+        Assert.Equal("-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----", node.Tls.Certificate);
+        var profile = ProfileJson.CreateDefault();
+        profile.Nodes.Add(node);
+        profile.Final = Target.Node("h");
+        var tls = Compile(profile)["outbounds"]![0]!["tls"]!.AsObject();
+        Assert.Equal("-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----", tls["certificate"]!.ToString());
     }
 
     [Fact]

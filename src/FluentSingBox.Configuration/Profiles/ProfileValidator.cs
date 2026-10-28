@@ -13,7 +13,6 @@ public enum ProfileError
     UnknownGroup,
     UnknownRuleSet,
     UnknownDnsServer,
-    InvalidFinalTarget,
     InvalidGroupMember,
     EmptyGroup,
     GroupCycle,
@@ -23,7 +22,9 @@ public enum ProfileError
     InvalidCidr,
     MissingDnsAddress,
     InvalidVia,
-    InvalidUrl
+    InvalidUrl,
+    InvalidOption,
+    InvalidDefaultServer
 }
 
 // Path is a JSON-style location such as "rules[2].target"; the client turns the error
@@ -34,6 +35,8 @@ public sealed record ProfileDiagnostic(string Path, ProfileError Error);
 // later by its compiler.
 public static class ProfileValidator
 {
+    private static readonly string?[] PacketEncodings = ["xudp", "packetaddr"];
+
     // Deeper nesting cannot be edited sensibly in the routing page.
     public const int MaximumMatcherDepth = 4;
 
@@ -57,11 +60,10 @@ public static class ProfileValidator
             if (target?.Kind == TargetKind.Group && !groupIds.Contains(target.Id!)) Report(path, ProfileError.UnknownGroup);
         }
 
-        // Queries and downloads need somewhere to go; "default" is fine unless traffic is blocked by default.
+        // Queries and downloads need somewhere to go.
         void CheckVia(Target? via, string path)
         {
-            if (via?.Kind == TargetKind.Block || via?.Kind == TargetKind.Default && profile.Final.Kind == TargetKind.Block)
-                Report(path, ProfileError.InvalidVia);
+            if (via?.Kind == TargetKind.Block) Report(path, ProfileError.InvalidVia);
             else CheckTarget(via, path);
         }
 
@@ -107,6 +109,21 @@ public static class ProfileValidator
             var node = profile.Nodes[i];
             if (string.IsNullOrWhiteSpace(node.Server)) Report($"nodes[{i}].server", ProfileError.MissingServer);
             if (node.Port is < 1 or > 65535) Report($"nodes[{i}].port", ProfileError.InvalidPort);
+            if (node is Hysteria2Node hysteria)
+                for (var p = 0; p < hysteria.ServerPorts.Count; p++)
+                    if (!IsPortOrRange(hysteria.ServerPorts[p])) Report($"nodes[{i}].serverPorts[{p}]", ProfileError.InvalidPortRange);
+            // Values the editor offers as choices; a hand-edited file may contain anything.
+            var options = node switch
+            {
+                VlessNode vless => new[] { (vless.PacketEncoding, "packetEncoding", PacketEncodings) },
+                VmessNode vmess => [(vmess.PacketEncoding, "packetEncoding", PacketEncodings)],
+                SocksNode socks => [(socks.Version, "version", ["5", "4a", "4"])],
+                _ => []
+            };
+            var multiplex = node switch { VlessNode n => n.Multiplex, VmessNode n => n.Multiplex, TrojanNode n => n.Multiplex, ShadowsocksNode n => n.Multiplex, _ => null };
+            if (multiplex is not null) options = [.. options, (multiplex.Protocol, "multiplex.protocol", ["h2mux", "smux", "yamux"])];
+            foreach (var (value, field, allowed) in options)
+                if (value is not null && !allowed.Contains(value)) Report($"nodes[{i}].{field}", ProfileError.InvalidOption);
         }
 
         for (var i = 0; i < profile.Groups.Count; i++)
@@ -122,9 +139,12 @@ public static class ProfileValidator
         }
         foreach (var index in FindGroupsInCycles(profile.Groups)) Report($"groups[{index}]", ProfileError.GroupCycle);
 
-        // "default" means the final target itself, so the final target cannot use it.
-        if (profile.Final.Kind == TargetKind.Default) Report("final", ProfileError.InvalidFinalTarget);
         CheckTarget(profile.Final, "final");
+        if (profile.DefaultServer is { } defaultServer)
+        {
+            if (defaultServer.Kind is not (TargetKind.Node or TargetKind.Group)) Report("defaultServer", ProfileError.InvalidDefaultServer);
+            else CheckTarget(defaultServer, "defaultServer");
+        }
 
         for (var i = 0; i < profile.Rules.Count; i++)
         {

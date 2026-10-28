@@ -68,10 +68,11 @@ public static class NodeProbeService
         probe.Nodes.RemoveAll(item => item.Id != node.Id);
         probe.Groups.Clear();
         probe.Rules.Clear();
-        probe.Final = Target.Node(node.Id);
+        probe.DefaultServer = Target.Node(node.Id);
+        probe.Final = Target.Proxy;
         probe.Dns.Rules.Clear();
         foreach (var server in probe.Dns.Servers.Where(server => server.Via?.Kind is TargetKind.Node or TargetKind.Group))
-            server.Via = Target.Default;
+            server.Via = Target.Proxy;
         foreach (var set in probe.RuleSets) if (set.Source is RemoteRuleSetSource remote) remote.Via = null;
         probe.Capture.Tun.Enabled = false;
         probe.Capture.SystemProxy = new SystemProxyCapture { Enabled = true, Listen = "127.0.0.1", Port = port };

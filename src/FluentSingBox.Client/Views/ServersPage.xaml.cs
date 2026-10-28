@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using FluentSingBox.Client.Services;
 using FluentSingBox.Configuration.Profiles;
 using Microsoft.UI.Xaml;
@@ -7,11 +8,15 @@ namespace FluentSingBox.Client.Views;
 
 public sealed partial class ServersPage : Page
 {
+    private readonly ObservableCollection<NodeRow> _nodes = [];
+    private readonly ObservableCollection<GroupRow> _groups = [];
     private bool _loading;
 
     public ServersPage()
     {
         InitializeComponent();
+        ServerList.ItemsSource = _nodes;
+        GroupList.ItemsSource = _groups;
         Loaded += (_, _) => { App.State.ProfileChanged += Refresh; Refresh(); };
         Unloaded += (_, _) => App.State.ProfileChanged -= Refresh;
     }
@@ -22,29 +27,32 @@ public sealed partial class ServersPage : Page
     {
         _loading = true;
         var profile = Profile;
-        ServerList.ItemsSource = profile.Nodes.Select(node => new NodeRow
+        Rows.Sync(_nodes, profile.Nodes.Select(node => new NodeRow
         {
             Id = node.Id, Name = node.Name,
             Description = string.Join(" · ", new[]
             {
                 ProfileText.Endpoint(node), ProfileText.Protocol(node),
-                profile.Final == Target.Node(node.Id) ? Localization.Get("Servers_IsDefault") : null
+                profile.DefaultServer == Target.Node(node.Id) ? Localization.Get("Servers_IsDefault") : null
             }.OfType<string>())
-        }).ToArray();
+        }).ToArray(), row => row.Id);
         EmptyMessage.Visibility = profile.Nodes.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        GroupList.ItemsSource = profile.Groups.Select(group => new GroupRow
+        Rows.Sync(_groups, profile.Groups.Select(group => new GroupRow
         {
             Id = group.Id, Name = group.Name, IsSelect = group is SelectGroup,
             Description = string.Join(" · ", new[]
             {
                 Localization.Get(group is SelectGroup ? "Groups_TypeSelect" : "Groups_TypeUrlTest"),
                 Localization.Format("Groups_MemberCount", group.Members.Count),
-                profile.Final == Target.Group(group.Id) ? Localization.Get("Servers_IsDefault") : null
+                profile.DefaultServer == Target.Group(group.Id) ? Localization.Get("Servers_IsDefault") : null
             }.OfType<string>()),
             Members = group.Members.Select(member => new MemberChoice(member.ToString(), ProfileText.Target(profile, member))).ToArray(),
             Selected = App.State.GroupSelection(group.Id) is { } chosen && group.Members.Any(member => member.ToString() == chosen)
                 ? chosen : group.Members.FirstOrDefault()?.ToString()
-        }).ToArray();
+        }).ToArray(), row => row.Id, (a, b) => a with { Members = b.Members } == b && a.Members.SequenceEqual(b.Members));
+        // Groups first: picking a group as the default server is the usual way to switch nodes.
+        Rows.SetChoices(DefaultServerComboBox, profile.Groups.Select(group => new MemberChoice(Target.Group(group.Id).ToString(), Localization.Format("Target_GroupLabel", group.Name)))
+            .Concat(profile.Nodes.Select(node => new MemberChoice(Target.Node(node.Id).ToString(), node.Name))).ToArray(), profile.DefaultServer?.ToString());
         _loading = false;
     });
 
@@ -94,8 +102,8 @@ public sealed partial class ServersPage : Page
                 else
                 {
                     profile.Nodes.Add(edited);
-                    // The first node becomes where traffic goes by default.
-                    if (profile.Final.Kind == TargetKind.Direct && profile.Nodes.Count == 1) profile.Final = Target.Node(edited.Id);
+                    // The first node becomes the default server.
+                    profile.DefaultServer ??= Target.Node(edited.Id);
                 }
             });
         }, "ServerEditor_Dialog");
@@ -129,9 +137,8 @@ public sealed partial class ServersPage : Page
             count = nodes.Length;
             return App.State.UpdateAsync(profile =>
             {
-                var hadNodes = profile.Nodes.Count > 0;
                 profile.Nodes.AddRange(nodes);
-                if (!hadNodes && profile.Final.Kind == TargetKind.Direct) profile.Final = Target.Node(nodes[0].Id);
+                profile.DefaultServer ??= Target.Node(nodes[0].Id);
             });
         }, "Servers_ImportDialog");
         if (saved) ShowStatus(Localization.Format("ServersPage_Added0Servers", count), InfoBarSeverity.Success);
@@ -140,7 +147,7 @@ public sealed partial class ServersPage : Page
     private async void SetDefault_Click(object sender, RoutedEventArgs e)
     {
         if (Find(sender, Profile.Nodes, node => node.Id) is { } node)
-            await RunAsync(() => App.State.UpdateAsync(profile => profile.Final = Target.Node(node.Id)));
+            await RunAsync(() => App.State.UpdateAsync(profile => profile.DefaultServer = Target.Node(node.Id)));
     }
 
     private async void CopyServer_Click(object sender, RoutedEventArgs e)
@@ -173,7 +180,7 @@ public sealed partial class ServersPage : Page
         await RunAsync(() => App.State.UpdateAsync(profile =>
         {
             profile.Nodes.RemoveAll(item => item.Id == node.Id);
-            if (profile.Final == Target.Node(node.Id)) profile.Final = Target.Direct;
+            if (profile.DefaultServer == Target.Node(node.Id)) profile.DefaultServer = null;
         }));
     }
 
@@ -246,8 +253,15 @@ public sealed partial class ServersPage : Page
         await RunAsync(() => App.State.UpdateAsync(profile =>
         {
             profile.Groups.RemoveAll(item => item.Id == group.Id);
-            if (profile.Final == Target.Group(group.Id)) profile.Final = Target.Direct;
+            if (profile.DefaultServer == Target.Group(group.Id)) profile.DefaultServer = null;
         }));
+    }
+
+    private async void DefaultServer_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || DefaultServerComboBox.SelectedValue is not string value || value == Profile.DefaultServer?.ToString()
+            || !Target.TryParse(value, out var server)) return;
+        if (!await RunAsync(() => App.State.UpdateAsync(profile => profile.DefaultServer = server))) Refresh();
     }
 
     // The choice is runtime state: it is saved at once and used from the next core start.

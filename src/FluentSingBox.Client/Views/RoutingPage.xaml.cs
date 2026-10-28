@@ -9,12 +9,14 @@ namespace FluentSingBox.Client.Views;
 public sealed partial class RoutingPage : Page
 {
     private readonly ObservableCollection<RuleRow> _rows = [];
+    private readonly ObservableCollection<SimpleRow> _ruleSets = [];
     private bool _loading;
 
     public RoutingPage()
     {
         InitializeComponent();
         RuleList.ItemsSource = _rows;
+        RuleSetList.ItemsSource = _ruleSets;
         Loaded += (_, _) => { App.State.ProfileChanged += Refresh; Refresh(); };
         Unloaded += (_, _) => App.State.ProfileChanged -= Refresh;
     }
@@ -25,17 +27,13 @@ public sealed partial class RoutingPage : Page
     {
         _loading = true;
         var profile = Profile;
-        _rows.Clear();
-        foreach (var rule in profile.Rules)
-            _rows.Add(new RuleRow
-            {
-                Id = rule.Id, Name = string.IsNullOrWhiteSpace(rule.Name) ? Localization.Get("Routing_Unnamed") : rule.Name,
-                Description = ProfileText.Matcher(profile, rule.Match), Target = "→ " + ProfileText.Target(profile, rule.Target), Enabled = rule.Enabled
-            });
-        FinalComboBox.ItemsSource = ProfileText.Targets(profile, includeDefault: false)
-            .Select(item => new MemberChoice(item.Value.ToString(), item.Label)).ToArray();
-        FinalComboBox.SelectedValue = profile.Final.ToString();
-        RuleSetList.ItemsSource = profile.RuleSets.Select(set => new SimpleRow
+        Rows.Sync(_rows, profile.Rules.Select(rule => new RuleRow
+        {
+            Id = rule.Id, Name = string.IsNullOrWhiteSpace(rule.Name) ? Localization.Get("Routing_Unnamed") : rule.Name,
+            Description = ProfileText.Matcher(profile, rule.Match), Target = "→ " + ProfileText.Target(profile, rule.Target), Enabled = rule.Enabled
+        }).ToArray(), row => row.Id);
+        Rows.SetChoices(FinalComboBox, ProfileText.Targets(profile).Select(item => new MemberChoice(item.Value.ToString(), item.Label)).ToArray(), profile.Final.ToString());
+        Rows.Sync(_ruleSets, profile.RuleSets.Select(set => new SimpleRow
         {
             Id = set.Id, Name = set.Name, AutomationPrefix = "RuleSet", CanEdit = set.Source is not BuiltInRuleSetSource,
             Description = set.Source switch
@@ -45,7 +43,7 @@ public sealed partial class RoutingPage : Page
                 LocalRuleSetSource local => local.Path,
                 _ => ""
             }
-        }).ToArray();
+        }).ToArray(), row => row.Id);
         _loading = false;
     });
 
@@ -99,7 +97,7 @@ public sealed partial class RoutingPage : Page
         var profile = Profile;
         var id = rule?.Id ?? ProfileLibrary.NewId();
         var name = Editor.Text(Localization.Get("Routing_Name"), rule?.Name, "RuleEditor_Name");
-        var target = Editor.Choice(Localization.Get("Routing_Target"), ProfileText.Targets(profile, includeDefault: true), rule?.Target ?? Target.Default, "RuleEditor_Target");
+        var target = Editor.Choice(Localization.Get("Routing_Target"), ProfileText.Targets(profile), rule?.Target ?? Target.Proxy, "RuleEditor_Target");
         var matcher = new MatcherEditor(profile, rule?.Match);
         var form = new StackPanel { Spacing = 12, Width = Math.Min(560, Math.Max(240, XamlRoot.Size.Width - 140)) };
         form.Children.Add(name);
@@ -112,7 +110,7 @@ public sealed partial class RoutingPage : Page
             var edited = new RouteRule
             {
                 Id = id, Name = name.Text.Trim(), Enabled = rule?.Enabled ?? true, Match = matcher.Build(),
-                Target = Editor.Selected<Target>(target) ?? Target.Default
+                Target = Editor.Selected<Target>(target) ?? Target.Proxy
             };
             return App.State.UpdateAsync(candidate =>
             {
@@ -197,7 +195,7 @@ public sealed partial class RoutingPage : Page
             set?.Source is LocalRuleSetSource ? "local" : "remote", "RuleSetEditor_Source");
         var url = Editor.Text("URL", remote?.Url, "RuleSetEditor_Url", placeholder: "https://…/geosite-example.srs");
         var interval = Editor.Text(Localization.Get("RuleSets_UpdateHours"), (remote?.UpdateIntervalHours ?? 24).ToString(), "RuleSetEditor_Interval");
-        var via = Editor.Choice(Localization.Get("RuleSets_Via"), ProfileText.Targets(profile, includeDefault: true, includeBlock: false), remote?.Via ?? Target.Direct, "RuleSetEditor_Via");
+        var via = Editor.Choice(Localization.Get("RuleSets_Via"), ProfileText.Targets(profile, includeBlock: false), remote?.Via ?? Target.Direct, "RuleSetEditor_Via");
         var path = Editor.Text(Localization.Get("RuleSets_Path"), (set?.Source as LocalRuleSetSource)?.Path, "RuleSetEditor_Path", placeholder: @"C:\rules\example.srs");
         var browse = new Button { Content = Localization.Get("RuleSets_Browse") };
         browse.Click += async (_, _) => { if (await FilePickerService.PickFileAsync(".srs", ".json") is { } file) path.Text = file.Path; };

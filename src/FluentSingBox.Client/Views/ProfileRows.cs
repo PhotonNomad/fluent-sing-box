@@ -1,8 +1,42 @@
+using System.Collections.ObjectModel;
+
 namespace FluentSingBox.Client.Views;
 
-// Read-only rows for the profile lists. Pages rebuild them from the active profile after
-// every change, so they carry no change notification.
-public sealed class NodeRow
+internal static class Rows
+{
+    // Updates a bound list in place: rebuilding it would flash the whole list, jump the scroll
+    // position and collapse open expanders. Only rows whose content changed are replaced.
+    public static void Sync<T>(ObservableCollection<T> target, IReadOnlyList<T> source, Func<T, string> id, Func<T, T, bool>? same = null)
+    {
+        same ??= (a, b) => EqualityComparer<T>.Default.Equals(a, b);
+        for (var index = 0; index < source.Count; index++)
+        {
+            var wanted = source[index];
+            var existing = -1;
+            for (var search = index; search < target.Count; search++)
+                if (id(target[search]) == id(wanted)) { existing = search; break; }
+            if (existing < 0) target.Insert(index, wanted);
+            else
+            {
+                if (existing != index) target.Move(existing, index);
+                if (!same(target[index], wanted)) target[index] = wanted;
+            }
+        }
+        while (target.Count > source.Count) target.RemoveAt(target.Count - 1);
+    }
+
+    // Replacing the items of an unchanged combo box would redraw it and reset its selection.
+    public static void SetChoices(Microsoft.UI.Xaml.Controls.ComboBox box, IReadOnlyList<MemberChoice> choices, string? selected)
+    {
+        if (box.ItemsSource is not IReadOnlyList<MemberChoice> current || !current.SequenceEqual(choices)) box.ItemsSource = choices;
+        if (selected is null) box.SelectedIndex = -1;
+        else if (!Equals(box.SelectedValue, selected)) box.SelectedValue = selected;
+    }
+}
+
+// Read-only rows for the profile lists. Pages recreate them from the active profile after
+// every change and Rows.Sync swaps in only the ones that differ, so they need no notification.
+public sealed record NodeRow
 {
     public required string Id { get; init; }
     public required string Name { get; init; }
@@ -17,7 +51,7 @@ public sealed class NodeRow
 
 public sealed record MemberChoice(string Value, string Label);
 
-public sealed class GroupRow
+public sealed record GroupRow
 {
     public required string Id { get; init; }
     public required string Name { get; init; }
@@ -31,7 +65,7 @@ public sealed class GroupRow
     public string DeleteAutomationId => "Group_Delete_" + Id;
 }
 
-public sealed class RuleRow
+public sealed record RuleRow
 {
     public required string Id { get; init; }
     public required string Name { get; init; }
@@ -43,7 +77,7 @@ public sealed class RuleRow
     public string RowAutomationId => "Route_Row_" + Id;
 }
 
-public sealed class SimpleRow
+public sealed record SimpleRow
 {
     public required string Id { get; init; }
     public required string Name { get; init; }

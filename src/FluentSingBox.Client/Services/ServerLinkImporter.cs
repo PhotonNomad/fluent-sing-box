@@ -95,6 +95,7 @@ public static class ServerLinkImporter
                 outbound["type"] = "vless";
                 outbound["uuid"] = parts[0];
                 if (query.TryGetValue("flow", out var flow) && flow.Length > 0) outbound["flow"] = flow;
+                if (query.TryGetValue("packetEncoding", out var packetEncoding) && packetEncoding is "xudp" or "packetaddr") outbound["packet_encoding"] = packetEncoding;
                 ApplyTls(outbound, query, host, defaultEnabled: query.GetValueOrDefault("security") is "tls" or "reality");
                 ApplyTransport(outbound, query);
                 break;
@@ -130,6 +131,10 @@ public static class ServerLinkImporter
                 {
                     outbound["obfs"] = new JsonObject { ["type"] = obfs, ["password"] = query.GetValueOrDefault("obfs-password", string.Empty) };
                 }
+                // Port hopping: "20000-30000" or "443,20000-30000".
+                if (query.TryGetValue("mport", out var hopPorts) && hopPorts.Length > 0)
+                    outbound["server_ports"] = new JsonArray(hopPorts.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Select(item => (JsonNode?)(item.Contains('-') ? item.Replace('-', ':') : item + ":" + item)).ToArray());
                 break;
             case "hysteria":
                 outbound["type"] = "hysteria";
@@ -220,9 +225,12 @@ public static class ServerLinkImporter
         outbound["password"] = credentials[1];
         var fragment = uri.Fragment;
         if (string.IsNullOrWhiteSpace(name) && fragment.Length > 1) name = Decode(fragment[1..]);
-        if (!string.IsNullOrWhiteSpace(uri.Query) && uri.Query.Contains("plugin=", StringComparison.OrdinalIgnoreCase))
+        // SIP002: plugin=<name>;<options>, e.g. obfs-local;obfs=http;obfs-host=example.com
+        if (ParseQuery(uri.Query).TryGetValue("plugin", out var plugin) && plugin.Length > 0)
         {
-            throw new FormatException(Localization.Get("ServerLinkImporter_ThisShadowsocksShareLinkUsesPluginOptionsImport"));
+            var separator = plugin.IndexOf(';');
+            outbound["plugin"] = separator < 0 ? plugin : plugin[..separator];
+            if (separator >= 0 && separator < plugin.Length - 1) outbound["plugin_opts"] = plugin[(separator + 1)..];
         }
     }
 
