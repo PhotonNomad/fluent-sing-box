@@ -174,7 +174,7 @@ internal sealed class TunConfigurationForm
             App.State.Settings.Configuration.TunPreferredRouteBackups = routeBackups;
             try
             {
-                await ConfigurationFileService.ImportAsync(App.State.Settings, candidate.ToJsonString(), _source);
+                await App.State.ImportConfigurationAsync(candidate.ToJsonString(), _source);
             }
             catch
             {

@@ -13,7 +13,7 @@ public static class ConfigurationFileService
     private static readonly SemaphoreSlim Gate = new(1, 1);
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
-    public static AppSettingsData Snapshot(AppSettingsData settings) => JsonSerializer.Deserialize<AppSettingsData>(JsonSerializer.Serialize(settings))!;
+    public static AppSettingsData Snapshot(AppSettingsData settings) => SettingsCheckpoint.Snapshot(settings);
 
     // Validate draft form changes against the same merged source that SaveAsync will write.
     public static string ApplyPendingChanges(AppSettingsData settings, string json)
@@ -26,6 +26,7 @@ public static class ConfigurationFileService
         var next = JsonNode.Parse(generated)!.AsObject();
         if (JsonNode.DeepEquals(previous, next)) return json;
         var current = JsonNode.Parse(json) as JsonObject ?? throw new InvalidOperationException(Localization.Get("ConfigurationFileService_TheApplicationConfigurationMustBeAJSONObject"));
+        ServerTags.RemapReferences(current, ServerTags.Aliases(settings.Servers, ServerTags.Build(settings.Servers)));
         ConfigurationMerger.ApplyChanges(current, previous, next);
         return current.ToJsonString(JsonOptions);
     }
@@ -47,7 +48,7 @@ public static class ConfigurationFileService
         {
             var json = string.IsNullOrWhiteSpace(settings.Configuration.NativeFilePath)
                 ? settings.Configuration.NativeJson : await File.ReadAllTextAsync(settings.Configuration.NativeFilePath);
-            await ImportAsync(settings, json, validateWithCore: validateWithCore);
+            await ImportAsync(settings, json, validateWithCore: validateWithCore, syncServers: false);
             return FilePath;
         }
         return await RestoreManagedFileAsync(settings, validateWithCore);
@@ -142,7 +143,7 @@ public static class ConfigurationFileService
         }
     }
 
-    public static async Task ImportAsync(AppSettingsData settings, string json, string? expectedSource = null, bool validateWithCore = true)
+    public static async Task ImportAsync(AppSettingsData settings, string json, string? expectedSource = null, bool validateWithCore = true, bool syncServers = true)
     {
         await Gate.WaitAsync();
         var staging = FilePath + ".import-" + Guid.NewGuid().ToString("N") + ".json";
@@ -163,6 +164,12 @@ public static class ConfigurationFileService
                 using var core = new SingBoxCoreService();
                 runtime = await core.BuildValidatedConfigurationAsync(candidate);
             }
+
+            if (syncServers)
+            {
+                ServerCatalog.Synchronize(settings, ServerLinkImporter.ExtractProxyServers(node.ToJsonString()));
+            }
+
             string? baseline;
             try { baseline = Generated(settings); }
             catch (InvalidOperationException) { baseline = null; } // A valid imported file need not have valid GUI profiles.
@@ -183,6 +190,13 @@ public static class ConfigurationFileService
         }
     }
 
+    public static async Task<IReadOnlyList<ServerProfile>?> ReadServersAsync(AppSettingsData settings)
+    {
+        var path = string.IsNullOrWhiteSpace(settings.Configuration.ExternalFilePath)
+            ? FilePath : settings.Configuration.ExternalFilePath;
+        if (!File.Exists(path)) return null;
+        return ServerLinkImporter.ExtractProxyServers(await File.ReadAllTextAsync(path));
+    }
     private static void TryDeleteStagingFile(string path, AppSettingsData settings)
     {
         try { if (File.Exists(path)) File.Delete(path); }
@@ -193,7 +207,7 @@ public static class ConfigurationFileService
         }
     }
 
-    public static async Task SynchronizeAsync(AppSettingsData settings)
+    public static async Task<string?> SynchronizeAsync(AppSettingsData settings)
     {
         if (settings.Configuration.NativeEnabled && string.IsNullOrWhiteSpace(settings.Configuration.ExternalFilePath))
         {
@@ -205,7 +219,7 @@ public static class ConfigurationFileService
                 await ReplaceAsync(Path.Combine(AppPaths.DataDirectory, "sing-box", "config.json"), runtime);
             }
             finally { Gate.Release(); }
-            return;
+            return null;
         }
         await EnsureAsync(settings);
         await Gate.WaitAsync();
@@ -225,8 +239,9 @@ public static class ConfigurationFileService
                     var content = document.ToJsonString(JsonOptions);
                     await CommitValidatedAsync(settings, settings.Configuration.ExternalFilePath, content,
                         File.Exists(BaselinePath) ? await File.ReadAllTextAsync(BaselinePath) : "{}");
+                    return content;
                 }
-                return;
+                return null;
             }
             if (string.IsNullOrWhiteSpace(settings.Configuration.ExternalFilePath))
             {
@@ -234,7 +249,7 @@ public static class ConfigurationFileService
                 var content = File.Exists(FilePath) ? await File.ReadAllTextAsync(FilePath) : generated;
                 await CommitValidatedAsync(settings, FilePath, content, generated);
                 settings.Configuration.ExternalFilePath = FilePath;
-                return;
+                return content;
             }
             var next = JsonNode.Parse(generated)!.AsObject();
             var previous = File.Exists(BaselinePath) ? JsonNode.Parse(await File.ReadAllTextAsync(BaselinePath))!.AsObject() : new JsonObject();
@@ -243,19 +258,22 @@ public static class ConfigurationFileService
                 var content = await File.ReadAllTextAsync(settings.Configuration.ExternalFilePath);
                 await CommitValidatedAsync(settings, settings.Configuration.ExternalFilePath, content, generated);
                 await DnsCachePolicy.TrackAsync(settings, content);
-                return;
+                return content;
             }
             var path = settings.Configuration.ExternalFilePath;
             var current = JsonNode.Parse(await File.ReadAllTextAsync(path)) as JsonObject ?? throw new InvalidOperationException(Localization.Get("ConfigurationFileService_TheApplicationConfigurationMustBeAJSONObject2"));
+            ServerTags.RemapReferences(current, ServerTags.Aliases(settings.Servers, ServerTags.Build(settings.Servers)));
             ConfigurationMerger.ApplyChanges(current, previous, next);
             await CommitValidatedAsync(settings, path, current.ToJsonString(JsonOptions), generated);
             await DnsCachePolicy.TrackAsync(settings, current.ToJsonString());
+            return current.ToJsonString(JsonOptions);
         }
         finally { Gate.Release(); }
     }
 
     private static async Task CommitValidatedAsync(AppSettingsData settings, string path, string content, string baseline)
     {
+        _ = ServerLinkImporter.ExtractProxyServers(content);
         var staging = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, ".save-" + Guid.NewGuid().ToString("N") + ".json");
         try
         {
@@ -305,6 +323,7 @@ public static class ConfigurationFileService
             await File.WriteAllTextAsync(temporary, content);
             if (File.Exists(path)) File.Replace(temporary, path, path + ".backup", ignoreMetadataErrors: true);
             else File.Move(temporary, path);
+            ConfigFileRevisions.Record(path, content);
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }

@@ -40,26 +40,48 @@ public static class SingBoxCoreBundle
         {
             if (await IsCompleteAsync(executablePath, markerPath)) return executablePath;
 
-            Directory.CreateDirectory(root);
-            var staging = Path.Combine(root, $".{Version}-{Guid.NewGuid():N}");
-            Directory.CreateDirectory(staging);
+            Directory.CreateDirectory(destination);
+
+            await using var resource = typeof(SingBoxCoreBundle).Assembly.GetManifestResourceStream(ArchiveResourceName)
+                ?? throw new InvalidOperationException(Localization.Get("SingBoxCoreBundle_TheBundledSingBoxCoreResourceIsMissing"));
+
+            using var memory = new MemoryStream();
+            await resource.CopyToAsync(memory);
+            var actualHash = Convert.ToHexString(SHA256.HashData(memory.GetBuffer().AsSpan(0, (int)memory.Length)));
+            if (!string.Equals(actualHash, ArchiveSha256, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(Localization.Get("SingBoxCoreBundle_TheBundledSingBoxCoreFailedItsIntegrity"));
+            }
+
+            memory.Position = 0;
+            var exeTmp = Path.Combine(destination, "sing-box.exe.tmp");
+            var dllTmp = Path.Combine(destination, "libcronet.dll.tmp");
+            var licTmp = Path.Combine(destination, "LICENSE.tmp");
             try
             {
-                var archivePath = Path.Combine(staging, "core.zip");
-                await ExtractResourceArchiveAsync(archivePath);
-                await VerifyArchiveAsync(archivePath);
-                await ExtractCoreFilesAsync(archivePath, staging);
-                await File.WriteAllTextAsync(Path.Combine(staging, ".bundle-sha256"), ArchiveSha256);
-                File.Delete(archivePath);
-
-                if (Directory.Exists(destination)) Directory.Delete(destination, recursive: true);
-                Directory.Move(staging, destination);
+                using (var archive = new ZipArchive(memory, ZipArchiveMode.Read))
+                {
+                    await CopyEntryAsync(archive, ArchiveRoot + "sing-box.exe", exeTmp, ExecutableLength);
+                    await CopyEntryAsync(archive, ArchiveRoot + "libcronet.dll", dllTmp, CronetLibraryLength);
+                    await CopyEntryAsync(archive, ArchiveRoot + "LICENSE", licTmp, 808);
+                }
+                if (File.Exists(markerPath)) File.Delete(markerPath);
+                File.Move(exeTmp, executablePath, overwrite: true);
+                File.Move(dllTmp, Path.Combine(destination, "libcronet.dll"), overwrite: true);
+                File.Move(licTmp, Path.Combine(destination, "LICENSE"), overwrite: true);
+                await File.WriteAllTextAsync(markerPath, ArchiveSha256);
             }
-            catch
+            finally
             {
-                if (Directory.Exists(staging)) Directory.Delete(staging, recursive: true);
-                throw;
+                if (File.Exists(exeTmp)) File.Delete(exeTmp);
+                if (File.Exists(dllTmp)) File.Delete(dllTmp);
+                if (File.Exists(licTmp)) File.Delete(licTmp);
             }
+        }
+        catch
+        {
+            if (File.Exists(markerPath)) File.Delete(markerPath);
+            throw;
         }
         finally
         {
@@ -78,32 +100,6 @@ public static class SingBoxCoreBundle
         return string.Equals(await File.ReadAllTextAsync(markerPath), ArchiveSha256, StringComparison.Ordinal);
     }
 
-    private static async Task ExtractResourceArchiveAsync(string archivePath)
-    {
-        await using var resource = typeof(SingBoxCoreBundle).Assembly.GetManifestResourceStream(ArchiveResourceName)
-            ?? throw new InvalidOperationException(Localization.Get("SingBoxCoreBundle_TheBundledSingBoxCoreResourceIsMissing"));
-        await using var output = new FileStream(archivePath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 131072, useAsync: true);
-        await resource.CopyToAsync(output);
-    }
-
-    private static async Task VerifyArchiveAsync(string archivePath)
-    {
-        await using var archiveStream = File.OpenRead(archivePath);
-        var actualHash = Convert.ToHexString(await SHA256.HashDataAsync(archiveStream));
-        if (!string.Equals(actualHash, ArchiveSha256, StringComparison.Ordinal))
-        {
-            throw new InvalidOperationException(Localization.Get("SingBoxCoreBundle_TheBundledSingBoxCoreFailedItsIntegrity"));
-        }
-    }
-
-    private static async Task ExtractCoreFilesAsync(string archivePath, string staging)
-    {
-        using var archive = ZipFile.OpenRead(archivePath);
-        await CopyEntryAsync(archive, ArchiveRoot + "sing-box.exe", Path.Combine(staging, "sing-box.exe"), ExecutableLength);
-        await CopyEntryAsync(archive, ArchiveRoot + "libcronet.dll", Path.Combine(staging, "libcronet.dll"), CronetLibraryLength);
-        await CopyEntryAsync(archive, ArchiveRoot + "LICENSE", Path.Combine(staging, "LICENSE"), 808);
-    }
-
     private static async Task CopyEntryAsync(ZipArchive archive, string entryName, string destinationPath, long expectedLength)
     {
         var entry = archive.GetEntry(entryName)
@@ -114,7 +110,7 @@ public static class SingBoxCoreBundle
         }
 
         await using var input = entry.Open();
-        await using var output = new FileStream(destinationPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 131072, useAsync: true);
+        await using var output = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, 131072, useAsync: true);
         await input.CopyToAsync(output);
     }
 }

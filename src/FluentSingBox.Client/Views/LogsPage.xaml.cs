@@ -63,7 +63,7 @@ public sealed partial class LogsPage : Page
             document["log"] ??= new JsonObject();
             document["log"]!["level"] = level;
             App.State.Settings.Configuration.LogLevel = level;
-            await ConfigurationFileService.ImportAsync(App.State.Settings, document.ToJsonString(), source);
+            await App.State.ImportConfigurationAsync(document.ToJsonString(), source);
             committed = true;
             await App.State.SavePreferencesAsync(configurationCommitted: true);
             ErrorBar.Message = Localization.Get("Logs_LevelSaved");

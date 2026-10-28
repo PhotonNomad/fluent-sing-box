@@ -32,8 +32,7 @@ public sealed partial class ConfigurationSettingsControl : UserControl
     {
         var file = await FilePickerService.PickFileAsync(".json");
         if (file is null) return;
-        await ConfigurationFileService.ImportAsync(App.State.Settings, await File.ReadAllTextAsync(file.Path));
-        await App.State.SaveAsync();
+        await App.State.ImportConfigurationAsync(await File.ReadAllTextAsync(file.Path));
         ShowStatus(Localization.Get("ConfigurationPage_ConfigurationValidatedAndImportedFutureEditsAndStarts"), false);
     });
 

@@ -27,6 +27,9 @@ public sealed partial class MainWindow : Window
     private bool _navigating;
     private bool _installUpdate;
     private object? _selectedNavigationItem;
+    private ConfigFileWatcher? _configFileWatcher;
+    private string? _watchedConfigPath;
+    private bool _configurationRefreshError;
 
     public MainWindow()
     {
@@ -54,6 +57,63 @@ public sealed partial class MainWindow : Window
         _healthMonitor.Start();
         try { _sessionEnd = new SessionEndHandler(WinRT.Interop.WindowNative.GetWindowHandle(this), EndSession); }
         catch (Exception exception) { ShutdownCoordinator.RecordExitFailure("session-end-hook", exception); }
+        App.State.SettingsChanged += RefreshCurrentPage;
+        StartWatchingFiles();
+        Activated += async (_, args) =>
+        {
+            if (args.WindowActivationState == WindowActivationState.Deactivated || _lifecycle != WindowLifecycle.Running) return;
+            try { await App.State.RefreshExternalFilesAsync(reloadSettings: true); }
+            catch (Exception error) { ReportConfigurationRefreshError(error); }
+        };
+    }
+
+    private void StartWatchingFiles()
+    {
+        var path = string.IsNullOrWhiteSpace(App.State.Settings.Configuration.ExternalFilePath)
+            ? ConfigurationFileService.FilePath : App.State.Settings.Configuration.ExternalFilePath;
+        if (_configFileWatcher is not null && string.Equals(path, _watchedConfigPath, StringComparison.OrdinalIgnoreCase)) return;
+        var previous = _configFileWatcher;
+        _watchedConfigPath = path;
+        if (previous is not null) _ = previous.DisposeAsync().AsTask();
+        _configFileWatcher = new ConfigFileWatcher(Path.Combine(AppPaths.DataDirectory, "settings.json"), path,
+            RefreshFromWatcherAsync, ReportConfigurationRefreshError);
+    }
+
+    private Task RefreshFromWatcherAsync(ConfigFileChange change)
+    {
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (!DispatcherQueue.TryEnqueue(async () =>
+        {
+            try
+            {
+                if (_lifecycle == WindowLifecycle.Running && _configFileWatcher is not null)
+                    await App.State.RefreshExternalFilesAsync(change.HasFlag(ConfigFileChange.Settings));
+                completion.TrySetResult();
+            }
+            catch (Exception error) { completion.TrySetException(error); }
+        })) completion.TrySetResult();
+        return completion.Task;
+    }
+
+    private void ReportConfigurationRefreshError(Exception error)
+        => DispatcherQueue.TryEnqueue(() =>
+        {
+            ShowRecoveryMessage(error is System.Text.Json.JsonException
+                ? Localization.Get("ConfigurationFileService_TheConfigurationContainsInvalidJSON")
+                : LogReader.Redact(error.Message, App.State.Settings));
+            _configurationRefreshError = true;
+        });
+
+    private void RefreshCurrentPage()
+    {
+        if (_configurationRefreshError)
+        {
+            RecoveryMessage.IsOpen = false;
+            _configurationRefreshError = false;
+        }
+        if (_lifecycle == WindowLifecycle.Running) StartWatchingFiles();
+        if (ContentFrame.Content is ServersPage serversPage) serversPage.RefreshView();
+        else if (ContentFrame.Content is ProxyPage proxyPage) proxyPage.RefreshServers();
     }
 
     // Logoff, shutdown or a Restart Manager close: release the proxy and core before the
@@ -72,6 +132,7 @@ public sealed partial class MainWindow : Window
 
     private void ShowRecoveryMessage(string message)
     {
+        _configurationRefreshError = false;
         RecoveryMessage.Message = message;
         RecoveryMessage.IsOpen = true;
     }
@@ -412,7 +473,7 @@ public sealed partial class MainWindow : Window
         RootNavigationView.SelectedItem = SettingsNavigationItem;
     }
 
-    private void MainWindow_Closed(object sender, WindowEventArgs args)
+    private async void MainWindow_Closed(object sender, WindowEventArgs args)
     {
         AppUpdateService.Current.Stop();
         AppUpdateService.Current.Changed -= ApplicationUpdateChanged;
@@ -423,6 +484,10 @@ public sealed partial class MainWindow : Window
         _sessionEnd?.Dispose();
         _xamlRootReady.TrySetCanceled();
         _healthMonitor.Stop();
+        App.State.SettingsChanged -= RefreshCurrentPage;
+        var watcher = _configFileWatcher;
+        _configFileWatcher = null;
+        watcher?.Dispose();
         if (_lifecycle != WindowLifecycle.ShutDown)
         {
             try { App.CoreService.Stop(); }
@@ -433,5 +498,6 @@ public sealed partial class MainWindow : Window
             _windowXamlRoot.Changed -= WindowXamlRoot_Changed;
             _windowXamlRoot = null;
         }
+        if (watcher is not null) await watcher.DisposeAsync();
     }
 }

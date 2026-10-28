@@ -108,6 +108,8 @@ public sealed class ServerEditorForm : Grid
             _fields.Children.Add(_raw);
             return;
         }
+        var serverTags = ServerTags.Build(App.State.Settings.Servers);
+        var aliases = ServerTags.Aliases(App.State.Settings.Servers, serverTags);
         foreach (var field in _current.Fields)
         {
             var value = _current.Get(field.Path);
@@ -117,20 +119,18 @@ public sealed class ServerEditorForm : Grid
                 case ServerFieldKind.ServerList:
                     var members = new StackPanel { Spacing = 8 };
                     members.Children.Add(new TextBlock { Text = field.Label });
-                    var selectedTags = ServerEditorDraft.SplitList(value).ToHashSet(StringComparer.Ordinal);
+                    var selectedTags = ServerEditorDraft.SplitList(value).Select(tag => aliases.GetValueOrDefault(tag, tag)).ToHashSet(StringComparer.Ordinal);
                     var memberChoices = new List<CheckBox>();
                     foreach (var server in App.State.Settings.Servers.Where(server => server.Id != _sourceId))
                     {
-                        var tag = SingBoxConfigBuilder.OutboundTag(server.Id);
-                        var sourceTag = ServerEditorDraft.FromProfile(server)["tag"]?.ToString();
-                        var checkbox = new CheckBox { Content = server.Name, Tag = tag, IsChecked = selectedTags.Contains(tag) || sourceTag is not null && selectedTags.Contains(sourceTag) };
+                        var tag = serverTags[server.Id];
+                        var checkbox = new CheckBox { Content = server.Name, Tag = tag, IsChecked = selectedTags.Contains(tag) };
                         memberChoices.Add(checkbox); members.Children.Add(checkbox);
                         void Changed(object sender, RoutedEventArgs args)
                         {
                             _current.Set(field.Path, string.Join(",", memberChoices.Where(item => item.IsChecked == true).Select(item => item.Tag)));
-                            foreach (var candidate in App.State.Settings.Servers)
-                                if (_current.Get("default") == ServerEditorDraft.FromProfile(candidate)["tag"]?.ToString())
-                                    _current.Set("default", SingBoxConfigBuilder.OutboundTag(candidate.Id));
+                            var defaultTag = _current.Get("default");
+                            if (aliases.TryGetValue(defaultTag, out var mappedDefault)) _current.Set("default", mappedDefault);
                         }
                         checkbox.Checked += Changed; checkbox.Unchecked += Changed;
                     }
@@ -142,12 +142,11 @@ public sealed class ServerEditorForm : Grid
                     selector.Items.Add(new ComboBoxItem { Content = field.Path == "detour" ? Localization.Get("ServerEditorForm_NoUpstreamProxy") : Localization.Get("ServerEditorForm_FirstCandidateServer"), Tag = "" });
                     foreach (var server in App.State.Settings.Servers.Where(server => server.Id != _sourceId))
                     {
-                        var tag = SingBoxConfigBuilder.OutboundTag(server.Id);
-                        var original = ServerEditorDraft.FromProfile(server)["tag"]?.ToString();
-                        // Preserve an imported reference until it is explicitly changed.
-                        selector.Items.Add(new ComboBoxItem { Content = server.Name, Tag = value == original ? original : tag });
+                        var tag = serverTags[server.Id];
+                        selector.Items.Add(new ComboBoxItem { Content = server.Name, Tag = tag });
                     }
-                    selector.SelectedItem = selector.Items.Cast<ComboBoxItem>().FirstOrDefault(item => (string)item.Tag == value) ?? selector.Items[0];
+                    var selectedValue = aliases.GetValueOrDefault(value, value);
+                    selector.SelectedItem = selector.Items.Cast<ComboBoxItem>().FirstOrDefault(item => (string)item.Tag == selectedValue) ?? selector.Items[0];
                     selector.SelectionChanged += (_, _) => { if (selector.SelectedItem is ComboBoxItem { Tag: string tag }) _current.Set(field.Path, tag); };
                     control = selector;
                     break;
