@@ -84,7 +84,7 @@ tools/                            Build.ps1、Build-Installer.ps1、Setup-Instal
 - **核心与系统代理相互独立**：系统代理只在本地 mixed 入站（标签 `system-http`）开启时可用；入站关闭、端口变化或切换配置时，`AppState` 会同步恢复或改指 Windows 代理。启动时只在核心已运行时恢复系统代理，避免 Windows 指向无人监听的端口。
 - **上次会话恢复**：只有用户手动开关核心或系统代理时才更新 `Resume*` 字段；退出、注销、更新交接不清除它们；核心崩溃或启动失败会清除。TUN 写在配置里，随核心一起恢复（会触发 UAC）。
 - **退出清理顺序**（`Shell/ShutdownCoordinator.cs`）：恢复系统代理 → 停止核心 → 保存偏好。顺序是清理契约的一部分，不要调整。
-- **默认分流**（`Configuration/Profiles/default-profile.json`）：局域网、国内域名、国内 IP（排除境外域名）直连，QUIC/STUN/DoT 拦截规则默认关闭，其余流量走「代理」；DNS 国内域名用 114 UDP，其余用 1.1.1.1 DoH（经「代理」）。第一个添加的节点自动成为默认服务器；`hijack-dns` 只在开启 TUN 时生成。
+- **默认分流**（`Configuration/Profiles/default-profile.json`）：按顺序：ChatGPT/Codex、Claude 程序走「代理」；局域网直连；拦截 QUIC/STUN/DoT；国内域名、国内 IP（排除境外域名）直连；来自系统代理的流量走「代理」；其余流量直连。TUN 默认开启，首次启动核心会请求管理员权限；DNS 国内域名用 114 UDP，其余用 1.1.1.1 DoH（经「代理」）。第一个添加的节点自动成为默认服务器；`hijack-dns` 只在开启 TUN 时生成。
 - **进程规则**：名称匹配必须是完整 `.exe` 名且大小写与磁盘一致（sing-box 区分大小写）；Store 应用路径编译成只放宽版本号的 `process_path_regex`。
 - **界面列表**：配置变化后用 `Rows.Sync` 只替换有变化的行，不要整表重建（会闪烁、跳回顶部、收起展开项）。
 - **节点组**：`select` 组的当前成员是运行状态，存在 `settings.json`，改它不改配置；编译时写成 selector 的 `default`，并用 `cache_id` 让缓存里的旧选择失效。

@@ -11,7 +11,7 @@ public class ProfileMessagesTests
     {
         Localization.Configure("en-US");
         var profile = ProfileJson.CreateDefault();
-        profile.Rules[0].Target = Target.Node("missing");
+        profile.Rules.Single(rule => rule.Id == "private").Target = Target.Node("missing");
 
         var message = ProfileMessages.Describe(profile, ProfileValidator.Validate(profile));
 

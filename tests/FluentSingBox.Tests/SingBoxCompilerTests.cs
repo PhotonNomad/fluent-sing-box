@@ -36,18 +36,22 @@ public class SingBoxCompilerTests
         var rules = RouteRules(config);
 
         Assert.Equal("sniff", rules[0]!["action"]!.ToString());
-        Assert.Equal("resolve", rules[1]!["action"]!.ToString());
-        Assert.True(rules[2]!["ip_is_private"]!.GetValue<bool>());
-        Assert.Equal("geosite-cn", rules[3]!["rule_set"]!.ToString());
-        // The disabled guard is left out entirely.
-        Assert.DoesNotContain(rules, rule => rule!["action"]?.ToString() == "reject");
+        Assert.Equal("hijack-dns", rules[1]!["action"]!.ToString());
+        Assert.Equal("resolve", rules[2]!["action"]!.ToString());
+        // App rules come first, then the domestic bypass; without a default server proxy is direct.
+        Assert.Equal(["ChatGPT.exe", "codex.exe"], rules[3]!["process_name"]!.AsArray().Select(name => name!.ToString()));
+        Assert.Equal("direct", rules[3]!["outbound"]!.ToString());
+        Assert.True(rules[5]!["ip_is_private"]!.GetValue<bool>());
+        Assert.Equal("reject", rules[6]!["action"]!.ToString());
+        Assert.Equal("geosite-cn", rules[7]!["rule_set"]!.ToString());
+        Assert.Equal("system-http", rules[^1]!["inbound"]![0]!.ToString());
         Assert.Equal("direct", config["route"]!["final"]!.ToString());
         Assert.Equal(["geosite-cn", "geosite-not-cn", "geoip-cn"], config["route"]!["rule_set"]!.AsArray().Select(set => set!["tag"]!.ToString()));
         Assert.Equal("rules/geoip-cn.srs", config["route"]!["rule_set"]![2]!["path"]!.ToString());
         Assert.Equal("国内 DNS", config["route"]!["default_domain_resolver"]!.ToString());
         Assert.Equal("境外 DNS", config["dns"]!["final"]!.ToString());
         Assert.Equal("ipv4_only", config["dns"]!["strategy"]!.ToString());
-        Assert.Single(config["inbounds"]!.AsArray());
+        Assert.Equal(["system-http", "tun"], config["inbounds"]!.AsArray().Select(inbound => inbound!["tag"]!.ToString()));
     }
 
     [Fact]
@@ -63,7 +67,7 @@ public class SingBoxCompilerTests
         Assert.Equal("cdn.example", outbound["tls"]!["server_name"]!.ToString());
         Assert.Equal("cdn.example", outbound["transport"]!["headers"]!["Host"]!.ToString());
         Assert.Equal("HK", RouteRules(config)[^1]!["outbound"]!.ToString());
-        Assert.Equal("HK", config["route"]!["final"]!.ToString());
+        Assert.Equal("direct", config["route"]!["final"]!.ToString());
         Assert.Equal("HK", config["dns"]!["servers"]![2]!["detour"]!.ToString());
         Assert.Null(config["dns"]!["servers"]![0]!["detour"]);
     }

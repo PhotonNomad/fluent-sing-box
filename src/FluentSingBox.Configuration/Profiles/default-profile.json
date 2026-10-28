@@ -11,6 +11,18 @@
   ],
   "rules": [
     {
+      "id": "openai-apps",
+      "name": "gpt",
+      "match": { "type": "process", "by": "name", "values": ["ChatGPT.exe", "codex.exe"] },
+      "target": "proxy"
+    },
+    {
+      "id": "claude-app",
+      "name": "claude",
+      "match": { "type": "process", "by": "name", "values": ["claude.exe"] },
+      "target": "proxy"
+    },
+    {
       "id": "private",
       "name": "局域网直连",
       "match": { "type": "privateIp" },
@@ -19,7 +31,6 @@
     {
       "id": "connection-guard",
       "name": "拦截 QUIC、STUN 和 DoT",
-      "enabled": false,
       "match": {
         "type": "any",
         "matchers": [
@@ -46,9 +57,15 @@
         ]
       },
       "target": "direct"
+    },
+    {
+      "id": "system-proxy",
+      "name": "系统代理",
+      "match": { "type": "inbound", "inbounds": ["systemProxy"] },
+      "target": "proxy"
     }
   ],
-  "final": "proxy",
+  "final": "direct",
   "dns": {
     "servers": [
       { "id": "local", "name": "国内 DNS", "type": "udp", "address": "114.114.114.114", "port": 53 },
@@ -85,7 +102,7 @@
   "capture": {
     "systemProxy": { "enabled": true, "listen": "127.0.0.1", "port": 10809 },
     "tun": {
-      "enabled": false,
+      "enabled": true,
       "stack": "mixed",
       "mtu": 1500,
       "addresses": ["172.19.0.1/30", "fdfe:dcba:9876::1/126"],

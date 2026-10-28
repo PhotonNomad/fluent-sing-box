@@ -27,7 +27,7 @@ public sealed class Profile
     public Target? DefaultServer { get; set; }
 
     // Where traffic that matches no rule goes; independent of the default server.
-    public Target Final { get; set; } = Target.Proxy;
+    public Target Final { get; set; } = Target.Direct;
 
     public DnsSettings Dns { get; set; } = new();
     public CaptureSettings Capture { get; set; } = new();
