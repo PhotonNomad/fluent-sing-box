@@ -47,7 +47,7 @@ public static class SingBoxCoreBundle
 
             using var memory = new MemoryStream();
             await resource.CopyToAsync(memory);
-            var actualHash = Convert.ToHexString(SHA256.HashData(memory.ToArray()));
+            var actualHash = Convert.ToHexString(SHA256.HashData(memory.GetBuffer().AsSpan(0, (int)memory.Length)));
             if (!string.Equals(actualHash, ArchiveSha256, StringComparison.Ordinal))
             {
                 throw new InvalidOperationException(Localization.Get("SingBoxCoreBundle_TheBundledSingBoxCoreFailedItsIntegrity"));
