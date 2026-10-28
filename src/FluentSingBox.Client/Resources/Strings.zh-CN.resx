@@ -2967,4 +2967,7 @@ Windows: {0}
   <data name="SystemProxySettingsControl_InboundSwitch.OffContent" xml:space="preserve">
     <value>关</value>
   </data>
+  <data name="SettingsStore_InvalidSettings" xml:space="preserve">
+    <value>设置文件包含无效或重复的条目。</value>
+  </data>
 </root>

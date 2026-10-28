@@ -76,12 +76,13 @@ public static class ConfigurationParts
         catch (JsonException) { throw new InvalidOperationException(name + Localization.Get("ConfigurationComposer_ContainsInvalidJSON")); }
     }
 
-    public static void ApplySections(JsonObject config, ConfigurationOptions options, bool managedInbound = true)
+    public static void ApplySections(JsonObject config, ConfigurationOptions options, bool managedInbound = true, IReadOnlyDictionary<string, string>? serverAliases = null)
     {
         foreach (var (name, text) in options.Sections)
         {
             if (string.IsNullOrWhiteSpace(text)) continue;
             var node = ParseSection(name, text);
+            if (serverAliases is not null) ServerTags.RemapReferences(node, serverAliases);
             if (node is JsonArray additions)
             {
                 var array = config[name] as JsonArray;

@@ -17,13 +17,15 @@ public sealed class SingBoxConfigBuilder
         var defaultServer = settings.Servers.FirstOrDefault(server => server.Id == settings.DefaultServerId);
         if (defaultServer is null && settings.Servers.Count > 0 && settings.DefaultServerId != "direct")
             throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_AddAndSelectADefaultServerFirst"));
+        var tagMap = BuildServerTagMap(settings.Servers);
+        string ResolveTag(string serverId) => tagMap.TryGetValue(serverId, out var mapped) ? mapped : OutboundTag(serverId);
         var finalOutbound = settings.RouteFinalMode switch
         {
             "auto" => settings.GlobalTunEnabled ? "proxy" : "direct",
             "direct" => "direct",
             "default" => "proxy",
             "server" => settings.Servers.Any(server => server.Id == settings.RouteFinalServerId)
-                ? OutboundTag(settings.RouteFinalServerId!)
+                ? ResolveTag(settings.RouteFinalServerId!)
                 : throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_TheServerSelectedForUnmatchedTrafficFinalNo")),
             _ => throw new InvalidOperationException(Localization.Get("SingBoxConfigBuilder_TheUnmatchedTrafficFinalActionIsInvalidSelect"))
         };
@@ -61,23 +63,17 @@ public sealed class SingBoxConfigBuilder
 
         var outbounds = new JsonArray();
         var endpoints = new JsonArray();
-        var importedTags = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var server in settings.Servers.Where(server => !string.IsNullOrWhiteSpace(server.OutboundJson)))
-        {
-            var sourceTag = ParseOutbound(server)["tag"]?.GetValue<string>();
-            if (!string.IsNullOrWhiteSpace(sourceTag) && !importedTags.TryAdd(sourceTag, OutboundTag(server.Id)))
-                throw new InvalidOperationException(Localization.Format("SingBoxConfigBuilder_DuplicateServerTag0GiveEachServerA", sourceTag));
-        }
+        var importedTags = ServerTags.Aliases(settings.Servers, tagMap);
         foreach (var server in settings.Servers.OrderByDescending(server => server.Id == defaultServer?.Id))
         {
-            (server.ConfigSection == "endpoints" ? endpoints : outbounds).Add(BuildServerOutbound(server, OutboundTag(server.Id), importedTags));
+            (server.ConfigSection == "endpoints" ? endpoints : outbounds).Add(BuildServerOutbound(server, ResolveTag(server.Id), importedTags));
         }
         outbounds.Add(new JsonObject { ["type"] = "direct", ["tag"] = "direct" });
         outbounds.Add(new JsonObject
         {
             ["type"] = "selector", ["tag"] = "proxy",
-            ["outbounds"] = new JsonArray(settings.Servers.Select(server => (JsonNode?)JsonValue.Create(OutboundTag(server.Id))).Append(JsonValue.Create("direct")).ToArray()),
-            ["default"] = defaultServer is null ? "direct" : OutboundTag(defaultServer.Id)
+            ["outbounds"] = new JsonArray(settings.Servers.Select(server => (JsonNode?)JsonValue.Create(ResolveTag(server.Id))).Append(JsonValue.Create("direct")).ToArray()),
+            ["default"] = defaultServer is null ? "direct" : ResolveTag(defaultServer.Id)
         });
 
         var inbounds = new JsonArray();
@@ -127,7 +123,7 @@ public sealed class SingBoxConfigBuilder
         // per-app server. Other address rules come after process selection.
         foreach (var rule in settings.RoutingRules.Where(rule => rule.IsEnabled && !rule.IsBuiltIn && rule.Outbound == "block"))
         {
-            AddAddressRule(routeRules, rule, defaultServer, settings);
+            AddAddressRule(routeRules, rule, defaultServer, settings, tagMap);
         }
 
         foreach (var rule in settings.RoutingRules.Where(rule => rule.IsEnabled && (rule.MatchPrivateAddresses || rule.BuiltInKind == "private")))
@@ -152,7 +148,7 @@ public sealed class SingBoxConfigBuilder
                 ["inbound"] = new JsonArray("app-tun"),
                 [group.Key] = new JsonArray(group.Select(path => (JsonNode?)JsonValue.Create(group.Key == "process_path_regex" ? ApplicationMatching.StorePathRegex(path)! : path)).ToArray()),
                 ["action"] = "route",
-                ["outbound"] = server is null ? "proxy" : OutboundTag(server.Id)
+                ["outbound"] = server is null ? "proxy" : ResolveTag(server.Id)
             });
         }
 
@@ -174,7 +170,7 @@ public sealed class SingBoxConfigBuilder
 
         foreach (var rule in settings.RoutingRules.Where(rule => rule.IsEnabled && !rule.IsBuiltIn && !rule.MatchPrivateAddresses && rule.Outbound != "block"))
         {
-            AddAddressRule(routeRules, rule, defaultServer, settings);
+            AddAddressRule(routeRules, rule, defaultServer, settings, tagMap);
         }
 
         if (settings.RoutingRules.Any(rule => rule.IsEnabled && rule.BuiltInKind == "china-domains"))
@@ -288,17 +284,25 @@ public sealed class SingBoxConfigBuilder
             var identity = string.Join("\n", selectors.Select(item => item.ToJsonString()));
             config["experimental"]!["cache_file"]!["cache_id"] = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(identity)));
         }
-        ConfigurationParts.ApplySections(config, options, settings.SystemProxyInboundEnabled);
+        ConfigurationParts.ApplySections(config, options, settings.SystemProxyInboundEnabled, importedTags);
         config["log"]!["output"] = logPath;
         if (useUpdatedRuleSets) BundledRuleSets.ApplyUpdates(config);
         return config.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
 
-    public static string OutboundTag(string serverId) => $"proxy-{serverId}";
+    public static string OutboundTag(string serverId) => ServerTags.LegacyTag(serverId);
 
-    // The tag is an internal key; the server name in settings is the only display name.
+    public static Dictionary<string, string> BuildServerTagMap(IEnumerable<ServerProfile> servers)
+        => ServerTags.Build(servers);
+
+    // The tag is an internal key or friendly unique name; the server name in settings is the display name.
     public static string OutboundDisplayName(string tag, IEnumerable<ServerProfile> servers)
-        => servers.FirstOrDefault(server => OutboundTag(server.Id) == tag) is { } server && !string.IsNullOrWhiteSpace(server.Name) ? server.Name : tag;
+    {
+        var list = servers as IReadOnlyList<ServerProfile> ?? servers.ToList();
+        var tagMap = BuildServerTagMap(list);
+        return list.FirstOrDefault(server => (tagMap.TryGetValue(server.Id, out var mapped) ? mapped : OutboundTag(server.Id)) == tag) is { } server
+            && !string.IsNullOrWhiteSpace(server.Name) ? server.Name : tag;
+    }
 
     public static JsonObject BuildManagedInbound(AppSettingsData settings)
     {
@@ -325,7 +329,7 @@ public sealed class SingBoxConfigBuilder
         return ruleSet;
     }
 
-    private static void AddAddressRule(JsonArray routeRules, RouteRuleProfile rule, ServerProfile? defaultServer, AppSettingsData settings)
+    private static void AddAddressRule(JsonArray routeRules, RouteRuleProfile rule, ServerProfile? defaultServer, AppSettingsData settings, IReadOnlyDictionary<string, string> tagMap)
     {
         RouteAddressValidator.Validate(rule.Addresses);
         var tokens = rule.Addresses
@@ -364,7 +368,7 @@ public sealed class SingBoxConfigBuilder
             : new JsonObject
             {
                 ["action"] = "route",
-                ["outbound"] = ResolveOutbound(rule, defaultServer, settings)
+                ["outbound"] = ResolveOutbound(rule, defaultServer, settings, tagMap)
             };
         if (domains.Count > 0) route["domain"] = domains;
         if (domainSuffixes.Count > 0) route["domain_suffix"] = domainSuffixes;
@@ -422,8 +426,8 @@ public sealed class SingBoxConfigBuilder
     {
         if (string.IsNullOrWhiteSpace(server.OutboundJson)) return BuildVlessOutbound(server, tag);
         var outbound = ParseOutbound(server);
-        RemapTags(outbound, importedTags);
-        ApplyWebSocketServerNameFallback(outbound);
+        ServerTags.RemapReferences(outbound, importedTags);
+        ServerMetadataComparer.ApplyWebSocketServerNameFallback(outbound);
         var type = outbound["type"]?.GetValue<string>();
         if (string.IsNullOrWhiteSpace(type))
         {
@@ -433,28 +437,6 @@ public sealed class SingBoxConfigBuilder
         return outbound;
     }
 
-    private static void ApplyWebSocketServerNameFallback(JsonObject outbound)
-    {
-        if (outbound["tls"] is not JsonObject tls
-            || tls["enabled"] is not JsonValue enabledValue
-            || !enabledValue.TryGetValue<bool>(out var tlsEnabled)
-            || !tlsEnabled
-            || !string.IsNullOrWhiteSpace(tls["server_name"]?.GetValue<string>())
-            || outbound["transport"] is not JsonObject transport
-            || !string.Equals(transport["type"]?.GetValue<string>(), "ws", StringComparison.OrdinalIgnoreCase)
-            || transport["headers"] is not JsonObject headers)
-        {
-            return;
-        }
-
-        var hostNode = headers["Host"] ?? headers["host"];
-        if (hostNode is JsonValue hostValue
-            && hostValue.TryGetValue<string>(out var host)
-            && !string.IsNullOrWhiteSpace(host))
-        {
-            tls["server_name"] = host;
-        }
-    }
 
     private static JsonObject ParseOutbound(ServerProfile server)
     {
@@ -469,38 +451,14 @@ public sealed class SingBoxConfigBuilder
         }
     }
 
-    private static void RemapTags(JsonNode? node, IReadOnlyDictionary<string, string> importedTags)
-    {
-        if (node is JsonObject obj)
-        {
-            foreach (var key in obj.Select(pair => pair.Key).ToArray())
-            {
-                if (key is "detour" or "default" && obj[key] is JsonValue value && value.TryGetValue<string>(out var text) && importedTags.TryGetValue(text, out var mapped))
-                    obj[key] = mapped;
-                else if (key == "outbounds" && obj[key] is JsonArray references)
-                {
-                    for (var i = 0; i < references.Count; i++)
-                        if (references[i] is JsonValue reference && reference.TryGetValue<string>(out var source) && importedTags.TryGetValue(source, out var target)) references[i] = target;
-                }
-                else
-                    RemapTags(obj[key], importedTags);
-            }
-        }
-        else if (node is JsonArray array)
-        {
-            for (var index = 0; index < array.Count; index++)
-            {
-                RemapTags(array[index], importedTags);
-            }
-        }
-    }
-
-    private static string ResolveOutbound(RouteRuleProfile rule, ServerProfile? defaultServer, AppSettingsData settings) =>
+    private static string ResolveOutbound(RouteRuleProfile rule, ServerProfile? defaultServer, AppSettingsData settings, IReadOnlyDictionary<string, string> tagMap) =>
         rule.Outbound switch
         {
             "direct" => "direct",
             "block" => "block",
-            "proxy" => settings.Servers.FirstOrDefault(server => server.Id == rule.ServerId) is { } selected ? OutboundTag(selected.Id) : "proxy",
+            "proxy" => settings.Servers.FirstOrDefault(server => server.Id == rule.ServerId) is { } selected
+                ? (tagMap.TryGetValue(selected.Id, out var tag) ? tag : OutboundTag(selected.Id))
+                : "proxy",
             _ => "proxy"
         };
 

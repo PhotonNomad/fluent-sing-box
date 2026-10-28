@@ -45,9 +45,11 @@ public static class SettingsStore
     public static async Task SaveAsync(string path, AppSettingsData settings)
     {
         var temporary = path + ".tmp";
-        // Callers serialize writes; capture JSON before awaiting IO so UI edits cannot
-        // mutate a collection while its async serialization is enumerating it.
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(settings, Options);
+        // Do not dump user-config.json servers into settings.json:
+        var copy = SettingsCheckpoint.Snapshot(settings);
+        copy.Servers = new System.Collections.ObjectModel.ObservableCollection<ServerProfile>(
+            copy.Servers.Where(server => !server.FromUserConfig));
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(copy, Options);
         await using (var output = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true))
         {
             await output.WriteAsync(bytes);
@@ -56,11 +58,30 @@ public static class SettingsStore
         }
         if (File.Exists(path)) File.Replace(temporary, path, path + ".backup", ignoreMetadataErrors: true);
         else File.Move(temporary, path);
+        ConfigFileRevisions.Record(path, bytes);
     }
 
-    private static async Task<AppSettingsData> ReadAsync(string path)
+    public static async Task<AppSettingsData> ReadAsync(string path)
     {
         await using var input = File.OpenRead(path);
-        return await JsonSerializer.DeserializeAsync<AppSettingsData>(input, Options) ?? throw new JsonException(Localization.Get("SettingsStore_TheConfigurationContentIsEmpty"));
+        var settings = await JsonSerializer.DeserializeAsync<AppSettingsData>(input, Options)
+            ?? throw new JsonException(Localization.Get("SettingsStore_TheConfigurationContentIsEmpty"));
+        if (settings.Configuration is null || settings.Servers is null || settings.Applications is null || settings.RoutingRules is null
+            || settings.Configuration.Sections is null || settings.Configuration.DisabledRules is null
+            || settings.Configuration.DirectDns is null || settings.Configuration.ProxyDns is null
+            || settings.Servers.Any(server => server is null) || settings.Applications.Any(app => app is null)
+            || settings.RoutingRules.Any(rule => rule is null))
+            throw new JsonException(Localization.Get("SettingsStore_InvalidSettings"));
+        ValidateIds(settings.Servers.Select(server => server.Id));
+        ValidateIds(settings.Applications.Select(app => app.Id));
+        ValidateIds(settings.RoutingRules.Select(rule => rule.Id));
+        return settings;
+    }
+
+    private static void ValidateIds(IEnumerable<string> ids)
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var id in ids)
+            if (string.IsNullOrWhiteSpace(id) || !seen.Add(id)) throw new JsonException(Localization.Get("SettingsStore_InvalidSettings"));
     }
 }

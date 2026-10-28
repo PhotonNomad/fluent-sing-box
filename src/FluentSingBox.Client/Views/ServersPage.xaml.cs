@@ -12,10 +12,24 @@ public sealed partial class ServersPage : Page
     public ServersPage()
     {
         InitializeComponent();
-        Loaded += (_, _) => RefreshView();
+        Loaded += async (_, _) => await RefreshViewAsync();
     }
 
-    private void RefreshView()
+    private async Task RefreshViewAsync()
+    {
+        try { await App.State.RefreshExternalFilesAsync(); }
+        catch (Exception error)
+        {
+            OperationMessage.Message = error is JsonException
+                ? Localization.Get("ConfigurationFileService_TheConfigurationContainsInvalidJSON")
+                : LogReader.Redact(error.Message, App.State.Settings);
+            OperationMessage.Severity = InfoBarSeverity.Error;
+            OperationMessage.IsOpen = true;
+        }
+        RefreshView();
+    }
+
+    public void RefreshView()
     {
         ServerList.ItemsSource = null;
         ServerList.ItemsSource = App.State.Settings.Servers;

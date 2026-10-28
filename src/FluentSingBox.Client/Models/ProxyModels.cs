@@ -63,6 +63,9 @@ public sealed class ServerProfile : ObservableModel
     }
 
     [JsonIgnore]
+    public bool FromUserConfig { get; set; }
+
+    [JsonIgnore]
     public bool IsDefault { get => _isDefault; set => Set(ref _isDefault, value); }
 
     [JsonIgnore]

@@ -10,6 +10,7 @@ foreach ($language in @('en-US','zh-CN')) {
     $directory = Join-Path $taskClient ('Strings/' + $language)
     New-Item -ItemType Directory -Path $directory -Force | Out-Null
     $settings = [Xml.XmlWriterSettings]::new(); $settings.Indent=$true; $settings.Encoding=[Text.UTF8Encoding]::new($false)
+    $settings.NewLineChars = "`n"
     $writer = [Xml.XmlWriter]::Create((Join-Path $directory 'Resources.resw'),$settings)
     try { $doc.Save($writer) } finally { $writer.Dispose() }
 }

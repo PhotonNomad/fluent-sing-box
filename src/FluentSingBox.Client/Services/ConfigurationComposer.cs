@@ -57,6 +57,8 @@ public static class ConfigurationComposer
     public static IReadOnlyList<string> FindReferences(AppSettingsData settings, ServerProfile server)
     {
         var tags = new HashSet<string>(StringComparer.Ordinal) { SingBoxConfigBuilder.OutboundTag(server.Id) };
+        var tagMap = SingBoxConfigBuilder.BuildServerTagMap(settings.Servers);
+        if (tagMap.TryGetValue(server.Id, out var friendlyTag)) tags.Add(friendlyTag);
         if (!string.IsNullOrWhiteSpace(server.OutboundJson) && JsonNode.Parse(server.OutboundJson)?["tag"] is { } tag) tags.Add(tag.ToString());
         var references = settings.Servers.Where(item => item.Id != server.Id && !string.IsNullOrWhiteSpace(item.OutboundJson)
             && References(JsonNode.Parse(item.OutboundJson))).Select(item => item.Name).ToList();

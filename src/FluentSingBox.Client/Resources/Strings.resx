@@ -2967,4 +2967,7 @@ Windows: {0}
   <data name="SystemProxySettingsControl_InboundSwitch.OffContent" xml:space="preserve">
     <value>Off</value>
   </data>
+  <data name="SettingsStore_InvalidSettings" xml:space="preserve">
+    <value>The settings file contains invalid or duplicate entries.</value>
+  </data>
 </root>

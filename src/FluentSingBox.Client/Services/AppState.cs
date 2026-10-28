@@ -23,6 +23,8 @@ public sealed class AppState
     public AppSettingsData Settings { get; private set; } = new();
     public bool IsLoaded => _settingsPath.Length > 0;
     public event Action<string>? BackgroundSaveFailed;
+    public event Action? SettingsChanged;
+    public bool IsRefreshing => _restoring;
 
     public async Task LoadAsync()
     {
@@ -46,26 +48,20 @@ public sealed class AppState
         // A previous abrupt shutdown must not leave Windows pointing at a dead local proxy.
         if (Settings.HasSystemProxySnapshot) WindowsProxyService.Restore(Settings);
 
-
-        if (Settings.DefaultServerId != "direct" && !Settings.Servers.Any(server => server.Id == Settings.DefaultServerId))
+        try
         {
-            Settings.DefaultServerId = Settings.Servers.FirstOrDefault()?.Id;
+            var initial = SettingsCheckpoint.Snapshot(Settings);
+            if (await ConfigurationFileService.ReadServersAsync(initial) is { } servers)
+                ServerCatalog.Synchronize(initial, servers);
+            SettingsCheckpoint.Restore(Settings, initial);
+        }
+        catch (Exception error) when (error is System.Text.Json.JsonException or IOException or UnauthorizedAccessException)
+        {
+            DiagnosticsLog.Write(DiagnosticsCategory.SettingsSave, LogReader.Redact(error.Message, Settings));
         }
         Settings.EnsureBuiltInRules();
-        foreach (var server in Settings.Servers)
-        {
-            server.IsDefault = server.Id == Settings.DefaultServerId;
-        }
-        for (var index = 0; index < Settings.Applications.Count; index++)
-        {
-            var app = Settings.Applications[index];
-            app.AvailableServers.Clear();
-            foreach (var server in Settings.Servers)
-            {
-                app.AvailableServers.Add(server);
-            }
-            Observe(app);
-        }
+        ServerCatalog.RefreshSelections(Settings);
+        foreach (var app in Settings.Applications) Observe(app);
 
         ObserveCollection(Settings.Servers);
         ObserveCollection(Settings.RoutingRules);
@@ -74,6 +70,59 @@ public sealed class AppState
         foreach (var item in Settings.RoutingRules) Observe(item);
         await SavePreferencesAsync();
         _committedSettings = ConfigurationFileService.Snapshot(Settings);
+    }
+
+    public Task ReloadSettingsAsync() => RefreshExternalFilesAsync(reloadSettings: true);
+
+    public async Task RefreshExternalFilesAsync(bool reloadSettings = false)
+    {
+        if (string.IsNullOrEmpty(_settingsPath)) return;
+        await _saveGate.WaitAsync();
+        try
+        {
+            // A pending local edit wins; never replace a draft from a watcher callback.
+            if (_dirty) return;
+            var original = SettingsCheckpoint.Snapshot(Settings);
+            var candidate = reloadSettings ? await SettingsStore.ReadAsync(_settingsPath) : SettingsCheckpoint.Snapshot(Settings);
+            if (await ConfigurationFileService.ReadServersAsync(candidate) is not { } servers) return;
+            ServerCatalog.Synchronize(candidate, servers);
+            candidate.EnsureBuiltInRules();
+            if (!SettingsCheckpoint.SameContent(Settings, original)) return;
+            Publish(candidate);
+            _committedSettings = SettingsCheckpoint.Snapshot(Settings);
+        }
+        finally { _saveGate.Release(); }
+    }
+
+    public async Task ImportConfigurationAsync(string json, string? expectedSource = null)
+    {
+        await _saveGate.WaitAsync();
+        try
+        {
+            var original = SettingsCheckpoint.Snapshot(Settings);
+            var candidate = SettingsCheckpoint.Snapshot(Settings);
+            await ConfigurationFileService.ImportAsync(candidate, json, expectedSource);
+            _committedSettings = candidate;
+            if (SettingsCheckpoint.SameContent(Settings, original)) Publish(candidate);
+            await SettingsStore.SaveAsync(_settingsPath, candidate);
+        }
+        finally { _saveGate.Release(); }
+    }
+
+    private void Publish(AppSettingsData candidate)
+    {
+        _restoring = true;
+        try
+        {
+            SettingsCheckpoint.ApplyReload(Settings, candidate);
+            ServerCatalog.RefreshSelections(Settings);
+        }
+        finally { _restoring = false; }
+        try { SettingsChanged?.Invoke(); }
+        catch (Exception error)
+        {
+            DiagnosticsLog.Write(DiagnosticsCategory.ClientErrors, LogReader.Redact(error.Message, Settings));
+        }
     }
 
     public void AddServer(ServerProfile server)
@@ -117,6 +166,7 @@ public sealed class AppState
         {
             if (rule.ServerId == server.Id) rule.ServerId = Settings.DefaultServerId;
         }
+        ServerCatalog.RefreshSelections(Settings);
         ScheduleSave();
     }
 
@@ -143,6 +193,7 @@ public sealed class AppState
     {
         if (string.IsNullOrEmpty(_settingsPath)) return;
         await _saveGate.WaitAsync();
+        AppSettingsData? original = null;
         try
         {
             // The snapshot below includes every edit made so far; a pending debounced save
@@ -152,32 +203,19 @@ public sealed class AppState
                 _dirty = false;
                 _debounce?.Cancel();
             }
-            var candidate = ConfigurationFileService.Snapshot(Settings);
-            await ConfigurationFileService.SynchronizeAsync(candidate);
+            original = SettingsCheckpoint.Snapshot(Settings);
+            var candidate = SettingsCheckpoint.Snapshot(Settings);
+            var committedSource = await ConfigurationFileService.SynchronizeAsync(candidate);
+            if (committedSource is not null)
+                ServerCatalog.Synchronize(candidate, ServerLinkImporter.ExtractProxyServers(committedSource));
             await SettingsStore.SaveAsync(_settingsPath, candidate);
-            Settings.Configuration.ExternalFilePath = candidate.Configuration.ExternalFilePath;
-            Settings.Configuration.NativeEnabled = candidate.Configuration.NativeEnabled;
-            Settings.Configuration.NativeFilePath = candidate.Configuration.NativeFilePath;
-            Settings.Configuration.NativeJson = candidate.Configuration.NativeJson;
+            if (SettingsCheckpoint.SameContent(Settings, original)) Publish(candidate);
             _committedSettings = candidate;
         }
         catch
         {
-            if (_committedSettings is not null)
-            {
-                _restoring = true;
-                try
-                {
-                    SettingsCheckpoint.Restore(Settings, ConfigurationFileService.Snapshot(_committedSettings));
-                    foreach (var server in Settings.Servers) server.IsDefault = server.Id == Settings.DefaultServerId;
-                    foreach (var app in Settings.Applications)
-                    {
-                        app.AvailableServers.Clear();
-                        foreach (var server in Settings.Servers) app.AvailableServers.Add(server);
-                    }
-                }
-                finally { _restoring = false; }
-            }
+            if (_committedSettings is not null && original is not null && SettingsCheckpoint.SameContent(Settings, original))
+                Publish(SettingsCheckpoint.Snapshot(_committedSettings));
             throw;
         }
         finally
