@@ -1,107 +1,131 @@
-using System.IO;
-using System.Threading;
-using Microsoft.UI.Dispatching;
+using System.Text.Json;
+using System.Threading.Channels;
 
 namespace FluentSingBox.Client.Services;
 
-public sealed class ConfigFileWatcher : IDisposable
+[Flags]
+public enum ConfigFileChange { None = 0, Settings = 1, UserConfig = 2, All = Settings | UserConfig }
+
+public sealed class ConfigFileWatcher : IDisposable, IAsyncDisposable
 {
-    private FileSystemWatcher? _watcher;
-    private readonly Action<string> _onChanged;
-    private readonly DispatcherQueue _dispatcher;
-    private readonly Timer _debounceTimer;
-    private string _pendingType = string.Empty;
-    private static DateTime _suppressUntil = DateTime.MinValue;
-    private static readonly object SuppressLock = new();
+    private readonly string _settingsPath;
+    private readonly string _configPath;
+    private readonly Func<ConfigFileChange, Task> _onChanged;
+    private readonly Action<Exception> _onError;
+    private readonly List<FileSystemWatcher> _watchers = [];
+    private readonly Channel<ConfigFileChange> _changes = Channel.CreateUnbounded<ConfigFileChange>(
+        new UnboundedChannelOptions { SingleReader = true });
+    private readonly CancellationTokenSource _stop = new();
+    private readonly Task _worker;
+    private bool _disposed;
 
-    public static void SuppressNext(TimeSpan duration)
+    public ConfigFileWatcher(string settingsPath, string configPath, Func<ConfigFileChange, Task> onChanged, Action<Exception> onError)
     {
-        lock (SuppressLock)
-        {
-            _suppressUntil = DateTime.UtcNow + duration;
-        }
-    }
-
-    public ConfigFileWatcher(DispatcherQueue dispatcher, Action<string> onChanged)
-    {
-        _dispatcher = dispatcher;
+        _settingsPath = Path.GetFullPath(settingsPath);
+        _configPath = Path.GetFullPath(configPath);
         _onChanged = onChanged;
-        _debounceTimer = new Timer(OnDebounceElapsed, null, Timeout.Infinite, Timeout.Infinite);
-        Start();
+        _onError = onError;
+        foreach (var directory in new[] { Path.GetDirectoryName(_settingsPath)!, Path.GetDirectoryName(_configPath)! }.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            try
+            {
+                var watcher = new FileSystemWatcher(directory)
+                {
+                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size
+                };
+                watcher.Changed += OnChanged;
+                watcher.Created += OnChanged;
+                watcher.Deleted += OnChanged;
+                watcher.Renamed += OnRenamed;
+                watcher.Error += (_, args) => { Report(args.GetException()); _changes.Writer.TryWrite(ConfigFileChange.All); };
+                watcher.EnableRaisingEvents = true;
+                _watchers.Add(watcher);
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException)
+            { Report(error); }
+        }
+        _worker = RunAsync(_stop.Token);
     }
 
-    public void Start()
+    private ConfigFileChange Classify(string path) => path.Equals(_settingsPath, StringComparison.OrdinalIgnoreCase)
+        ? ConfigFileChange.Settings : path.Equals(_configPath, StringComparison.OrdinalIgnoreCase)
+        ? ConfigFileChange.UserConfig : ConfigFileChange.None;
+
+    private void OnChanged(object sender, FileSystemEventArgs args)
     {
-        Stop();
+        var change = Classify(args.FullPath);
+        if (change != ConfigFileChange.None) _changes.Writer.TryWrite(change);
+    }
+
+    private void OnRenamed(object sender, RenamedEventArgs args)
+    {
+        OnChanged(sender, args);
+        var old = Classify(args.OldFullPath);
+        if (old != ConfigFileChange.None) _changes.Writer.TryWrite(old);
+    }
+
+    private async Task RunAsync(CancellationToken cancellation)
+    {
         try
         {
-            var dir = AppPaths.DataDirectory;
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-
-            _watcher = new FileSystemWatcher(dir)
+            while (await _changes.Reader.WaitToReadAsync(cancellation).ConfigureAwait(false))
             {
-                Filter = "*.json",
-                IncludeSubdirectories = true,
-                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size
-            };
-            _watcher.Changed += OnFileChanged;
-            _watcher.Created += OnFileChanged;
-            _watcher.Renamed += OnFileChanged;
-            _watcher.EnableRaisingEvents = true;
+                var pending = ConfigFileChange.None;
+                while (true)
+                {
+                    while (_changes.Reader.TryRead(out var change)) pending |= change;
+                    await Task.Delay(300, cancellation).ConfigureAwait(false);
+                    if (!_changes.Reader.TryPeek(out _)) break;
+                }
+                for (var attempt = 0; ; attempt++)
+                {
+                    try
+                    {
+                        var external = pending;
+                        if (external.HasFlag(ConfigFileChange.Settings) && await ConfigFileRevisions.MatchesAsync(_settingsPath).ConfigureAwait(false))
+                            external &= ~ConfigFileChange.Settings;
+                        if (external.HasFlag(ConfigFileChange.UserConfig) && await ConfigFileRevisions.MatchesAsync(_configPath).ConfigureAwait(false))
+                            external &= ~ConfigFileChange.UserConfig;
+                        cancellation.ThrowIfCancellationRequested();
+                        if (external != ConfigFileChange.None) await _onChanged(external).ConfigureAwait(false);
+                        break;
+                    }
+                    catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException)
+                    {
+                        if (attempt == 2) { Report(error); break; }
+                        await Task.Delay(300, cancellation).ConfigureAwait(false);
+                    }
+                    catch (Exception error)
+                    {
+                        cancellation.ThrowIfCancellationRequested();
+                        Report(error);
+                        break;
+                    }
+                }
+            }
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
-        {
-        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
     }
 
-    private void OnFileChanged(object sender, FileSystemEventArgs e)
+    private void Report(Exception error)
     {
-        var name = e.Name;
-        if (string.IsNullOrEmpty(name)) return;
-        var isSettings = name.EndsWith("settings.json", StringComparison.OrdinalIgnoreCase);
-        var isUserConfig = name.EndsWith("user-config.json", StringComparison.OrdinalIgnoreCase);
-        if (!isSettings && !isUserConfig) return;
-
-        lock (SuppressLock)
-        {
-            if (DateTime.UtcNow < _suppressUntil) return;
-            var changeType = isSettings ? "settings" : "user-config";
-            if (string.IsNullOrEmpty(_pendingType)) _pendingType = changeType;
-            else if (_pendingType != changeType) _pendingType = "all";
-        }
-
-        // Trailing-edge debounce: reset timer on every event until 300ms of quiet
-        _debounceTimer.Change(300, Timeout.Infinite);
-    }
-
-    private void OnDebounceElapsed(object? state)
-    {
-        string type;
-        lock (SuppressLock)
-        {
-            type = _pendingType;
-            _pendingType = string.Empty;
-        }
-        if (!string.IsNullOrEmpty(type))
-        {
-            _dispatcher.TryEnqueue(() => _onChanged(type));
-        }
-    }
-
-    public void Stop()
-    {
-        _debounceTimer.Change(Timeout.Infinite, Timeout.Infinite);
-        if (_watcher is not null)
-        {
-            _watcher.EnableRaisingEvents = false;
-            _watcher.Dispose();
-            _watcher = null;
-        }
+        try { _onError(error); }
+        catch { }
     }
 
     public void Dispose()
     {
-        Stop();
-        _debounceTimer.Dispose();
+        if (_disposed) return;
+        _disposed = true;
+        foreach (var watcher in _watchers) watcher.Dispose();
+        _changes.Writer.TryComplete();
+        _stop.Cancel();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Dispose();
+        await _worker.ConfigureAwait(false);
+        _stop.Dispose();
     }
 }

@@ -141,7 +141,7 @@ internal sealed class ConfigurationSectionForm
                 if (string.IsNullOrWhiteSpace(final) || !dns["servers"]!.AsArray().OfType<JsonObject>().Any(server => server["tag"]?.ToString() == final))
                     throw new InvalidOperationException(Localization.Get("Schema_SelectDnsServer"));
             }
-            await ConfigurationFileService.ImportAsync(App.State.Settings, _document.ToJsonString(), _source);
+            await App.State.ImportConfigurationAsync(_document.ToJsonString(), _source);
             App.State.Settings.Configuration.DisabledRules = disabled;
             _source = await File.ReadAllTextAsync(ConfigurationFileService.FilePath);
             await App.State.SavePreferencesAsync(configurationCommitted: true);

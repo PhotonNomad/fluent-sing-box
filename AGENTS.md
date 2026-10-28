@@ -35,7 +35,7 @@ src/FluentSingBox.Client/         主程序 fluent sing-box.exe
 src/FluentSingBox.Configuration/  ConfigurationMerger：用户配置与生成配置的三方合并
 src/FluentSingBox.Updates/        更新协议、GitHub 凭据、安装包哈希与 Authenticode 校验（客户端和更新器共用）
 src/FluentSingBox.Updater/        FluentSingBox.Update.exe：等主程序退出、校验并调用安装包、重启主程序
-tests/FluentSingBox.Tests/        xUnit：配置合并、更新协议离线校验（不联网、不写用户目录、不启动核心）
+tests/FluentSingBox.Tests/        xUnit：配置合并、更新协议及可移植客户端逻辑（不联网、不写用户运行目录、不启动核心）
 installer/                        WiX 主题、安装器文案（.wxl）、许可页（License.rtf）；WiX 源由脚本生成
 tools/                            Build.ps1、Build-Installer.ps1、Setup-InstallerTools.ps1、Sync-LocalizationResources.ps1
 tools/ProcessName.Regression/     进程名匹配的手动回归小工具
@@ -47,8 +47,10 @@ tools/ProcessName.Regression/     进程名匹配的手动回归小工具
 
 | 位置 | 职责 |
 | --- | --- |
-| `Services/AppState.cs` | 加载/保存 `settings.json`；模型变更 400ms 防抖后生成并校验配置（`SaveAsync`）；`SavePreferencesAsync` 只存偏好、不碰配置 |
+| `Services/AppState.cs` | 活动模型的配置提交、外部重载和导入入口；400ms 防抖保存并校验（`SaveAsync`）；`SavePreferencesAsync` 只存偏好 |
 | `Services/ConfigurationFileService.cs` | 维护 `user-config.json`、备份与恢复、导入时用实际核心校验 |
+| `Services/ServerCatalog.cs`、`ServerTags.cs` | 在候选快照中协调节点身份、迁移引用与默认选择；统一输出标签和旧引用别名 |
+| `Services/ConfigFileWatcher.cs`、`ConfigFileRevisions.cs` | 精确监听当前两个配置路径、串行防抖回调；用成功写入的内容摘要识别回声，不设全局忽略窗口 |
 | `Services/SingBoxConfigBuilder.cs`、`ConfigurationCompiler.cs`、`ConfigurationParts.cs`、`ConfigurationComposer.cs` | 从模型生成配置，合并进用户配置，产出核心实际读取的 `config.json` |
 | `Services/ConfigurationSchema.cs`、`Views/SchemaObjectForm.cs`、`Views/ConfigurationSectionForm.cs` | 按核心的 JSON Schema 动态生成 DNS/路由/TUN 表单 |
 | `Services/SingBoxCoreService.cs` + `Core/` | 核心启停、需要 TUN 时经 UAC 启动提权宿主、命名管道 READY/STOP/ERROR 协议、Job Object |
@@ -78,6 +80,7 @@ tools/ProcessName.Regression/     进程名匹配的手动回归小工具
 
 - **配置不热加载**：页面修改会自动校验并保存到 `user-config.json` 和 `config.json`，但正在运行的核心要重启才生效。校验失败时保留上次有效文件，界面回滚并提示。
 - **保护用户配置**：生成内容通过 `ConfigurationMerger` 合并，不得用模板覆盖整个文件；保留用户自定义字段、规则顺序和标签引用。规则顺序决定分流结果。
+- **外部配置同步**：外部文件只读入候选快照，经 `AppState` 原位发布；解析失败或读取失败保留活动状态，不执行核心校验或自动回写。外部重载不覆盖未保存的本地编辑，也不替换活动集合或重放系统代理恢复。`FromUserConfig` 节点不重复存入设置，但其 ID 引用保留；源节点 ID 按区段和大小写敏感的标签生成，无标签时只能按区段内位置识别，分享链接导入则每次分配独立本地 ID。
 - **核心与系统代理相互独立**：系统代理只在本地 mixed 入站（标签 `system-http`）开启时可用；关闭入站会先恢复 Windows 代理。启动时只在核心已运行时恢复系统代理，避免 Windows 指向无人监听的端口。
 - **上次会话恢复**：只有用户手动开关核心或系统代理时才更新 `Resume*` 字段；退出、注销、更新交接不清除它们；核心崩溃或启动失败会清除。TUN 写在配置里，随核心一起恢复（会触发 UAC）。
 - **退出清理顺序**（`Shell/ShutdownCoordinator.cs`）：恢复系统代理 → 停止核心 → 保存偏好。顺序是清理契约的一部分，不要调整。
@@ -119,7 +122,7 @@ dotnet build src/FluentSingBox.Client -c Debug -p:Platform=x64      # 日常编�
 dotnet test tests/FluentSingBox.Tests -p:Platform=x64
 ```
 
-单元测试只覆盖 `FluentSingBox.Configuration` 和 `FluentSingBox.Updates`；客户端项目没有单元测试，界面改动要自己启动应用目视核对：
+单元测试覆盖配置合并、更新协议，以及通过链接源码测试的客户端节点解析/协调、标签引用、设置快照/持久化和文件监听。客户端离线测试不加载 WinUI，文件夹具只写独立临时目录；活动窗口和 AppState 集成仍需启动应用验证。界面改动按以下方式启动目视核对：
 
 ```powershell
 $env:FLUENTSINGBOX_DATA_DIR = '<临时目录>'

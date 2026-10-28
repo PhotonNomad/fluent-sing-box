@@ -63,13 +63,7 @@ public sealed class SingBoxConfigBuilder
 
         var outbounds = new JsonArray();
         var endpoints = new JsonArray();
-        var importedTags = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var server in settings.Servers.Where(server => !string.IsNullOrWhiteSpace(server.OutboundJson)))
-        {
-            var sourceTag = ParseOutbound(server)["tag"]?.GetValue<string>();
-            if (!string.IsNullOrWhiteSpace(sourceTag))
-                importedTags.TryAdd(sourceTag, ResolveTag(server.Id));
-        }
+        var importedTags = ServerTags.Aliases(settings.Servers, tagMap);
         foreach (var server in settings.Servers.OrderByDescending(server => server.Id == defaultServer?.Id))
         {
             (server.ConfigSection == "endpoints" ? endpoints : outbounds).Add(BuildServerOutbound(server, ResolveTag(server.Id), importedTags));
@@ -290,32 +284,16 @@ public sealed class SingBoxConfigBuilder
             var identity = string.Join("\n", selectors.Select(item => item.ToJsonString()));
             config["experimental"]!["cache_file"]!["cache_id"] = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(identity)));
         }
-        ConfigurationParts.ApplySections(config, options, settings.SystemProxyInboundEnabled);
+        ConfigurationParts.ApplySections(config, options, settings.SystemProxyInboundEnabled, importedTags);
         config["log"]!["output"] = logPath;
         if (useUpdatedRuleSets) BundledRuleSets.ApplyUpdates(config);
         return config.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
 
-    public static string OutboundTag(string serverId) => $"proxy-{serverId}";
+    public static string OutboundTag(string serverId) => ServerTags.LegacyTag(serverId);
 
     public static Dictionary<string, string> BuildServerTagMap(IEnumerable<ServerProfile> servers)
-    {
-        var result = new Dictionary<string, string>(StringComparer.Ordinal);
-        var usedTags = new HashSet<string>(StringComparer.Ordinal) { "direct", "block", "dns", "proxy" };
-        foreach (var server in servers)
-        {
-            var rawName = server.Name?.Trim();
-            var baseTag = string.IsNullOrWhiteSpace(rawName) ? OutboundTag(server.Id) : rawName;
-            var tag = baseTag;
-            var counter = 2;
-            while (!usedTags.Add(tag))
-            {
-                tag = $"{baseTag}-{counter++}";
-            }
-            result[server.Id] = tag;
-        }
-        return result;
-    }
+        => ServerTags.Build(servers);
 
     // The tag is an internal key or friendly unique name; the server name in settings is the display name.
     public static string OutboundDisplayName(string tag, IEnumerable<ServerProfile> servers)
@@ -448,8 +426,8 @@ public sealed class SingBoxConfigBuilder
     {
         if (string.IsNullOrWhiteSpace(server.OutboundJson)) return BuildVlessOutbound(server, tag);
         var outbound = ParseOutbound(server);
-        RemapTags(outbound, importedTags);
-        ApplyWebSocketServerNameFallback(outbound);
+        ServerTags.RemapReferences(outbound, importedTags);
+        ServerMetadataComparer.ApplyWebSocketServerNameFallback(outbound);
         var type = outbound["type"]?.GetValue<string>();
         if (string.IsNullOrWhiteSpace(type))
         {
@@ -459,28 +437,6 @@ public sealed class SingBoxConfigBuilder
         return outbound;
     }
 
-    private static void ApplyWebSocketServerNameFallback(JsonObject outbound)
-    {
-        if (outbound["tls"] is not JsonObject tls
-            || tls["enabled"] is not JsonValue enabledValue
-            || !enabledValue.TryGetValue<bool>(out var tlsEnabled)
-            || !tlsEnabled
-            || !string.IsNullOrWhiteSpace(tls["server_name"]?.GetValue<string>())
-            || outbound["transport"] is not JsonObject transport
-            || !string.Equals(transport["type"]?.GetValue<string>(), "ws", StringComparison.OrdinalIgnoreCase)
-            || transport["headers"] is not JsonObject headers)
-        {
-            return;
-        }
-
-        var hostNode = headers["Host"] ?? headers["host"];
-        if (hostNode is JsonValue hostValue
-            && hostValue.TryGetValue<string>(out var host)
-            && !string.IsNullOrWhiteSpace(host))
-        {
-            tls["server_name"] = host;
-        }
-    }
 
     private static JsonObject ParseOutbound(ServerProfile server)
     {
@@ -492,32 +448,6 @@ public sealed class SingBoxConfigBuilder
         catch (JsonException exception)
         {
             throw new InvalidOperationException(Localization.Format("SingBoxConfigBuilder_InvalidSingBoxJSONForServer01", server.Name, exception.Message));
-        }
-    }
-
-    private static void RemapTags(JsonNode? node, IReadOnlyDictionary<string, string> importedTags)
-    {
-        if (node is JsonObject obj)
-        {
-            foreach (var key in obj.Select(pair => pair.Key).ToArray())
-            {
-                if (key is "detour" or "default" && obj[key] is JsonValue value && value.TryGetValue<string>(out var text) && importedTags.TryGetValue(text, out var mapped))
-                    obj[key] = mapped;
-                else if (key == "outbounds" && obj[key] is JsonArray references)
-                {
-                    for (var i = 0; i < references.Count; i++)
-                        if (references[i] is JsonValue reference && reference.TryGetValue<string>(out var source) && importedTags.TryGetValue(source, out var target)) references[i] = target;
-                }
-                else
-                    RemapTags(obj[key], importedTags);
-            }
-        }
-        else if (node is JsonArray array)
-        {
-            for (var index = 0; index < array.Count; index++)
-            {
-                RemapTags(array[index], importedTags);
-            }
         }
     }
 

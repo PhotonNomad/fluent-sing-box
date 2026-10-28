@@ -52,6 +52,7 @@ public static class ServerMetadataComparer
         }
 
         var clone = (JsonObject)node.DeepClone();
+        ApplyWebSocketServerNameFallback(clone);
         clone.Remove("tag");
         return clone;
     }
@@ -64,14 +65,26 @@ public static class ServerMetadataComparer
         return JsonNode.DeepEquals(metaA, metaB);
     }
 
-    public static bool IsDuplicate(ServerProfile candidate, IEnumerable<ServerProfile> existing)
+    internal static void ApplyWebSocketServerNameFallback(JsonObject outbound)
     {
-        var candidateMeta = GetNormalizedConnectionMetadata(candidate);
-        if (candidateMeta is null) return false;
-        return existing.Any(item =>
+        if (outbound["tls"] is not JsonObject tls
+            || tls["enabled"] is not JsonValue enabledValue
+            || !enabledValue.TryGetValue<bool>(out var tlsEnabled)
+            || !tlsEnabled
+            || !string.IsNullOrWhiteSpace(tls["server_name"]?.GetValue<string>())
+            || outbound["transport"] is not JsonObject transport
+            || !string.Equals(transport["type"]?.GetValue<string>(), "ws", StringComparison.OrdinalIgnoreCase)
+            || transport["headers"] is not JsonObject headers)
         {
-            var existingMeta = GetNormalizedConnectionMetadata(item);
-            return existingMeta is not null && JsonNode.DeepEquals(candidateMeta, existingMeta);
-        });
+            return;
+        }
+
+        var hostNode = headers["Host"] ?? headers["host"];
+        if (hostNode is JsonValue hostValue
+            && hostValue.TryGetValue<string>(out var host)
+            && !string.IsNullOrWhiteSpace(host))
+        {
+            tls["server_name"] = host;
+        }
     }
 }

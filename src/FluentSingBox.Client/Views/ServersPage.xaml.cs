@@ -17,7 +17,15 @@ public sealed partial class ServersPage : Page
 
     private async Task RefreshViewAsync()
     {
-        await ConfigurationFileService.SynchronizeWithUserConfigAsync(App.State.Settings);
+        try { await App.State.RefreshExternalFilesAsync(); }
+        catch (Exception error)
+        {
+            OperationMessage.Message = error is JsonException
+                ? Localization.Get("ConfigurationFileService_TheConfigurationContainsInvalidJSON")
+                : LogReader.Redact(error.Message, App.State.Settings);
+            OperationMessage.Severity = InfoBarSeverity.Error;
+            OperationMessage.IsOpen = true;
+        }
         RefreshView();
     }
 

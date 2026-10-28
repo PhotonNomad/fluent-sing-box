@@ -48,7 +48,11 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
 
     private void Applications_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs args) => UpdateEmptyApplicationsMessage();
     private void Servers_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs args) => LoadDefaultServer();
-    public void RefreshServers() => LoadDefaultServer();
+    public void RefreshServers()
+    {
+        LoadDefaultServer();
+        UpdateEmptyApplicationsMessage();
+    }
 
     private void ProxyPage_Unloaded(object sender, RoutedEventArgs args)
     {
@@ -67,13 +71,19 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
     private void LoadDefaultServer()
     {
         var settings = App.State.Settings;
-        DefaultServerComboBox.ItemsSource = new[] { new ServerProfile { Id = "direct", Name = Localization.Get(settings.Servers.Count == 0 ? "DefaultOutlet_DirectEmpty" : "DefaultOutlet_Direct") } }.Concat(settings.Servers).ToArray();
-        DefaultServerComboBox.SelectedValue = settings.DefaultServerId ?? "direct";
+        var wasLoading = _loading;
+        _loading = true;
+        try
+        {
+            DefaultServerComboBox.ItemsSource = new[] { new ServerProfile { Id = "direct", Name = Localization.Get(settings.Servers.Count == 0 ? "DefaultOutlet_DirectEmpty" : "DefaultOutlet_Direct") } }.Concat(settings.Servers).ToArray();
+            DefaultServerComboBox.SelectedValue = settings.DefaultServerId ?? "direct";
+        }
+        finally { _loading = wasLoading; }
     }
 
     private async void DefaultServer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_loading || DefaultServerComboBox.SelectedItem is not ServerProfile server
+        if (_loading || App.State.IsRefreshing || DefaultServerComboBox.SelectedItem is not ServerProfile server
             || App.State.Settings.DefaultServerId == server.Id) return;
         App.State.SetDefaultServer(server);
         try { await App.ProxyCoordinator.ApplyConfigurationChangesAsync(); }
@@ -123,7 +133,7 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
 
     private async void ApplicationServer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_loading || sender is not ComboBox { DataContext: ApplicationProxyProfile profile } combo
+        if (_loading || App.State.IsRefreshing || sender is not ComboBox { DataContext: ApplicationProxyProfile profile } combo
             || !combo.IsLoaded || combo.SelectedValue is not string serverId || serverId == profile.ServerId) return;
         var previous = profile.ServerId;
         profile.ServerId = serverId;
@@ -138,7 +148,7 @@ public sealed partial class ProxyPage : Page, IPendingConfigurationPage
 
     private async void ApplicationProxySwitch_Toggled(object sender, RoutedEventArgs e)
     {
-        if (_loading || _changingApplicationProxy || sender is not ToggleSwitch toggle
+        if (_loading || App.State.IsRefreshing || _changingApplicationProxy || sender is not ToggleSwitch toggle
             || toggle.DataContext is not ApplicationProxyProfile profile
             || toggle.IsOn == profile.IsEnabled)
         {
