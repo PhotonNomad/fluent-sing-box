@@ -41,5 +41,21 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(2, settings.Servers.Count);
     }
 
+    [Fact]
+    public async Task SourceNodesStayPersistedWhileTheirNameIsNotTheSourceTag()
+    {
+        var settings = new AppSettingsData
+        {
+            Servers =
+            [
+                new() { Id = "migrated", Name = "Alpha", FromUserConfig = true, OutboundJson = """{"type":"socks","tag":"proxy-old"}""" },
+                new() { Id = "synced", Name = "Beta", FromUserConfig = true, OutboundJson = """{"type":"socks","tag":"Beta"}""" }
+            ]
+        };
+        await SettingsStore.SaveAsync(FilePath, settings);
+        var saved = await SettingsStore.ReadAsync(FilePath);
+        Assert.Equal("Alpha", Assert.Single(saved.Servers).Name);
+    }
+
     public void Dispose() => Directory.Delete(_directory, recursive: true);
 }

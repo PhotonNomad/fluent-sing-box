@@ -45,10 +45,13 @@ public static class SettingsStore
     public static async Task SaveAsync(string path, AppSettingsData settings)
     {
         var temporary = path + ".tmp";
-        // Do not dump user-config.json servers into settings.json:
+        // Do not dump user-config.json servers into settings.json, unless the display name is not
+        // yet the source tag (a migrated or renamed node): until a save rewrites the tag, this file
+        // is the only place that name exists.
         var copy = SettingsCheckpoint.Snapshot(settings);
         copy.Servers = new System.Collections.ObjectModel.ObservableCollection<ServerProfile>(
-            copy.Servers.Where(server => !server.FromUserConfig));
+            copy.Servers.Where(server => !server.FromUserConfig
+                || ServerTags.SourceTag(server) is { Length: > 0 } tag && !string.IsNullOrWhiteSpace(server.Name) && server.Name != tag));
         var bytes = JsonSerializer.SerializeToUtf8Bytes(copy, Options);
         await using (var output = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true))
         {

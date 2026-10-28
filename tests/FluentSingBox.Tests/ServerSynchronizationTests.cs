@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using FluentSingBox.Client.Services;
 
 namespace FluentSingBox.Tests;
@@ -128,6 +129,86 @@ public sealed class ServerSynchronizationTests
         Assert.Equal(source[1].Id, settings.RouteFinalServerId);
         Assert.Equal(source[1].Id, settings.Applications[0].ServerId);
         Assert.Equal(source[1].Id, settings.RoutingRules[0].ServerId);
+    }
+
+    [Fact]
+    public void ReleasedProxyIdTagsKeepNamesReferencesAndGroupMembers()
+    {
+        // Released versions kept profiles in settings.json and wrote them to user-config.json as proxy-<id>.
+        var alpha = new FluentSingBox.Client.Models.ServerProfile
+        {
+            Id = "a1", Name = "Alpha",
+            OutboundJson = """{"type":"socks","tag":"Alpha","server":"127.0.0.1","server_port":1080,"username":"one"}"""
+        };
+        var beta = new FluentSingBox.Client.Models.ServerProfile
+        {
+            Id = "b2", Name = "Beta",
+            OutboundJson = """{"type":"socks","server":"127.0.0.1","server_port":1080,"username":"one"}"""
+        };
+        var group = new FluentSingBox.Client.Models.ServerProfile
+        {
+            Id = "g3", Name = "Group",
+            OutboundJson = """{"type":"selector","outbounds":["direct","proxy-a1"],"default":"proxy-a1"}"""
+        };
+        var settings = new FluentSingBox.Client.Models.AppSettingsData
+        {
+            Servers = [alpha, beta, group], DefaultServerId = "a1",
+            Applications = [new() { ServerId = "b2" }]
+        };
+        var released = ServerLinkImporter.ExtractProxyServers("""
+            {"outbounds":[
+              {"type":"socks","tag":"proxy-a1","server":"127.0.0.1","server_port":1080,"username":"one"},
+              {"type":"socks","tag":"proxy-b2","server":"127.0.0.1","server_port":1080,"username":"one"},
+              {"type":"selector","tag":"proxy-g3","outbounds":["direct","proxy-a1"],"default":"proxy-a1"}
+            ]}
+            """);
+
+        ServerCatalog.Synchronize(settings, released);
+
+        Assert.Equal(new[] { "Alpha", "Beta", "Group" }, settings.Servers.Select(server => server.Name));
+        Assert.Equal(released[0].Id, settings.DefaultServerId);
+        Assert.Equal(released[1].Id, settings.Applications[0].ServerId);
+        var tags = ServerTags.Build(settings.Servers);
+        var members = JsonNode.Parse(group.OutboundJson)!["outbounds"]!.AsArray().Select(member => member!.ToString());
+        Assert.Equal(new[] { "direct", tags[alpha.Id] }, members);
+
+        // Page loads and window activation synchronize again before any save rewrites the tags.
+        ServerCatalog.Synchronize(settings, ServerLinkImporter.ExtractProxyServers("""
+            {"outbounds":[
+              {"type":"socks","tag":"proxy-a1","server":"127.0.0.1","server_port":1080,"username":"one"},
+              {"type":"socks","tag":"proxy-b2","server":"127.0.0.1","server_port":1080,"username":"one"}
+            ]}
+            """));
+        Assert.Equal(new[] { "Alpha", "Beta", "Group" }, settings.Servers.Select(server => server.Name));
+
+        // The next save writes display names as tags; the names, identities and group members must hold.
+        var saved = new JsonArray();
+        foreach (var server in new[] { alpha, beta })
+        {
+            var node = JsonNode.Parse(server.OutboundJson)!;
+            node["tag"] = tags[server.Id];
+            saved.Add(node);
+        }
+        ServerCatalog.Synchronize(settings, ServerLinkImporter.ExtractProxyServers(new JsonObject { ["outbounds"] = saved }.ToJsonString()));
+
+        Assert.Equal(new[] { "Alpha", "Beta", "Group" }, settings.Servers.Select(server => server.Name));
+        tags = ServerTags.Build(settings.Servers);
+        Assert.Equal(tags[alpha.Id], JsonNode.Parse(group.OutboundJson)!["default"]!.ToString());
+        Assert.All(JsonNode.Parse(group.OutboundJson)!["outbounds"]!.AsArray().Select(member => member!.ToString()),
+            member => Assert.True(member == "direct" || tags.ContainsValue(member)));
+    }
+
+    [Fact]
+    public void AnExternalTagRenameRenamesTheSourceNode()
+    {
+        var settings = new FluentSingBox.Client.Models.AppSettingsData();
+        ServerCatalog.Synchronize(settings, ServerLinkImporter.ExtractProxyServers("""
+            {"outbounds":[{"type":"socks","tag":"Old","server":"127.0.0.1","server_port":1080}]}
+            """));
+        ServerCatalog.Synchronize(settings, ServerLinkImporter.ExtractProxyServers("""
+            {"outbounds":[{"type":"socks","tag":"New","server":"127.0.0.1","server_port":1080}]}
+            """));
+        Assert.Equal("New", Assert.Single(settings.Servers).Name);
     }
 
     [Fact]
