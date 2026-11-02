@@ -13,6 +13,7 @@
     "name": { "type": "string", "minLength": 1 },
     "nodes": { "type": "array", "items": { "$ref": "#/$defs/node" } },
     "groups": { "type": "array", "items": { "$ref": "#/$defs/group" } },
+    "subscriptions": { "type": "array", "items": { "$ref": "#/$defs/subscription" } },
     "ruleSets": { "type": "array", "items": { "$ref": "#/$defs/ruleSet" } },
     "rules": {
       "description": "Matched top to bottom.",
@@ -455,6 +456,21 @@
       "additionalProperties": false,
       "properties": {
         "logLevel": { "enum": ["trace", "debug", "info", "warn", "error"] }
+      }
+    }
+,
+
+    "subscription": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "url"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "url": { "$ref": "#/$defs/secret" },
+        "lastUpdated": { "type": "string", "format": "date-time" },
+        "groupId": { "$ref": "#/$defs/id" },
+        "nodeIds": { "type": "array", "items": { "$ref": "#/$defs/id" } }
       }
     }
   }

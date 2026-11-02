@@ -2549,4 +2549,46 @@ Windows: {0}
   <data name="Tun_Ipv6Hint.Message" xml:space="preserve">
     <value>This network has no IPv6, so the adapter's IPv6 addresses are left out. They apply again on a network with IPv6.</value>
   </data>
+  <data name="ProfileLocation_Subscription" xml:space="preserve">
+    <value>subscription '{0}'</value>
+  </data>
+  <data name="Subscription_HttpError" xml:space="preserve">
+    <value>HTTP request failed ({0}: {1})</value>
+  </data>
+  <data name="Subscription_DefaultName" xml:space="preserve">
+    <value>Subscription</value>
+  </data>
+  <data name="Servers_AddSubscription.Content" xml:space="preserve">
+    <value>Add Subscription</value>
+  </data>
+  <data name="Servers_AddSubscription.AutomationProperties.Name" xml:space="preserve">
+    <value>Add subscription link</value>
+  </data>
+  <data name="Subscriptions_Section.Header" xml:space="preserve">
+    <value>Subscriptions</value>
+  </data>
+  <data name="Subscription_Url" xml:space="preserve">
+    <value>Subscription link</value>
+  </data>
+  <data name="Subscription_Name" xml:space="preserve">
+    <value>Name (optional)</value>
+  </data>
+  <data name="Subscription_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Subscription_Refreshed" xml:space="preserve">
+    <value>Updated {0} servers from '{1}'.</value>
+  </data>
+  <data name="Subscription_Added" xml:space="preserve">
+    <value>Added subscription '{0}' with {1} servers.</value>
+  </data>
+  <data name="Subscription_LastUpdated" xml:space="preserve">
+    <value>Updated {0}</value>
+  </data>
+  <data name="Subscription_ServerCount" xml:space="preserve">
+    <value>{0} servers</value>
+  </data>
+  <data name="Subscription_DialogTitle" xml:space="preserve">
+    <value>Add Subscription</value>
+  </data>
 </root>

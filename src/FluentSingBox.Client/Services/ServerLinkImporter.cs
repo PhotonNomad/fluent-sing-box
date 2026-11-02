@@ -71,7 +71,12 @@ public static class ServerLinkImporter
             throw new FormatException(Localization.Get("ServerLinkImporter_EveryOutboundMustContainATypeField"));
         }
 
-        return nodes.Select(node => CreateProfile((JsonObject)node.DeepClone(), null)).ToArray();
+        var filtered = nodes.Where(node =>
+        {
+            var type = node["type"]?.GetValue<string>();
+            return !string.IsNullOrWhiteSpace(type) && !NonProxyOutboundTypes.Contains(type);
+        }).ToArray();
+        return filtered.Select(node => CreateProfile((JsonObject)node.DeepClone(), null)).ToArray();
     }
 
     private static ImportedOutbound ParseUri(string link)

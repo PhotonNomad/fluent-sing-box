@@ -53,6 +53,7 @@ public static class ProfileValidator
         var dnsServerIds = CheckIds(profile.Dns.Servers.Select(server => server.Id), "dns.servers", Report);
         CheckIds(profile.Rules.Select(rule => rule.Id), "rules", Report);
         CheckIds(profile.Dns.Rules.Select(rule => rule.Id), "dns.rules", Report);
+        CheckIds(profile.Subscriptions.Select(subscription => subscription.Id), "subscriptions", Report);
 
         void CheckTarget(Target? target, string path)
         {
@@ -158,6 +159,20 @@ public static class ProfileValidator
             if (!Uri.TryCreate(remote.Url, UriKind.Absolute, out var url) || url.Scheme is not ("http" or "https"))
                 Report($"ruleSets[{i}].source.url", ProfileError.InvalidUrl);
             CheckVia(remote.Via, $"ruleSets[{i}].source.via");
+        }
+
+        for (var i = 0; i < profile.Subscriptions.Count; i++)
+        {
+            var subscription = profile.Subscriptions[i];
+            if (!Uri.TryCreate(subscription.Url, UriKind.Absolute, out var url) || url.Scheme is not ("http" or "https"))
+                Report($"subscriptions[{i}].url", ProfileError.InvalidUrl);
+            if (subscription.GroupId is { } groupId && !groupIds.Contains(groupId))
+                Report($"subscriptions[{i}].groupId", ProfileError.UnknownGroup);
+            for (var n = 0; n < subscription.NodeIds.Count; n++)
+            {
+                if (!nodeIds.Contains(subscription.NodeIds[n]))
+                    Report($"subscriptions[{i}].nodeIds[{n}]", ProfileError.UnknownNode);
+            }
         }
 
         for (var i = 0; i < profile.Dns.Servers.Count; i++)

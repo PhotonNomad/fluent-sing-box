@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <DefineConstants>$(DefineConstants);TESTS</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
@@ -28,6 +29,7 @@
     <Compile Include="../../src/FluentSingBox.Client/Services/ConfigFileWatcher.cs" Link="Client/ConfigFileWatcher.cs" />
     <Compile Include="../../src/FluentSingBox.Client/Services/ConfigFileRevisions.cs" Link="Client/ConfigFileRevisions.cs" />
     <Compile Include="../../src/FluentSingBox.Client/Services/SettingsStore.cs" Link="Client/SettingsStore.cs" />
+    <Compile Include="../../src/FluentSingBox.Client/Services/SubscriptionService.cs" Link="Client/SubscriptionService.cs" />
     <EmbeddedResource Include="../../src/FluentSingBox.Client/Resources/Strings.resx" Link="Client/Strings.resx" LogicalName="FluentSingBox.Client.Resources.Strings.resources" />
   </ItemGroup>
 </Project>

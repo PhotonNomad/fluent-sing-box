@@ -872,4 +872,13 @@
   <data name="Tun_Ipv6Hint.Message" xml:space="preserve">
     <value>本机网络没有 IPv6，TUN 的 IPv6 地址不会生效；连到有 IPv6 的网络后自动恢复。</value>
   </data>
+  <data name="Servers_AddSubscription.Content" xml:space="preserve">
+    <value>添加订阅</value>
+  </data>
+  <data name="Servers_AddSubscription.AutomationProperties.Name" xml:space="preserve">
+    <value>添加订阅链接</value>
+  </data>
+  <data name="Subscriptions_Section.Header" xml:space="preserve">
+    <value>订阅</value>
+  </data>
 </root>

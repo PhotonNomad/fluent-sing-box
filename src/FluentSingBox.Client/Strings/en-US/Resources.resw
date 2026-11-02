@@ -872,4 +872,13 @@
   <data name="Tun_Ipv6Hint.Message" xml:space="preserve">
     <value>This network has no IPv6, so the adapter's IPv6 addresses are left out. They apply again on a network with IPv6.</value>
   </data>
+  <data name="Servers_AddSubscription.Content" xml:space="preserve">
+    <value>Add Subscription</value>
+  </data>
+  <data name="Servers_AddSubscription.AutomationProperties.Name" xml:space="preserve">
+    <value>Add subscription link</value>
+  </data>
+  <data name="Subscriptions_Section.Header" xml:space="preserve">
+    <value>Subscriptions</value>
+  </data>
 </root>
