@@ -30,6 +30,7 @@
     <Compile Include="../../src/FluentSingBox.Client/Services/ConfigFileRevisions.cs" Link="Client/ConfigFileRevisions.cs" />
     <Compile Include="../../src/FluentSingBox.Client/Services/SettingsStore.cs" Link="Client/SettingsStore.cs" />
     <Compile Include="../../src/FluentSingBox.Client/Services/SubscriptionService.cs" Link="Client/SubscriptionService.cs" />
+    <Compile Include="../../src/FluentSingBox.Client/Services/NodeProbeService.cs" Link="Client/NodeProbeService.cs" />
     <EmbeddedResource Include="../../src/FluentSingBox.Client/Resources/Strings.resx" Link="Client/Strings.resx" LogicalName="FluentSingBox.Client.Resources.Strings.resources" />
   </ItemGroup>
 </Project>

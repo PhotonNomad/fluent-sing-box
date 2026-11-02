@@ -14,7 +14,8 @@ public static class ProfileSecrets
 
         void Visit(object value)
         {
-            if (value is string || value.GetType().IsPrimitive || value.GetType().IsEnum) return;
+            // Scalar structs such as DateTimeOffset lead back to themselves through DateTime.Date.
+            if (value is string || value.GetType().IsValueType) return;
             if (value is IEnumerable items)
             {
                 foreach (var item in items) if (item is not null) Visit(item);

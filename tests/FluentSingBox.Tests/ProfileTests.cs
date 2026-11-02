@@ -96,6 +96,26 @@ public class ProfileTests
         Assert.Contains(new ProfileDiagnostic("groups[1]", ProfileError.GroupCycle), errors);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CollectSecretsTreatsSubscriptionTimestampAsScalar(bool hasTimestamp)
+    {
+        var profile = WithNodes();
+        const string url = "https://subscription.example/sub?token=fixture-token";
+        profile.Subscriptions.Add(new Subscription
+        {
+            Id = "sub", Name = "Subscription", Url = url,
+            LastUpdated = hasTimestamp ? new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.FromHours(8)) : null,
+            NodeIds = ["a", "b"], GroupId = "g"
+        });
+
+        var secrets = ProfileSecrets.Collect(profile);
+
+        Assert.Equal(new[] { "11111111-1111-1111-1111-111111111111", "pw", url }.Order(),
+            secrets.Order());
+    }
+
     [Fact]
     public void ExportWithoutSecretsBlanksCredentialsOnly()
     {
