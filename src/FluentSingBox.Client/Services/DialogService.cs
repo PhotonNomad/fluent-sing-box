@@ -1,3 +1,4 @@
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
 namespace FluentSingBox.Client.Services;
@@ -16,6 +17,8 @@ public static class DialogService
                 try { dialog.XamlRoot = await window.WaitForXamlRootAsync(); }
                 catch (OperationCanceledException) { return ContentDialogResult.None; }
             }
+            // Popup content does not inherit the window content's requested theme.
+            if (dialog.XamlRoot.Content is FrameworkElement root) dialog.RequestedTheme = root.ActualTheme;
             return await dialog.ShowAsync();
         }
         finally { Gate.Release(); }
