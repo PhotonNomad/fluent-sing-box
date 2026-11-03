@@ -1659,7 +1659,7 @@ Windows: {0}
     <value>Domain resolver DNS</value>
   </data>
   <data name="NodeEditor_DomainResolver_Auto" xml:space="preserve">
-    <value>Auto (recommended)</value>
+    <value>Inherit groups / global automatic</value>
   </data>
   <data name="NodeEditor_Cipher" xml:space="preserve">
     <value>Encryption</value>
@@ -2580,7 +2580,7 @@ Windows: {0}
     <value>subscription '{0}'</value>
   </data>
   <data name="Subscription_HttpError" xml:space="preserve">
-    <value>HTTP request failed ({0}: {1})</value>
+    <value>HTTP request failed ({0}).</value>
   </data>
   <data name="Subscription_DefaultName" xml:space="preserve">
     <value>Subscription</value>
@@ -2617,5 +2617,47 @@ Windows: {0}
   </data>
   <data name="Subscription_DialogTitle" xml:space="preserve">
     <value>Add Subscription</value>
+  </data>
+  <data name="Subscription_TooLarge" xml:space="preserve">
+    <value>Subscription exceeds the 8 MiB limit.</value>
+  </data>
+  <data name="Subscription_DownloadFailed" xml:space="preserve">
+    <value>Could not download the subscription. Check the URL and network.</value>
+  </data>
+  <data name="Profiles_ChangedDuringOperation" xml:space="preserve">
+    <value>The profile or subscription changed. Please try again.</value>
+  </data>
+  <data name="Dns_CacheClearPending" xml:space="preserve">
+    <value>Windows DNS cache flushed. Core cache will be cleared before the next start.</value>
+  </data>
+  <data name="Dns_SystemCacheClearFailed" xml:space="preserve">
+    <value>Could not flush the Windows DNS cache.</value>
+  </data>
+  <data name="Groups_DomainResolver" xml:space="preserve">
+    <value>Member node resolver</value>
+  </data>
+  <data name="Groups_DomainResolver_Auto" xml:space="preserve">
+    <value>Inherit parent groups / global automatic</value>
+  </data>
+  <data name="Groups_DomainResolver_Hint" xml:space="preserve">
+    <value>Defaults for member nodes; individual node settings take priority, and shared nodes must have consistent resolvers.</value>
+  </data>
+  <data name="Groups_DomainResolver_Summary" xml:space="preserve">
+    <value>Member resolver: {0}</value>
+  </data>
+  <data name="DomainResolver_GlobalAuto" xml:space="preserve">
+    <value>Resolver: global automatic</value>
+  </data>
+  <data name="DomainResolver_Explicit" xml:space="preserve">
+    <value>Resolver: {0} (node setting)</value>
+  </data>
+  <data name="DomainResolver_Inherited" xml:space="preserve">
+    <value>Resolver: {1} (inherited from {0})</value>
+  </data>
+  <data name="DomainResolver_ConflictSources" xml:space="preserve">
+    <value>Resolver conflict: {0}</value>
+  </data>
+  <data name="ProfileError_ConflictingDomainResolvers" xml:space="preserve">
+    <value>Groups specify conflicting resolvers for this node. Align the groups or choose a resolver for the node.</value>
   </data>
 </root>

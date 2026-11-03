@@ -20,15 +20,32 @@ public static class SubscriptionService
             throw new FormatException(Localization.Get("ProfileError_InvalidUrl"));
         }
 
+        const int maximumBytes = 8 * 1024 * 1024;
         var http = client ?? DefaultHttpClient.Value;
-        using var response = await http.GetAsync(uri, cancellationToken);
-        if (!response.IsSuccessStatusCode)
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(15));
+        try
         {
-            throw new InvalidOperationException(Localization.Format("Subscription_HttpError", (int)response.StatusCode, response.ReasonPhrase ?? ""));
-        }
+            using var response = await http.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, timeout.Token).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+                throw new InvalidOperationException(Localization.Format("Subscription_HttpError", (int)response.StatusCode));
+            if (response.Content.Headers.ContentLength > maximumBytes)
+                throw new InvalidOperationException(Localization.Get("Subscription_TooLarge"));
 
-        var content = await response.Content.ReadAsStringAsync(cancellationToken);
-        return ParseNodes(content);
+            try { await response.Content.LoadIntoBufferAsync(maximumBytes, timeout.Token).ConfigureAwait(false); }
+            catch (HttpRequestException error) when (error.HttpRequestError == HttpRequestError.ConfigurationLimitExceeded)
+            {
+                throw new InvalidOperationException(Localization.Get("Subscription_TooLarge"));
+            }
+            var content = await response.Content.ReadAsStringAsync(timeout.Token).ConfigureAwait(false);
+            // JSON and link decoding can be substantial for a large subscription; never do it on the UI thread.
+            return await Task.Run(() => ParseNodes(content), timeout.Token).ConfigureAwait(false);
+        }
+        catch (HttpRequestException)
+        {
+            // Transport errors may contain the credential-bearing URL, including on the first import.
+            throw new InvalidOperationException(Localization.Get("Subscription_DownloadFailed"));
+        }
     }
 
     public static IReadOnlyList<Node> ParseNodes(string content)
@@ -108,9 +125,38 @@ public static class SubscriptionService
         }
 
         var targetSub = profile.Subscriptions.FirstOrDefault(s => s.Id == subscriptionId)
-            ?? throw new InvalidOperationException("Subscription not found.");
+            ?? throw new InvalidOperationException(Localization.Get("Profiles_ChangedDuringOperation"));
 
         var oldNodeIds = new HashSet<string>(targetSub.NodeIds, StringComparer.Ordinal);
+        // Provider payloads have no stable IDs. Match only unambiguous endpoints (and names
+        // when several accounts share an endpoint), so references and local DNS choices survive.
+        var replacements = ProfileJson.Deserialize(ProfileJson.Serialize(new Profile
+        {
+            Id = "refresh", Name = "", Nodes = newNodes.ToList()
+        })).Nodes;
+        static (Type Protocol, string Server, int Port) Endpoint(Node node) =>
+            (node.GetType(), node.Server.ToLowerInvariant(), node.Port);
+        var oldByEndpoint = profile.Nodes.Where(node => oldNodeIds.Contains(node.Id)).GroupBy(Endpoint).ToDictionary(g => g.Key, g => g.ToArray());
+        foreach (var batch in replacements.GroupBy(Endpoint))
+        {
+            if (!oldByEndpoint.TryGetValue(batch.Key, out var previous)) continue;
+            var incoming = batch.ToArray();
+            var previousNames = previous.ToLookup(node => node.Name, StringComparer.Ordinal);
+            var incomingNames = incoming.ToLookup(node => node.Name, StringComparer.Ordinal);
+            foreach (var node in incoming)
+            {
+                var matches = previousNames[node.Name];
+                Node? old = null;
+                if (previous.Length == 1 && incoming.Length == 1) old = previous[0];
+                else if (matches.Count() == 1 && incomingNames[node.Name].Count() == 1) old = matches.First();
+                if (old is null) continue;
+                node.Id = old.Id;
+                node.DomainResolver = old.DomainResolver;
+            }
+        }
+        newNodes = replacements;
+        var replaceDefault = targetSub.GroupId is null && profile.DefaultServer is { Kind: TargetKind.Node } current
+            && oldNodeIds.Contains(current.Id!) && !newNodes.Any(node => node.Id == current.Id);
         profile.Nodes.RemoveAll(node => oldNodeIds.Contains(node.Id));
         profile.Nodes.AddRange(newNodes);
 
@@ -145,6 +191,8 @@ public static class SubscriptionService
             });
             targetSub.GroupId = newGroupId;
         }
+        if (replaceDefault)
+            profile.DefaultServer = targetSub.GroupId is { } defaultGroup ? Target.Group(defaultGroup) : Target.Node(newNodes[0].Id);
     }
 
     public static void ApplyDelete(Profile profile, string subscriptionId)
@@ -177,10 +225,12 @@ public static class SubscriptionService
         HttpClient? client = null,
         CancellationToken cancellationToken = default)
     {
+        var profileId = appState.Profile.Id;
         var nodes = await FetchNodesAsync(url, client, cancellationToken);
         Subscription? created = null;
-        await appState.UpdateAsync(profile =>
+        await appState.UpdateAsync(profileId, profile =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             created = ApplyAdd(profile, url, name, nodes);
         });
         return created!;
@@ -192,20 +242,24 @@ public static class SubscriptionService
         HttpClient? client = null,
         CancellationToken cancellationToken = default)
     {
+        var profileId = appState.Profile.Id;
         var existing = appState.Profile.Subscriptions.FirstOrDefault(s => s.Id == subscriptionId)
-            ?? throw new InvalidOperationException("Subscription not found.");
+            ?? throw new InvalidOperationException(Localization.Get("Profiles_ChangedDuringOperation"));
 
         var newNodes = await FetchNodesAsync(existing.Url, client, cancellationToken);
 
-        await appState.UpdateAsync(profile =>
+        await appState.UpdateAsync(profileId, profile =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (profile.Subscriptions.FirstOrDefault(sub => sub.Id == subscriptionId)?.Url != existing.Url)
+                throw new InvalidOperationException(Localization.Get("Profiles_ChangedDuringOperation"));
             ApplyRefresh(profile, subscriptionId, newNodes);
         });
     }
 
-    public static async Task DeleteSubscriptionAsync(AppState appState, string subscriptionId)
+    public static async Task DeleteSubscriptionAsync(AppState appState, string subscriptionId, string? profileId = null)
     {
-        await appState.UpdateAsync(profile =>
+        await appState.UpdateAsync(profileId ?? appState.Profile.Id, profile =>
         {
             ApplyDelete(profile, subscriptionId);
         });

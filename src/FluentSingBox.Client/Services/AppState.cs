@@ -66,11 +66,21 @@ public sealed class AppState
 
     public static Profile Clone(Profile profile) => ProfileJson.Deserialize(ProfileJson.Serialize(profile));
 
-    public Task UpdateAsync(Action<Profile> edit)
+    public Task UpdateAsync(Action<Profile> edit) => UpdateAsync(Profile.Id, edit);
+
+    internal async Task UpdateAsync(string profileId, Action<Profile> edit)
     {
-        var candidate = Clone(Profile);
-        edit(candidate);
-        return CommitAsync(candidate);
+        await _gate.WaitAsync();
+        try
+        {
+            if (profileId != Profile.Id)
+                throw new InvalidOperationException(Localization.Get("Profiles_ChangedDuringOperation"));
+            // Clone only after earlier commits finish, otherwise queued edits overwrite each other.
+            var candidate = Clone(Profile);
+            edit(candidate);
+            await CommitGuardedAsync(candidate);
+        }
+        finally { _gate.Release(); }
     }
 
     // Throws with a user-facing message when the candidate is rejected.
@@ -80,11 +90,16 @@ public sealed class AppState
         try
         {
             if (candidate.Id != Profile.Id) throw new InvalidOperationException("A commit must target the active profile.");
-            await ValidateAsync(candidate);
-            Write(candidate);
-            await PublishAsync(candidate);
+            await CommitGuardedAsync(candidate);
         }
         finally { _gate.Release(); }
+    }
+
+    private async Task CommitGuardedAsync(Profile candidate)
+    {
+        await ValidateAsync(candidate);
+        Write(candidate);
+        await PublishAsync(candidate);
     }
 
     // The same checks as starting the core, without starting it.

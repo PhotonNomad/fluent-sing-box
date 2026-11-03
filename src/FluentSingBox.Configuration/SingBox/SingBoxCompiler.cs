@@ -53,6 +53,7 @@ public static class SingBoxCompiler
         private readonly Dictionary<string, string> _dnsTags = new(StringComparer.Ordinal);
         private readonly HashSet<string> _usedRuleSets = new(StringComparer.Ordinal);
         private readonly HashSet<string> _outboundTags = new(StringComparer.Ordinal) { "direct" };
+        private readonly DomainResolverPolicy _resolverPolicy = new(profile.Groups);
         private bool _needsBootstrap;
 
         public JsonObject Build()
@@ -149,8 +150,8 @@ public static class SingBoxCompiler
         private JsonObject Outbound(Node node)
         {
             var outbound = new JsonObject { ["type"] = "", ["tag"] = _nodeTags[node.Id], ["server"] = node.Server, ["server_port"] = node.Port };
-            if (!string.IsNullOrEmpty(node.DomainResolver) && _dnsTags.TryGetValue(node.DomainResolver, out var resolverTag))
-                outbound["domain_resolver"] = resolverTag;
+            if (_resolverPolicy.ForNode(node.Id, node.DomainResolver).ServerId is { } resolverId)
+                outbound["domain_resolver"] = _dnsTags[resolverId];
             Transport? transport = null;
             TlsSettings? tls = null;
             MultiplexSettings? multiplex = null;

@@ -100,11 +100,17 @@ public sealed partial class DnsPage : Page
 
     private async void ClearCache_Click(object sender, RoutedEventArgs e)
     {
-        await GuardAsync(async () =>
+        ClearCacheButton.IsEnabled = false;
+        try
         {
-            await DnsCachePolicy.ClearNowAsync();
-            ShowStatus(Localization.Get("Dns_CacheClearedSuccess"), InfoBarSeverity.Success);
-        });
+            await GuardAsync(async () =>
+            {
+                var cleared = await App.CoreService.ClearDnsCacheAsync();
+                ShowStatus(Localization.Get(cleared ? "Dns_CacheClearedSuccess" : "Dns_CacheClearPending"),
+                    cleared ? InfoBarSeverity.Success : InfoBarSeverity.Informational);
+            });
+        }
+        finally { ClearCacheButton.IsEnabled = true; }
     }
 
     private async void AddServer_Click(object sender, RoutedEventArgs e) => await GuardAsync(() => EditServerAsync(null));

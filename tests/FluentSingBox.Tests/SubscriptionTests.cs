@@ -228,4 +228,180 @@ public class SubscriptionTests
         Assert.Empty(profile.Groups);
         Assert.Null(profile.DefaultServer);
     }
+
+    [Fact]
+    public void RefreshPreservesIdentityReferencesAndLocalResolverWithoutMutatingDownloadedNodes()
+    {
+        var profile = ProfileJson.CreateDefault();
+        var original = TestNode("old", "edge.example");
+        original.DomainResolver = profile.Dns.Servers[0].Id;
+        var sub = SubscriptionService.ApplyAdd(profile, "https://subscription.example/sub", "Sub", [original]);
+        profile.Final = Target.Node(original.Id);
+        profile.Groups.Add(new SelectGroup { Id = "custom", Name = "Custom", Members = [Target.Node(original.Id)] });
+        var downloaded = TestNode("downloaded", "edge.example");
+        downloaded.Name = "Renamed";
+        downloaded.Password = "new-password";
+
+        SubscriptionService.ApplyRefresh(profile, sub.Id, [downloaded]);
+
+        var updated = Assert.IsType<ShadowsocksNode>(Assert.Single(profile.Nodes));
+        Assert.Equal("old", updated.Id);
+        Assert.Equal("new-password", updated.Password);
+        Assert.Equal(original.DomainResolver, updated.DomainResolver);
+        Assert.Equal("Renamed", updated.Name);
+        Assert.Equal("downloaded", downloaded.Id);
+        Assert.Null(downloaded.DomainResolver);
+        Assert.Empty(ProfileValidator.Validate(profile));
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void RefreshSingleNodeSubscriptionKeepsDefaultUsableWhenEndpointDisappears(int count)
+    {
+        var profile = ProfileJson.CreateDefault();
+        var sub = SubscriptionService.ApplyAdd(profile, "https://subscription.example/sub", "Sub", [TestNode("old", "old.example")]);
+        var nodes = Enumerable.Range(0, count).Select(i => (Node)TestNode("new" + i, "new" + i + ".example")).ToArray();
+
+        SubscriptionService.ApplyRefresh(profile, sub.Id, nodes);
+
+        Assert.Empty(ProfileValidator.Validate(profile));
+        Assert.Equal(count == 1 ? Target.Node("new0") : Target.Group(sub.GroupId!), profile.DefaultServer);
+    }
+
+    [Fact]
+    public void RefreshRemovedReferencedNodeIsStillRejectedRatherThanSilentlyRerouted()
+    {
+        var profile = ProfileJson.CreateDefault();
+        var sub = SubscriptionService.ApplyAdd(profile, "https://subscription.example/sub", "Sub", [TestNode("old", "old.example")]);
+        profile.Final = Target.Node("old");
+
+        SubscriptionService.ApplyRefresh(profile, sub.Id, [TestNode("new", "new.example")]);
+
+        Assert.Contains(new ProfileDiagnostic("final", ProfileError.UnknownNode), ProfileValidator.Validate(profile));
+    }
+
+    [Fact]
+    public void ValidatorRejectsSharedSubscriptionOwnership()
+    {
+        var profile = ProfileJson.CreateDefault();
+        var first = SubscriptionService.ApplyAdd(profile, "https://subscription.example/first", "First",
+            [TestNode("a", "a.example"), TestNode("b", "b.example")]);
+        profile.Subscriptions.Add(new Subscription
+        {
+            Id = "other", Name = "Other", Url = "https://subscription.example/other",
+            NodeIds = ["a", "a"], GroupId = first.GroupId
+        });
+
+        var errors = ProfileValidator.Validate(profile);
+
+        Assert.Contains(new ProfileDiagnostic("subscriptions[1].nodeIds[0]", ProfileError.DuplicateId), errors);
+        Assert.Contains(new ProfileDiagnostic("subscriptions[1].nodeIds[1]", ProfileError.DuplicateId), errors);
+        Assert.Contains(new ProfileDiagnostic("subscriptions[1].groupId", ProfileError.DuplicateId), errors);
+    }
+
+    private static ShadowsocksNode TestNode(string id, string server) => new()
+    {
+        Id = id, Name = id, Server = server, Port = 8388, Method = "aes-128-gcm", Password = "fixture-password"
+    };
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task FetchRejectsOversizedPayloadsEvenWithoutContentLength(bool knownLength)
+    {
+        var body = new string(' ', 8 * 1024 * 1024) +
+            """{"type":"shadowsocks","server":"edge.example","server_port":8388,"method":"aes-128-gcm","password":"fixture"}""";
+        using var client = new HttpClient(new ResponseHandler(() => new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+        {
+            Content = knownLength ? new StringContent(body) : new UnboundedContent(body)
+        }));
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            SubscriptionService.FetchNodesAsync("https://subscription.example/sub", client));
+
+        Assert.Equal(Localization.Get("Subscription_TooLarge"), error.Message);
+    }
+
+    [Fact]
+    public async Task HttpErrorsDoNotEchoUntrustedReasonOrCredentialBearingUrl()
+    {
+        using var client = new HttpClient(new ResponseHandler(() => new HttpResponseMessage(System.Net.HttpStatusCode.Forbidden)
+        {
+            ReasonPhrase = "fixture-secret"
+        }));
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            SubscriptionService.FetchNodesAsync("https://subscription.example/sub?token=fixture-secret", client));
+
+        Assert.DoesNotContain("fixture-secret", error.Message);
+        Assert.Contains("403", error.Message);
+    }
+
+    [Fact]
+    public async Task FetchUsesOfflineResponseAndParsesNodes()
+    {
+        using var client = new HttpClient(new ResponseHandler(() => new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+        {
+            Content = new StringContent("""{"type":"shadowsocks","server":"edge.example","server_port":8388,"method":"aes-128-gcm","password":"fixture"}""")
+        }));
+
+        var nodes = await SubscriptionService.FetchNodesAsync("https://subscription.example/sub", client);
+
+        Assert.Equal("edge.example", Assert.Single(nodes).Server);
+    }
+
+    [Fact]
+    public async Task TransportFailureDoesNotExposeAnUnsavedSubscriptionSecret()
+    {
+        using var client = new HttpClient(new ResponseHandler(() => throw new HttpRequestException("https://subscription.example/private/fixture-secret")));
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            SubscriptionService.FetchNodesAsync("https://subscription.example/private/fixture-secret", client));
+        Assert.Equal(Localization.Get("Subscription_DownloadFailed"), error.Message);
+        Assert.DoesNotContain("fixture-secret", error.Message);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SharedEndpointsUseUniqueNamesAndNeverGuessAmbiguousIdentity(bool ambiguous)
+    {
+        var profile = ProfileJson.CreateDefault();
+        var first = TestNode("a", "shared.example");
+        var second = TestNode("b", "shared.example");
+        first.Name = "Account A";
+        second.Name = ambiguous ? "Account A" : "Account B";
+        var sub = SubscriptionService.ApplyAdd(profile, "https://subscription.example/sub", "Sub", [first, second]);
+        profile.Final = Target.Node("a");
+        var incomingB = TestNode("new-b", "shared.example");
+        var incomingA = TestNode("new-a", "shared.example");
+        incomingB.Name = second.Name;
+        incomingA.Name = first.Name;
+
+        SubscriptionService.ApplyRefresh(profile, sub.Id, [incomingB, incomingA]);
+
+        if (ambiguous)
+        {
+            Assert.Equal(["new-b", "new-a"], sub.NodeIds);
+            Assert.Contains(new ProfileDiagnostic("final", ProfileError.UnknownNode), ProfileValidator.Validate(profile));
+        }
+        else
+        {
+            Assert.Equal(["b", "a"], sub.NodeIds);
+            Assert.Empty(ProfileValidator.Validate(profile));
+        }
+    }
+
+    private sealed class ResponseHandler(Func<HttpResponseMessage> response) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(response());
+    }
+
+    private sealed class UnboundedContent(string body) : HttpContent
+    {
+        protected override bool TryComputeLength(out long length) { length = 0; return false; }
+        protected override Task SerializeToStreamAsync(Stream stream, System.Net.TransportContext? context) =>
+            stream.WriteAsync(System.Text.Encoding.UTF8.GetBytes(body)).AsTask();
+    }
 }

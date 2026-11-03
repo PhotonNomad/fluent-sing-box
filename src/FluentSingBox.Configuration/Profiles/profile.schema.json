@@ -53,7 +53,7 @@
         "name": { "type": "string", "minLength": 1 },
         "server": { "type": "string", "minLength": 1 },
         "port": { "$ref": "#/$defs/port" },
-        "domainResolver": { "$ref": "#/$defs/id" }
+        "domainResolver": { "$ref": "#/$defs/id", "description": "Direct DNS server ID. When omitted, inherit the nearest configured groups on each membership path, then use global automatic resolution." }
       },
       "oneOf": [
         { "$ref": "#/$defs/vlessNode" },
@@ -258,7 +258,7 @@
         "id": { "$ref": "#/$defs/id" },
         "name": { "type": "string", "minLength": 1 },
         "members": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/memberTarget" } },
-        "domainResolver": { "$ref": "#/$defs/id" },
+        "domainResolver": { "$ref": "#/$defs/id", "description": "Default direct DNS server for member nodes. Child groups and explicit node settings override it; shared nodes with conflicting inherited defaults are rejected." },
         "url": { "type": "string", "format": "uri" },
         "intervalSeconds": { "type": "integer", "minimum": 10 },
         "toleranceMilliseconds": { "type": "integer", "minimum": 0 }

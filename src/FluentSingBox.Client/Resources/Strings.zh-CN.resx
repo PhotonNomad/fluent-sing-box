@@ -1659,7 +1659,7 @@ Windows: {0}
     <value>域名解析 DNS</value>
   </data>
   <data name="NodeEditor_DomainResolver_Auto" xml:space="preserve">
-    <value>自动（推荐）</value>
+    <value>继承节点组／全局自动</value>
   </data>
   <data name="NodeEditor_Cipher" xml:space="preserve">
     <value>加密方式</value>
@@ -2580,7 +2580,7 @@ Windows: {0}
     <value>订阅「{0}」</value>
   </data>
   <data name="Subscription_HttpError" xml:space="preserve">
-    <value>网络请求失败（{0}：{1}）</value>
+    <value>网络请求失败（{0}）。</value>
   </data>
   <data name="Subscription_DefaultName" xml:space="preserve">
     <value>订阅</value>
@@ -2617,5 +2617,47 @@ Windows: {0}
   </data>
   <data name="Subscription_DialogTitle" xml:space="preserve">
     <value>添加订阅</value>
+  </data>
+  <data name="Subscription_TooLarge" xml:space="preserve">
+    <value>订阅内容超过 8 MiB 限制。</value>
+  </data>
+  <data name="Subscription_DownloadFailed" xml:space="preserve">
+    <value>无法下载订阅，请检查链接和网络。</value>
+  </data>
+  <data name="Profiles_ChangedDuringOperation" xml:space="preserve">
+    <value>配置或订阅已更改，请重试。</value>
+  </data>
+  <data name="Dns_CacheClearPending" xml:space="preserve">
+    <value>系统 DNS 已刷新，核心缓存将在下次启动时清除。</value>
+  </data>
+  <data name="Dns_SystemCacheClearFailed" xml:space="preserve">
+    <value>无法刷新 Windows 系统 DNS 缓存。</value>
+  </data>
+  <data name="Groups_DomainResolver" xml:space="preserve">
+    <value>成员节点解析器</value>
+  </data>
+  <data name="Groups_DomainResolver_Auto" xml:space="preserve">
+    <value>继承上层组／全局自动</value>
+  </data>
+  <data name="Groups_DomainResolver_Hint" xml:space="preserve">
+    <value>作为成员节点的默认值，节点单独设置优先，共享节点须使用一致的解析器。</value>
+  </data>
+  <data name="Groups_DomainResolver_Summary" xml:space="preserve">
+    <value>成员解析：{0}</value>
+  </data>
+  <data name="DomainResolver_GlobalAuto" xml:space="preserve">
+    <value>解析：全局自动</value>
+  </data>
+  <data name="DomainResolver_Explicit" xml:space="preserve">
+    <value>解析：{0}（节点设置）</value>
+  </data>
+  <data name="DomainResolver_Inherited" xml:space="preserve">
+    <value>解析：{1}（继承自 {0}）</value>
+  </data>
+  <data name="DomainResolver_ConflictSources" xml:space="preserve">
+    <value>解析冲突：{0}</value>
+  </data>
+  <data name="ProfileError_ConflictingDomainResolvers" xml:space="preserve">
+    <value>该节点继承了不同组的冲突解析器，请统一组设置或为节点单独指定解析器。</value>
   </data>
 </root>

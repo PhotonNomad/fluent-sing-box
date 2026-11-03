@@ -13,6 +13,7 @@ public abstract class NodeGroup
     public required string Id { get; set; }
     public required string Name { get; set; }
     public List<Target> Members { get; set; } = [];
+    // A default for member nodes; a nearer group's or the node's own setting takes priority.
     public string? DomainResolver { get; set; }
 }
 

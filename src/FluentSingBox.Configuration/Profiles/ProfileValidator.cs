@@ -25,7 +25,8 @@ public enum ProfileError
     InvalidUrl,
     InvalidOption,
     InvalidDefaultServer,
-    InvalidDomainResolver
+    InvalidDomainResolver,
+    ConflictingDomainResolvers
 }
 
 // Path is a JSON-style location such as "rules[2].target"; the client turns the error
@@ -152,6 +153,11 @@ public static class ProfileValidator
         }
         foreach (var index in FindGroupsInCycles(profile.Groups)) Report($"groups[{index}]", ProfileError.GroupCycle);
 
+        var resolverPolicy = new DomainResolverPolicy(profile.Groups);
+        for (var i = 0; i < profile.Nodes.Count; i++)
+            if (resolverPolicy.ForNode(profile.Nodes[i].Id, profile.Nodes[i].DomainResolver).HasConflict)
+                Report($"nodes[{i}].domainResolver", ProfileError.ConflictingDomainResolvers);
+
         CheckTarget(profile.Final, "final");
         if (profile.DefaultServer is { } defaultServer)
         {
@@ -173,6 +179,8 @@ public static class ProfileValidator
             CheckVia(remote.Via, $"ruleSets[{i}].source.via");
         }
 
+        var subscribedNodes = new HashSet<string>(StringComparer.Ordinal);
+        var subscriptionGroups = new HashSet<string>(StringComparer.Ordinal);
         for (var i = 0; i < profile.Subscriptions.Count; i++)
         {
             var subscription = profile.Subscriptions[i];
@@ -180,8 +188,12 @@ public static class ProfileValidator
                 Report($"subscriptions[{i}].url", ProfileError.InvalidUrl);
             if (subscription.GroupId is { } groupId && !groupIds.Contains(groupId))
                 Report($"subscriptions[{i}].groupId", ProfileError.UnknownGroup);
+            if (subscription.GroupId is { } ownedGroup && !subscriptionGroups.Add(ownedGroup))
+                Report($"subscriptions[{i}].groupId", ProfileError.DuplicateId);
             for (var n = 0; n < subscription.NodeIds.Count; n++)
             {
+                if (!subscribedNodes.Add(subscription.NodeIds[n]))
+                    Report($"subscriptions[{i}].nodeIds[{n}]", ProfileError.DuplicateId);
                 if (!nodeIds.Contains(subscription.NodeIds[n]))
                     Report($"subscriptions[{i}].nodeIds[{n}]", ProfileError.UnknownNode);
             }

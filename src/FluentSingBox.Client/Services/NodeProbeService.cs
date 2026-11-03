@@ -68,6 +68,14 @@ public static class NodeProbeService
     {
         var probe = ProfileJson.Deserialize(ProfileJson.Serialize(source));
         probe.Nodes.RemoveAll(item => item.Id != node.Id);
+        var resolverPolicy = new DomainResolverPolicy(probe.Groups);
+        foreach (var item in probe.Nodes)
+        {
+            var selection = resolverPolicy.ForNode(item.Id, item.DomainResolver);
+            if (selection.HasConflict)
+                throw new InvalidOperationException(Localization.Get("ProfileError_ConflictingDomainResolvers"));
+            item.DomainResolver = selection.ServerId;
+        }
         probe.Groups.Clear();
         // Subscription references still name nodes and groups removed from this private profile.
         probe.Subscriptions.Clear();

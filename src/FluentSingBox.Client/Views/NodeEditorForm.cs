@@ -34,13 +34,17 @@ internal sealed class NodeEditorForm : StackPanel
         _name = Editor.Text(Localization.Get("NodeEditor_Name"), node?.Name, "NodeEditor_Name");
         _server = Editor.Text(Localization.Get("NodeEditor_Server"), node?.Server, "NodeEditor_Server");
         _port = Editor.Text(Localization.Get("NodeEditor_Port"), (node?.Port ?? 443).ToString(), "NodeEditor_Port");
-        var directDnsServers = App.State.Profile.Dns.Servers
-            .Where(s => s.Via is null || s.Via.Kind == TargetKind.Direct)
-            .Select(s => (s.Id, s.Name));
-        var resolverChoices = new[] { ("", Localization.Get("NodeEditor_DomainResolver_Auto")) }
-            .Concat(directDnsServers)
-            .ToArray();
-        _domainResolver = Editor.Choice(Localization.Get("NodeEditor_DomainResolver"), resolverChoices, node?.DomainResolver ?? "", "NodeEditor_DomainResolver");
+        var profile = App.State.Profile;
+        var resolverPolicy = new DomainResolverPolicy(profile.Groups);
+        _domainResolver = Editor.Choice(Localization.Get("NodeEditor_DomainResolver"),
+            DomainResolverText.Choices(profile, Localization.Get("NodeEditor_DomainResolver_Auto")),
+            node?.DomainResolver ?? "", "NodeEditor_DomainResolver");
+        var resolverSource = new TextBlock { TextWrapping = TextWrapping.Wrap };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(resolverSource, "NodeEditor_DomainResolverSource");
+        void UpdateResolverSource() => resolverSource.Text = DomainResolverText.Describe(profile,
+            resolverPolicy.ForNode(_id, Editor.Selected<string>(_domainResolver)));
+        _domainResolver.SelectionChanged += (_, _) => UpdateResolverSource();
+        UpdateResolverSource();
         _uuid = Editor.Text("UUID", node switch { VlessNode n => n.Uuid, VmessNode n => n.Uuid, TuicNode n => n.Uuid, _ => null }, "NodeEditor_Uuid");
         _flow = Editor.Text("Flow", (node as VlessNode)?.Flow, "NodeEditor_Flow", placeholder: "xtls-rprx-vision");
         _vmessSecurity = Editor.Text(Localization.Get("NodeEditor_Cipher"), (node as VmessNode)?.Security ?? "auto", "NodeEditor_VmessSecurity");
@@ -125,7 +129,7 @@ internal sealed class NodeEditorForm : StackPanel
 
         foreach (var element in new UIElement[]
         {
-            _protocol, _name, _server, _port, _domainResolver, _serverPorts, _hopInterval, _uuid, _flow, _vmessSecurity, _alterId, _packetEncoding,
+            _protocol, _name, _server, _port, _domainResolver, resolverSource, _serverPorts, _hopInterval, _uuid, _flow, _vmessSecurity, _alterId, _packetEncoding,
             _authenticatedLength, _globalPadding, _method, _plugin, _pluginOptions, _socksVersion, _username, _password, _udpOverTcp,
             _obfsPassword, _upMbps, _downMbps, _congestion, _udpRelay, _zeroRtt, _heartbeat, _transportPanel, _tls, _tlsPanel, _mux, _muxPanel
         }) Children.Add(element);

@@ -24,6 +24,7 @@
     <Compile Include="../../src/FluentSingBox.Client/Models/AppSettings.cs" Link="Client/AppSettings.cs" />
     <Compile Include="../../src/FluentSingBox.Client/Services/Localization.cs" Link="Client/Localization.cs" />
     <Compile Include="../../src/FluentSingBox.Client/Services/ProfileMessages.cs" Link="Client/ProfileMessages.cs" />
+    <Compile Include="../../src/FluentSingBox.Client/Services/DomainResolverText.cs" Link="Client/DomainResolverText.cs" />
     <Compile Include="../../src/FluentSingBox.Client/Services/ApplicationMatching.cs" Link="Client/ApplicationMatching.cs" />
     <Compile Include="../../src/FluentSingBox.Client/Services/ServerLinkImporter.cs" Link="Client/ServerLinkImporter.cs" />
     <Compile Include="../../src/FluentSingBox.Client/Services/ConfigFileWatcher.cs" Link="Client/ConfigFileWatcher.cs" />
@@ -31,6 +32,9 @@
     <Compile Include="../../src/FluentSingBox.Client/Services/SettingsStore.cs" Link="Client/SettingsStore.cs" />
     <Compile Include="../../src/FluentSingBox.Client/Services/SubscriptionService.cs" Link="Client/SubscriptionService.cs" />
     <Compile Include="../../src/FluentSingBox.Client/Services/NodeProbeService.cs" Link="Client/NodeProbeService.cs" />
+    <Compile Include="../../src/FluentSingBox.Client/Services/AppPaths.cs" Link="Client/AppPaths.cs" />
+    <Compile Include="../../src/FluentSingBox.Client/Services/DiagnosticsLog.cs" Link="Client/DiagnosticsLog.cs" />
+    <Compile Include="../../src/FluentSingBox.Client/Services/DnsCachePolicy.cs" Link="Client/DnsCachePolicy.cs" />
     <EmbeddedResource Include="../../src/FluentSingBox.Client/Resources/Strings.resx" Link="Client/Strings.resx" LogicalName="FluentSingBox.Client.Resources.Strings.resources" />
   </ItemGroup>
 </Project>
