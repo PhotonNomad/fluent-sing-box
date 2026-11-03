@@ -24,7 +24,8 @@ public enum ProfileError
     InvalidVia,
     InvalidUrl,
     InvalidOption,
-    InvalidDefaultServer
+    InvalidDefaultServer,
+    InvalidDomainResolver
 }
 
 // Path is a JSON-style location such as "rules[2].target"; the client turns the error
@@ -51,6 +52,7 @@ public static class ProfileValidator
         var groupIds = CheckIds(profile.Groups.Select(group => group.Id), "groups", Report);
         var ruleSetIds = CheckIds(profile.RuleSets.Select(set => set.Id), "ruleSets", Report);
         var dnsServerIds = CheckIds(profile.Dns.Servers.Select(server => server.Id), "dns.servers", Report);
+        var directDnsServerIds = new HashSet<string>(profile.Dns.Servers.Where(s => s.Via is null || s.Via.Kind == TargetKind.Direct).Select(s => s.Id), StringComparer.Ordinal);
         CheckIds(profile.Rules.Select(rule => rule.Id), "rules", Report);
         CheckIds(profile.Dns.Rules.Select(rule => rule.Id), "dns.rules", Report);
         CheckIds(profile.Subscriptions.Select(subscription => subscription.Id), "subscriptions", Report);
@@ -109,6 +111,11 @@ public static class ProfileValidator
         {
             var node = profile.Nodes[i];
             if (string.IsNullOrWhiteSpace(node.Server)) Report($"nodes[{i}].server", ProfileError.MissingServer);
+            if (!string.IsNullOrWhiteSpace(node.DomainResolver))
+            {
+                if (!dnsServerIds.Contains(node.DomainResolver)) Report($"nodes[{i}].domainResolver", ProfileError.UnknownDnsServer);
+                else if (!directDnsServerIds.Contains(node.DomainResolver)) Report($"nodes[{i}].domainResolver", ProfileError.InvalidDomainResolver);
+            }
             if (node.Port is < 1 or > 65535) Report($"nodes[{i}].port", ProfileError.InvalidPort);
             if (node is Hysteria2Node hysteria)
                 for (var p = 0; p < hysteria.ServerPorts.Count; p++)
@@ -130,6 +137,11 @@ public static class ProfileValidator
         for (var i = 0; i < profile.Groups.Count; i++)
         {
             var group = profile.Groups[i];
+            if (!string.IsNullOrWhiteSpace(group.DomainResolver))
+            {
+                if (!dnsServerIds.Contains(group.DomainResolver)) Report($"groups[{i}].domainResolver", ProfileError.UnknownDnsServer);
+                else if (!directDnsServerIds.Contains(group.DomainResolver)) Report($"groups[{i}].domainResolver", ProfileError.InvalidDomainResolver);
+            }
             if (group.Members.Count == 0) Report($"groups[{i}].members", ProfileError.EmptyGroup);
             for (var m = 0; m < group.Members.Count; m++)
             {

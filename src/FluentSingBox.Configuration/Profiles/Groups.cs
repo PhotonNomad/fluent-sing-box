@@ -13,6 +13,7 @@ public abstract class NodeGroup
     public required string Id { get; set; }
     public required string Name { get; set; }
     public List<Target> Members { get; set; } = [];
+    public string? DomainResolver { get; set; }
 }
 
 public sealed class SelectGroup : NodeGroup { }

@@ -8,6 +8,7 @@ public sealed class DnsSettings
     public string? FinalServerId { get; set; }
     public DnsStrategy Strategy { get; set; } = DnsStrategy.Ipv4Only;
     public bool CacheEnabled { get; set; } = true;
+    public bool StoreDns { get; set; } = true;
 }
 
 public enum DnsServerType { System, Udp, Tcp, Tls, Https, Quic }

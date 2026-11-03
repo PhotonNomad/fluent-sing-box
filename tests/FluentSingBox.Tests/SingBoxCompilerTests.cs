@@ -48,7 +48,7 @@ public class SingBoxCompilerTests
         Assert.Equal("direct", config["route"]!["final"]!.ToString());
         Assert.Equal(["geosite-cn", "geosite-not-cn", "geoip-cn"], config["route"]!["rule_set"]!.AsArray().Select(set => set!["tag"]!.ToString()));
         Assert.Equal("rules/geoip-cn.srs", config["route"]!["rule_set"]![2]!["path"]!.ToString());
-        Assert.Equal("国内 DNS", config["route"]!["default_domain_resolver"]!.ToString());
+        Assert.Equal("系统 DNS", config["route"]!["default_domain_resolver"]!.ToString());
         Assert.Equal("境外 DNS", config["dns"]!["final"]!.ToString());
         Assert.Equal("ipv4_only", config["dns"]!["strategy"]!.ToString());
         Assert.Equal(["system-http", "tun"], config["inbounds"]!.AsArray().Select(inbound => inbound!["tag"]!.ToString()));
@@ -339,6 +339,44 @@ public class SingBoxCompilerTests
         Assert.Contains("proxy-pass", secrets);
         Assert.DoesNotContain("hk.example", secrets);
     }
+
+    [Theory]
+    [InlineData(true, true, true)]
+    [InlineData(true, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(false, false, false)]
+    public void StoreDnsCompilesToExperimentalCacheFile(bool cacheEnabled, bool storeDns, bool expected)
+    {
+        var profile = ProfileJson.CreateDefault();
+        profile.Dns.CacheEnabled = cacheEnabled;
+        profile.Dns.StoreDns = storeDns;
+
+        var config = Compile(profile);
+        Assert.Equal(expected, config["experimental"]!["cache_file"]!["store_dns"]!.GetValue<bool>());
+    }
+
+    [Fact]
+    public void DefaultDomainResolverFallsBackToFirstDirectWhenNoSystemDns()
+    {
+        var profile = ProfileJson.CreateDefault();
+        profile.Dns.Rules.Clear();
+        profile.Dns.Servers.RemoveAll(s => s.Type == DnsServerType.System);
+
+        var config = Compile(profile);
+        Assert.Equal("国内 DNS", config["route"]!["default_domain_resolver"]!.ToString());
+    }
+
+    [Fact]
+    public void NodeDomainResolverCompilesToOutbound()
+    {
+        var profile = WithNode();
+        profile.Dns.Servers.Add(new DnsServer { Id = "custom-direct", Name = "Custom DNS", Type = DnsServerType.Udp, Address = "223.5.5.5" });
+        profile.Nodes[0].DomainResolver = "custom-direct";
+
+        var config = Compile(profile);
+        var outbound = config["outbounds"]![0]!.AsObject();
+        Assert.Equal("Custom DNS", outbound["domain_resolver"]!.ToString());
+    }
 }
 
 public sealed class ProfileLibraryTests : IDisposable
@@ -377,4 +415,5 @@ public sealed class ProfileLibraryTests : IDisposable
     }
 
     public void Dispose() { if (Directory.Exists(_directory)) Directory.Delete(_directory, recursive: true); }
+
 }

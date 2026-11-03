@@ -130,4 +130,35 @@ public class ProfileTests
         // A server certificate is public and must survive an export.
         Assert.Equal("-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----", vless.Tls!.Certificate);
     }
+
+    [Fact]
+    public void DnsSettingsStoreDnsRoundTripsAndDefaultsToTrue()
+    {
+        var profile = ProfileJson.CreateDefault();
+        Assert.True(profile.Dns.StoreDns);
+
+        profile.Dns.StoreDns = false;
+        var json = ProfileJson.Serialize(profile);
+        var restored = ProfileJson.Deserialize(json);
+        Assert.False(restored.Dns.StoreDns);
+    }
+
+    [Fact]
+    public void NodeDomainResolverMustBeDirectDnsServer()
+    {
+        var profile = WithNodes();
+        profile.Dns.Servers.Add(new DnsServer { Id = "d1", Name = "Direct", Type = DnsServerType.System });
+        profile.Dns.Servers.Add(new DnsServer { Id = "d2", Name = "Proxied", Type = DnsServerType.Udp, Address = "1.1.1.1", Via = Target.Proxy });
+
+        profile.Nodes[0].DomainResolver = "d1";
+        Assert.Empty(ProfileValidator.Validate(profile));
+
+        profile.Nodes[0].DomainResolver = "nonexistent";
+        var errors = ProfileValidator.Validate(profile);
+        Assert.Contains(new ProfileDiagnostic("nodes[0].domainResolver", ProfileError.UnknownDnsServer), errors);
+
+        profile.Nodes[0].DomainResolver = "d2";
+        errors = ProfileValidator.Validate(profile);
+        Assert.Contains(new ProfileDiagnostic("nodes[0].domainResolver", ProfileError.InvalidDomainResolver), errors);
+    }
 }

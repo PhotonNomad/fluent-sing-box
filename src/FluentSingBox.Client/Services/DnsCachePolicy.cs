@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -22,7 +23,8 @@ public static class DnsCachePolicy
             dns = config["dns"],
             final = config["route"]?["final"],
             selectors = (config["outbounds"] as JsonArray)?.Where(item => item?["type"]?.ToString() is "selector" or "urltest").ToArray(),
-            tun = (config["inbounds"] as JsonArray)?.Where(item => item?["type"]?.ToString() == "tun").ToArray()
+            tun = (config["inbounds"] as JsonArray)?.Where(item => item?["type"]?.ToString() == "tun").ToArray(),
+            experimental = config["experimental"]
         });
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));
         Directory.CreateDirectory(DirectoryPath);
@@ -47,5 +49,50 @@ public static class DnsCachePolicy
         var effective = JsonNode.Parse(json)?["dns"]?["strategy"]?.ToString();
         if (effective is null) return;
         DiagnosticsLog.Write(DiagnosticsCategory.DnsPolicy, $"DNS strategy={effective}.");
+    }
+
+    public static async Task ClearNowAsync()
+    {
+        var cache = Path.Combine(DirectoryPath, "cache.db");
+        try
+        {
+            if (File.Exists(cache)) File.Delete(cache);
+        }
+        catch (IOException ex)
+        {
+            DiagnosticsLog.Write(DiagnosticsCategory.DnsPolicy, $"Failed to delete cache.db immediately: {ex.Message}");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            DiagnosticsLog.Write(DiagnosticsCategory.DnsPolicy, $"Unauthorized to delete cache.db: {ex.Message}");
+        }
+
+        try
+        {
+            if (File.Exists(PendingPath)) File.Delete(PendingPath);
+        }
+        catch { }
+
+        await Task.Run(FlushSystemDns);
+        DiagnosticsLog.Write(DiagnosticsCategory.DnsPolicy, "DNS cache cleared by user.");
+    }
+
+    private static void FlushSystemDns()
+    {
+        try
+        {
+            using var proc = Process.Start(new ProcessStartInfo
+            {
+                FileName = "ipconfig",
+                Arguments = "/flushdns",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+            proc?.WaitForExit(2000);
+        }
+        catch (Exception ex)
+        {
+            DiagnosticsLog.Write(DiagnosticsCategory.DnsPolicy, $"Failed to flush system DNS: {ex.Message}");
+        }
     }
 }

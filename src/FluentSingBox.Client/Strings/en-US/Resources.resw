@@ -755,6 +755,21 @@
   <data name="Dns_CacheCard.Header" xml:space="preserve">
     <value>DNS cache</value>
   </data>
+  <data name="Dns_StoreDnsCard.Header" xml:space="preserve">
+    <value>Persist DNS cache</value>
+  </data>
+  <data name="Dns_StoreDnsCard.Description" xml:space="preserve">
+    <value>Write to disk to preserve across core restarts</value>
+  </data>
+  <data name="Dns_ClearCacheCard.Header" xml:space="preserve">
+    <value>Clear DNS cache</value>
+  </data>
+  <data name="Dns_ClearCacheCard.Description" xml:space="preserve">
+    <value>Clear core disk cache and flush Windows system DNS cache</value>
+  </data>
+  <data name="Dns_ClearCacheButton.Content" xml:space="preserve">
+    <value>Clear now</value>
+  </data>
   <data name="Dns_ServersSection.Header" xml:space="preserve">
     <value>DNS servers</value>
   </data>

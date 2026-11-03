@@ -60,6 +60,8 @@ public static class SingBoxCompiler
             // Tags are display names where possible, so logs read like the UI.
             foreach (var node in profile.Nodes) _nodeTags[node.Id] = UniqueTag(_outboundTags, node.Name, node.Id);
             foreach (var group in profile.Groups) _groupTags[group.Id] = UniqueTag(_outboundTags, group.Name, group.Id);
+            var dnsUsed = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var server in profile.Dns.Servers) _dnsTags[server.Id] = UniqueTag(dnsUsed, server.Name, server.Id);
 
             var outbounds = new JsonArray();
             foreach (var node in profile.Nodes) outbounds.Add(Outbound(node));
@@ -81,7 +83,7 @@ public static class SingBoxCompiler
                 ["route"] = route,
                 ["experimental"] = new JsonObject
                 {
-                    ["cache_file"] = new JsonObject { ["enabled"] = true, ["store_dns"] = false, ["store_fakeip"] = false }
+                    ["cache_file"] = new JsonObject { ["enabled"] = true, ["store_dns"] = profile.Dns.StoreDns && profile.Dns.CacheEnabled, ["store_fakeip"] = false }
                 }
             };
             // DNS rules may reference rule sets too, so the list is complete only now.
@@ -147,6 +149,8 @@ public static class SingBoxCompiler
         private JsonObject Outbound(Node node)
         {
             var outbound = new JsonObject { ["type"] = "", ["tag"] = _nodeTags[node.Id], ["server"] = node.Server, ["server_port"] = node.Port };
+            if (!string.IsNullOrEmpty(node.DomainResolver) && _dnsTags.TryGetValue(node.DomainResolver, out var resolverTag))
+                outbound["domain_resolver"] = resolverTag;
             Transport? transport = null;
             TlsSettings? tls = null;
             MultiplexSettings? multiplex = null;
@@ -437,8 +441,11 @@ public static class SingBoxCompiler
         private JsonObject Dns()
         {
             var dns = profile.Dns;
-            var used = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var server in dns.Servers) _dnsTags[server.Id] = UniqueTag(used, server.Name, server.Id);
+            if (_dnsTags.Count == 0)
+            {
+                var used = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var server in dns.Servers) _dnsTags[server.Id] = UniqueTag(used, server.Name, server.Id);
+            }
             var servers = new JsonArray(dns.Servers.Select(server => (JsonNode?)DnsServerJson(server)).ToArray());
             var rules = new JsonArray();
             foreach (var rule in dns.Rules.Where(rule => rule.Enabled))
@@ -495,13 +502,19 @@ public static class SingBoxCompiler
         }
 
         // Proxy servers are resolved without going through a proxy.
+        // Auto mode prioritizes System DNS (which follows DHCP and works under restricted LANs),
+        // then falls back to other direct DNS servers or bootstrap.
         private string? DefaultDomainResolver()
         {
             if (profile.Dns.Servers.Count == 0) return null;
-            var direct = profile.Dns.Servers.FirstOrDefault(server => server.Via is null || OutboundTag(server.Via) == "direct");
-            if (direct is not null) return _dnsTags[direct.Id];
-            _needsBootstrap = true;
-            return BootstrapTag;
+            var directs = profile.Dns.Servers.Where(server => server.Via is null || OutboundTag(server.Via) == "direct").ToList();
+            if (directs.Count == 0)
+            {
+                _needsBootstrap = true;
+                return BootstrapTag;
+            }
+            var preferred = directs.FirstOrDefault(server => server.Type == DnsServerType.System) ?? directs[0];
+            return _dnsTags[preferred.Id];
         }
 
         private JsonArray RuleSets()

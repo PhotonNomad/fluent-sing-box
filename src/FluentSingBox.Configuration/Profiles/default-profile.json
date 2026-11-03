@@ -97,7 +97,8 @@
     ],
     "finalServerId": "remote",
     "strategy": "ipv4Only",
-    "cacheEnabled": true
+    "cacheEnabled": true,
+    "storeDns": true
   },
   "capture": {
     "systemProxy": { "enabled": true, "listen": "127.0.0.1", "port": 10809 },

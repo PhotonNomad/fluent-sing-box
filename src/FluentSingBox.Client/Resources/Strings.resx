@@ -1655,6 +1655,12 @@ Windows: {0}
   <data name="NodeEditor_Port" xml:space="preserve">
     <value>Port</value>
   </data>
+  <data name="NodeEditor_DomainResolver" xml:space="preserve">
+    <value>Domain resolver DNS</value>
+  </data>
+  <data name="NodeEditor_DomainResolver_Auto" xml:space="preserve">
+    <value>Auto (recommended)</value>
+  </data>
   <data name="NodeEditor_Cipher" xml:space="preserve">
     <value>Encryption</value>
   </data>
@@ -2138,6 +2144,24 @@ Windows: {0}
   <data name="Dns_CacheCard.Header" xml:space="preserve">
     <value>DNS cache</value>
   </data>
+  <data name="Dns_StoreDnsCard.Header" xml:space="preserve">
+    <value>Persist DNS cache</value>
+  </data>
+  <data name="Dns_StoreDnsCard.Description" xml:space="preserve">
+    <value>Write to disk to preserve across core restarts</value>
+  </data>
+  <data name="Dns_ClearCacheCard.Header" xml:space="preserve">
+    <value>Clear DNS cache</value>
+  </data>
+  <data name="Dns_ClearCacheCard.Description" xml:space="preserve">
+    <value>Clear core disk cache and flush Windows system DNS cache</value>
+  </data>
+  <data name="Dns_ClearCacheButton.Content" xml:space="preserve">
+    <value>Clear now</value>
+  </data>
+  <data name="Dns_CacheClearedSuccess" xml:space="preserve">
+    <value>DNS cache cleared.</value>
+  </data>
   <data name="Dns_ServersSection.Header" xml:space="preserve">
     <value>DNS servers</value>
   </data>
@@ -2419,6 +2443,9 @@ Windows: {0}
   </data>
   <data name="ProfileError_UnknownDnsServer" xml:space="preserve">
     <value>refers to a DNS server that does not exist</value>
+  </data>
+  <data name="ProfileError_InvalidDomainResolver" xml:space="preserve">
+    <value>domain resolver must be a direct DNS server</value>
   </data>
   <data name="ProfileError_InvalidGroupMember" xml:space="preserve">
     <value>members must be nodes or node groups</value>

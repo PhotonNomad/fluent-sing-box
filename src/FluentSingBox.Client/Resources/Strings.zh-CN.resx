@@ -1655,6 +1655,12 @@ Windows: {0}
   <data name="NodeEditor_Port" xml:space="preserve">
     <value>端口</value>
   </data>
+  <data name="NodeEditor_DomainResolver" xml:space="preserve">
+    <value>域名解析 DNS</value>
+  </data>
+  <data name="NodeEditor_DomainResolver_Auto" xml:space="preserve">
+    <value>自动（推荐）</value>
+  </data>
   <data name="NodeEditor_Cipher" xml:space="preserve">
     <value>加密方式</value>
   </data>
@@ -2138,6 +2144,24 @@ Windows: {0}
   <data name="Dns_CacheCard.Header" xml:space="preserve">
     <value>DNS 缓存</value>
   </data>
+  <data name="Dns_StoreDnsCard.Header" xml:space="preserve">
+    <value>持久化 DNS 缓存</value>
+  </data>
+  <data name="Dns_StoreDnsCard.Description" xml:space="preserve">
+    <value>写入磁盘，核心重启后依然有效</value>
+  </data>
+  <data name="Dns_ClearCacheCard.Header" xml:space="preserve">
+    <value>清空 DNS 缓存</value>
+  </data>
+  <data name="Dns_ClearCacheCard.Description" xml:space="preserve">
+    <value>清除核心磁盘缓存并刷新 Windows 系统 DNS 缓存</value>
+  </data>
+  <data name="Dns_ClearCacheButton.Content" xml:space="preserve">
+    <value>立即清空</value>
+  </data>
+  <data name="Dns_CacheClearedSuccess" xml:space="preserve">
+    <value>DNS 缓存已清空。</value>
+  </data>
   <data name="Dns_ServersSection.Header" xml:space="preserve">
     <value>DNS 服务器</value>
   </data>
@@ -2419,6 +2443,9 @@ Windows: {0}
   </data>
   <data name="ProfileError_UnknownDnsServer" xml:space="preserve">
     <value>引用了不存在的 DNS 服务器</value>
+  </data>
+  <data name="ProfileError_InvalidDomainResolver" xml:space="preserve">
+    <value>域名解析器必须为直连 DNS 服务器</value>
   </data>
   <data name="ProfileError_InvalidGroupMember" xml:space="preserve">
     <value>成员只能是节点或节点组</value>
