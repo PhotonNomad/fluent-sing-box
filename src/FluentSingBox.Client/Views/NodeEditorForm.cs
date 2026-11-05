@@ -21,7 +21,7 @@ internal sealed class NodeEditorForm : StackPanel
     private readonly TextBox _plugin, _pluginOptions, _serverPorts, _hopInterval, _heartbeat;
     private readonly TextBox _muxMaxConnections, _muxMinStreams, _muxMaxStreams;
     private readonly PasswordBox _password, _obfsPassword;
-    private readonly ComboBox _protocol, _transport, _fingerprint, _packetEncoding, _socksVersion, _muxProtocol;
+    private readonly ComboBox _protocol, _transport, _fingerprint, _packetEncoding, _socksVersion, _muxProtocol, _domainResolver;
     private readonly CheckBox _tls, _insecure, _disableSni, _reality, _authenticatedLength, _globalPadding, _udpOverTcp, _zeroRtt, _mux, _muxPadding;
     private readonly StackPanel _transportPanel, _tlsPanel, _muxPanel;
 
@@ -34,6 +34,17 @@ internal sealed class NodeEditorForm : StackPanel
         _name = Editor.Text(Localization.Get("NodeEditor_Name"), node?.Name, "NodeEditor_Name");
         _server = Editor.Text(Localization.Get("NodeEditor_Server"), node?.Server, "NodeEditor_Server");
         _port = Editor.Text(Localization.Get("NodeEditor_Port"), (node?.Port ?? 443).ToString(), "NodeEditor_Port");
+        var profile = App.State.Profile;
+        var resolverPolicy = new DomainResolverPolicy(profile.Groups);
+        _domainResolver = Editor.Choice(Localization.Get("NodeEditor_DomainResolver"),
+            DomainResolverText.Choices(profile, Localization.Get("NodeEditor_DomainResolver_Auto")),
+            node?.DomainResolver ?? "", "NodeEditor_DomainResolver");
+        var resolverSource = new TextBlock { TextWrapping = TextWrapping.Wrap };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(resolverSource, "NodeEditor_DomainResolverSource");
+        void UpdateResolverSource() => resolverSource.Text = DomainResolverText.Describe(profile,
+            resolverPolicy.ForNode(_id, Editor.Selected<string>(_domainResolver)));
+        _domainResolver.SelectionChanged += (_, _) => UpdateResolverSource();
+        UpdateResolverSource();
         _uuid = Editor.Text("UUID", node switch { VlessNode n => n.Uuid, VmessNode n => n.Uuid, TuicNode n => n.Uuid, _ => null }, "NodeEditor_Uuid");
         _flow = Editor.Text("Flow", (node as VlessNode)?.Flow, "NodeEditor_Flow", placeholder: "xtls-rprx-vision");
         _vmessSecurity = Editor.Text(Localization.Get("NodeEditor_Cipher"), (node as VmessNode)?.Security ?? "auto", "NodeEditor_VmessSecurity");
@@ -118,7 +129,7 @@ internal sealed class NodeEditorForm : StackPanel
 
         foreach (var element in new UIElement[]
         {
-            _protocol, _name, _server, _port, _serverPorts, _hopInterval, _uuid, _flow, _vmessSecurity, _alterId, _packetEncoding,
+            _protocol, _name, _server, _port, _domainResolver, resolverSource, _serverPorts, _hopInterval, _uuid, _flow, _vmessSecurity, _alterId, _packetEncoding,
             _authenticatedLength, _globalPadding, _method, _plugin, _pluginOptions, _socksVersion, _username, _password, _udpOverTcp,
             _obfsPassword, _upMbps, _downMbps, _congestion, _udpRelay, _zeroRtt, _heartbeat, _transportPanel, _tls, _tlsPanel, _mux, _muxPanel
         }) Children.Add(element);
@@ -249,7 +260,7 @@ internal sealed class NodeEditorForm : StackPanel
             Editor.Require(int.TryParse(box.Text, out var value) && value > 0, "NodeEditor_BandwidthInvalid");
             return value;
         }
-        return protocol switch
+        Node result = protocol switch
         {
             "vmess" => new VmessNode
             {
@@ -292,6 +303,8 @@ internal sealed class NodeEditorForm : StackPanel
                 Transport = Transport(), Tls = Tls(), Multiplex = Multiplex()
             }
         };
+        result.DomainResolver = Editor.Optional(Editor.Selected<string>(_domainResolver) ?? "");
+        return result;
     }
 
     private static string Required(string text, string messageKey)

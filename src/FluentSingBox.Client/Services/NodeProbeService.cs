@@ -9,6 +9,7 @@ public sealed record NodeProbeResult(bool Success, long Milliseconds, string Mes
 
 public static class NodeProbeService
 {
+#if !TESTS
     private static readonly SemaphoreSlim Gate = new(1, 1);
 
     public static async Task<NodeProbeResult> ProbeAsync(AppSettingsData settings, Profile source, Node node, CancellationToken cancellation = default)
@@ -60,13 +61,24 @@ public static class NodeProbeService
             Gate.Release();
         }
     }
+#endif
 
     // Only the node itself, reached through a private listener: no rules, groups or TUN.
-    private static Profile ProbeProfile(Profile source, Node node, int port)
+    internal static Profile ProbeProfile(Profile source, Node node, int port)
     {
-        var probe = AppState.Clone(source);
+        var probe = ProfileJson.Deserialize(ProfileJson.Serialize(source));
         probe.Nodes.RemoveAll(item => item.Id != node.Id);
+        var resolverPolicy = new DomainResolverPolicy(probe.Groups);
+        foreach (var item in probe.Nodes)
+        {
+            var selection = resolverPolicy.ForNode(item.Id, item.DomainResolver);
+            if (selection.HasConflict)
+                throw new InvalidOperationException(Localization.Get("ProfileError_ConflictingDomainResolvers"));
+            item.DomainResolver = selection.ServerId;
+        }
         probe.Groups.Clear();
+        // Subscription references still name nodes and groups removed from this private profile.
+        probe.Subscriptions.Clear();
         probe.Rules.Clear();
         probe.DefaultServer = Target.Node(node.Id);
         probe.Final = Target.Proxy;

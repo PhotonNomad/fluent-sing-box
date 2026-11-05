@@ -1655,6 +1655,12 @@ Windows: {0}
   <data name="NodeEditor_Port" xml:space="preserve">
     <value>Port</value>
   </data>
+  <data name="NodeEditor_DomainResolver" xml:space="preserve">
+    <value>Domain resolver DNS</value>
+  </data>
+  <data name="NodeEditor_DomainResolver_Auto" xml:space="preserve">
+    <value>Inherit groups / global automatic</value>
+  </data>
   <data name="NodeEditor_Cipher" xml:space="preserve">
     <value>Encryption</value>
   </data>
@@ -2138,6 +2144,24 @@ Windows: {0}
   <data name="Dns_CacheCard.Header" xml:space="preserve">
     <value>DNS cache</value>
   </data>
+  <data name="Dns_StoreDnsCard.Header" xml:space="preserve">
+    <value>Persist DNS cache</value>
+  </data>
+  <data name="Dns_StoreDnsCard.Description" xml:space="preserve">
+    <value>Write to disk to preserve across core restarts</value>
+  </data>
+  <data name="Dns_ClearCacheCard.Header" xml:space="preserve">
+    <value>Clear DNS cache</value>
+  </data>
+  <data name="Dns_ClearCacheCard.Description" xml:space="preserve">
+    <value>Clear core disk cache and flush Windows system DNS cache</value>
+  </data>
+  <data name="Dns_ClearCacheButton.Content" xml:space="preserve">
+    <value>Clear now</value>
+  </data>
+  <data name="Dns_CacheClearedSuccess" xml:space="preserve">
+    <value>DNS cache cleared.</value>
+  </data>
   <data name="Dns_ServersSection.Header" xml:space="preserve">
     <value>DNS servers</value>
   </data>
@@ -2420,6 +2444,9 @@ Windows: {0}
   <data name="ProfileError_UnknownDnsServer" xml:space="preserve">
     <value>refers to a DNS server that does not exist</value>
   </data>
+  <data name="ProfileError_InvalidDomainResolver" xml:space="preserve">
+    <value>domain resolver must be a direct DNS server</value>
+  </data>
   <data name="ProfileError_InvalidGroupMember" xml:space="preserve">
     <value>members must be nodes or node groups</value>
   </data>
@@ -2548,5 +2575,89 @@ Windows: {0}
   </data>
   <data name="Tun_Ipv6Hint.Message" xml:space="preserve">
     <value>This network has no IPv6, so the adapter's IPv6 addresses are left out. They apply again on a network with IPv6.</value>
+  </data>
+  <data name="ProfileLocation_Subscription" xml:space="preserve">
+    <value>subscription '{0}'</value>
+  </data>
+  <data name="Subscription_HttpError" xml:space="preserve">
+    <value>HTTP request failed ({0}).</value>
+  </data>
+  <data name="Subscription_DefaultName" xml:space="preserve">
+    <value>Subscription</value>
+  </data>
+  <data name="Servers_AddSubscription.Content" xml:space="preserve">
+    <value>Add Subscription</value>
+  </data>
+  <data name="Servers_AddSubscription.AutomationProperties.Name" xml:space="preserve">
+    <value>Add subscription link</value>
+  </data>
+  <data name="Subscriptions_Section.Header" xml:space="preserve">
+    <value>Subscriptions</value>
+  </data>
+  <data name="Subscription_Url" xml:space="preserve">
+    <value>Subscription link</value>
+  </data>
+  <data name="Subscription_Name" xml:space="preserve">
+    <value>Name (optional)</value>
+  </data>
+  <data name="Subscription_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Subscription_Refreshed" xml:space="preserve">
+    <value>Updated {0} servers from '{1}'.</value>
+  </data>
+  <data name="Subscription_Added" xml:space="preserve">
+    <value>Added subscription '{0}' with {1} servers.</value>
+  </data>
+  <data name="Subscription_LastUpdated" xml:space="preserve">
+    <value>Updated {0}</value>
+  </data>
+  <data name="Subscription_ServerCount" xml:space="preserve">
+    <value>{0} servers</value>
+  </data>
+  <data name="Subscription_DialogTitle" xml:space="preserve">
+    <value>Add Subscription</value>
+  </data>
+  <data name="Subscription_TooLarge" xml:space="preserve">
+    <value>Subscription exceeds the 8 MiB limit.</value>
+  </data>
+  <data name="Subscription_DownloadFailed" xml:space="preserve">
+    <value>Could not download the subscription. Check the URL and network.</value>
+  </data>
+  <data name="Profiles_ChangedDuringOperation" xml:space="preserve">
+    <value>The profile or subscription changed. Please try again.</value>
+  </data>
+  <data name="Dns_CacheClearPending" xml:space="preserve">
+    <value>Windows DNS cache flushed. Core cache will be cleared before the next start.</value>
+  </data>
+  <data name="Dns_SystemCacheClearFailed" xml:space="preserve">
+    <value>Could not flush the Windows DNS cache.</value>
+  </data>
+  <data name="Groups_DomainResolver" xml:space="preserve">
+    <value>Member node resolver</value>
+  </data>
+  <data name="Groups_DomainResolver_Auto" xml:space="preserve">
+    <value>Inherit parent groups / global automatic</value>
+  </data>
+  <data name="Groups_DomainResolver_Hint" xml:space="preserve">
+    <value>Defaults for member nodes; individual node settings take priority, and shared nodes must have consistent resolvers.</value>
+  </data>
+  <data name="Groups_DomainResolver_Summary" xml:space="preserve">
+    <value>Member resolver: {0}</value>
+  </data>
+  <data name="DomainResolver_GlobalAuto" xml:space="preserve">
+    <value>Resolver: global automatic</value>
+  </data>
+  <data name="DomainResolver_Explicit" xml:space="preserve">
+    <value>Resolver: {0} (node setting)</value>
+  </data>
+  <data name="DomainResolver_Inherited" xml:space="preserve">
+    <value>Resolver: {1} (inherited from {0})</value>
+  </data>
+  <data name="DomainResolver_ConflictSources" xml:space="preserve">
+    <value>Resolver conflict: {0}</value>
+  </data>
+  <data name="ProfileError_ConflictingDomainResolvers" xml:space="preserve">
+    <value>Groups specify conflicting resolvers for this node. Align the groups or choose a resolver for the node.</value>
   </data>
 </root>

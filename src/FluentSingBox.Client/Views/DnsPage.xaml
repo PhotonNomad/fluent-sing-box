@@ -35,6 +35,18 @@
                                 </controls:SettingsCard.HeaderIcon>
                                 <ToggleSwitch x:Name="CacheSwitch" Toggled="General_Changed" AutomationProperties.AutomationId="Dns_Cache" />
                             </controls:SettingsCard>
+                            <controls:SettingsCard x:Uid="Dns_StoreDnsCard">
+                                <controls:SettingsCard.HeaderIcon>
+                                    <FontIcon Glyph="&#xE8B7;" />
+                                </controls:SettingsCard.HeaderIcon>
+                                <ToggleSwitch x:Name="StoreDnsSwitch" Toggled="General_Changed" AutomationProperties.AutomationId="Dns_StoreDns" />
+                            </controls:SettingsCard>
+                            <controls:SettingsCard x:Uid="Dns_ClearCacheCard">
+                                <controls:SettingsCard.HeaderIcon>
+                                    <FontIcon Glyph="&#xE74D;" />
+                                </controls:SettingsCard.HeaderIcon>
+                                <Button x:Name="ClearCacheButton" Click="ClearCache_Click" AutomationProperties.AutomationId="Dns_ClearCache" x:Uid="Dns_ClearCacheButton" />
+                            </controls:SettingsCard>
                         </StackPanel>
                     </local:SettingsSection.SectionContent>
                 </local:SettingsSection>

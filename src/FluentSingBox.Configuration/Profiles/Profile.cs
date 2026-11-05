@@ -18,6 +18,7 @@ public sealed class Profile
     public required string Name { get; set; }
     public List<Node> Nodes { get; set; } = [];
     public List<NodeGroup> Groups { get; set; } = [];
+    public List<Subscription> Subscriptions { get; set; } = [];
     public List<RuleSet> RuleSets { get; set; } = [];
 
     // Matched top to bottom; the order is the user's priority and is never rearranged.
@@ -80,3 +81,13 @@ public enum LogLevel { Trace, Debug, Info, Warn, Error }
 // Marks credentials so exports can blank them and diagnostics can redact them.
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class SecretAttribute : Attribute { }
+
+public sealed class Subscription
+{
+    public required string Id { get; set; }
+    public required string Name { get; set; }
+    [Secret] public required string Url { get; set; }
+    public DateTimeOffset? LastUpdated { get; set; }
+    public string? GroupId { get; set; }
+    public List<string> NodeIds { get; set; } = [];
+}

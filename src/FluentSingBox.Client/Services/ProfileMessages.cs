@@ -9,8 +9,18 @@ public static partial class ProfileMessages
     public static string Describe(Profile profile, IEnumerable<ProfileDiagnostic> diagnostics) =>
         string.Join(Environment.NewLine, diagnostics.Select(item => Describe(profile, item)).Distinct());
 
-    public static string Describe(Profile profile, ProfileDiagnostic diagnostic) =>
-        Localization.Format("ProfileError_Format", Location(profile, diagnostic.Path), Localization.Get("ProfileError_" + diagnostic.Error));
+    public static string Describe(Profile profile, ProfileDiagnostic diagnostic)
+    {
+        var message = Localization.Get("ProfileError_" + diagnostic.Error);
+        if (diagnostic.Error == ProfileError.ConflictingDomainResolvers)
+        {
+            var match = IndexedSection().Match(diagnostic.Path);
+            if (match.Success && profile.Nodes.ElementAtOrDefault(int.Parse(match.Groups["index"].Value)) is { } node)
+                message += " " + DomainResolverText.Describe(profile,
+                    new DomainResolverPolicy(profile.Groups).ForNode(node.Id, node.DomainResolver));
+        }
+        return Localization.Format("ProfileError_Format", Location(profile, diagnostic.Path), message);
+    }
 
     private static string Location(Profile profile, string path)
     {
@@ -25,6 +35,7 @@ public static partial class ProfileMessages
                 "rules" => ("ProfileLocation_Rule", profile.Rules.ElementAtOrDefault(index)?.Name),
                 "ruleSets" => ("ProfileLocation_RuleSet", profile.RuleSets.ElementAtOrDefault(index)?.Name),
                 "dns.servers" => ("ProfileLocation_DnsServer", profile.Dns.Servers.ElementAtOrDefault(index)?.Name),
+                "subscriptions" => ("ProfileLocation_Subscription", profile.Subscriptions.ElementAtOrDefault(index)?.Name),
                 _ => ("ProfileLocation_DnsRule", profile.Dns.Rules.ElementAtOrDefault(index)?.Name)
             };
             return Localization.Format(key, string.IsNullOrWhiteSpace(name) ? $"#{index + 1}" : name);
@@ -35,6 +46,6 @@ public static partial class ProfileMessages
         return Localization.Get("ProfileLocation_Profile");
     }
 
-    [GeneratedRegex(@"^(?<section>nodes|groups|rules|ruleSets|dns\.servers|dns\.rules)\[(?<index>\d+)\]")]
+    [GeneratedRegex(@"^(?<section>nodes|groups|rules|ruleSets|dns\.servers|dns\.rules|subscriptions)\[(?<index>\d+)\]")]
     private static partial Regex IndexedSection();
 }

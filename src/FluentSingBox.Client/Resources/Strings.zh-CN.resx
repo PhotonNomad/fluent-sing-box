@@ -1655,6 +1655,12 @@ Windows: {0}
   <data name="NodeEditor_Port" xml:space="preserve">
     <value>端口</value>
   </data>
+  <data name="NodeEditor_DomainResolver" xml:space="preserve">
+    <value>域名解析 DNS</value>
+  </data>
+  <data name="NodeEditor_DomainResolver_Auto" xml:space="preserve">
+    <value>继承节点组／全局自动</value>
+  </data>
   <data name="NodeEditor_Cipher" xml:space="preserve">
     <value>加密方式</value>
   </data>
@@ -2138,6 +2144,24 @@ Windows: {0}
   <data name="Dns_CacheCard.Header" xml:space="preserve">
     <value>DNS 缓存</value>
   </data>
+  <data name="Dns_StoreDnsCard.Header" xml:space="preserve">
+    <value>持久化 DNS 缓存</value>
+  </data>
+  <data name="Dns_StoreDnsCard.Description" xml:space="preserve">
+    <value>写入磁盘，核心重启后依然有效</value>
+  </data>
+  <data name="Dns_ClearCacheCard.Header" xml:space="preserve">
+    <value>清空 DNS 缓存</value>
+  </data>
+  <data name="Dns_ClearCacheCard.Description" xml:space="preserve">
+    <value>清除核心磁盘缓存并刷新 Windows 系统 DNS 缓存</value>
+  </data>
+  <data name="Dns_ClearCacheButton.Content" xml:space="preserve">
+    <value>立即清空</value>
+  </data>
+  <data name="Dns_CacheClearedSuccess" xml:space="preserve">
+    <value>DNS 缓存已清空。</value>
+  </data>
   <data name="Dns_ServersSection.Header" xml:space="preserve">
     <value>DNS 服务器</value>
   </data>
@@ -2420,6 +2444,9 @@ Windows: {0}
   <data name="ProfileError_UnknownDnsServer" xml:space="preserve">
     <value>引用了不存在的 DNS 服务器</value>
   </data>
+  <data name="ProfileError_InvalidDomainResolver" xml:space="preserve">
+    <value>域名解析器必须为直连 DNS 服务器</value>
+  </data>
   <data name="ProfileError_InvalidGroupMember" xml:space="preserve">
     <value>成员只能是节点或节点组</value>
   </data>
@@ -2548,5 +2575,89 @@ Windows: {0}
   </data>
   <data name="Tun_Ipv6Hint.Message" xml:space="preserve">
     <value>本机网络没有 IPv6，TUN 的 IPv6 地址不会生效；连到有 IPv6 的网络后自动恢复。</value>
+  </data>
+  <data name="ProfileLocation_Subscription" xml:space="preserve">
+    <value>订阅「{0}」</value>
+  </data>
+  <data name="Subscription_HttpError" xml:space="preserve">
+    <value>网络请求失败（{0}）。</value>
+  </data>
+  <data name="Subscription_DefaultName" xml:space="preserve">
+    <value>订阅</value>
+  </data>
+  <data name="Servers_AddSubscription.Content" xml:space="preserve">
+    <value>添加订阅</value>
+  </data>
+  <data name="Servers_AddSubscription.AutomationProperties.Name" xml:space="preserve">
+    <value>添加订阅链接</value>
+  </data>
+  <data name="Subscriptions_Section.Header" xml:space="preserve">
+    <value>订阅</value>
+  </data>
+  <data name="Subscription_Url" xml:space="preserve">
+    <value>订阅链接</value>
+  </data>
+  <data name="Subscription_Name" xml:space="preserve">
+    <value>名称（可选）</value>
+  </data>
+  <data name="Subscription_Refresh" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="Subscription_Refreshed" xml:space="preserve">
+    <value>已从「{1}」更新 {0} 个节点。</value>
+  </data>
+  <data name="Subscription_Added" xml:space="preserve">
+    <value>已添加订阅「{0}」，包含 {1} 个节点。</value>
+  </data>
+  <data name="Subscription_LastUpdated" xml:space="preserve">
+    <value>更新于 {0}</value>
+  </data>
+  <data name="Subscription_ServerCount" xml:space="preserve">
+    <value>{0} 个节点</value>
+  </data>
+  <data name="Subscription_DialogTitle" xml:space="preserve">
+    <value>添加订阅</value>
+  </data>
+  <data name="Subscription_TooLarge" xml:space="preserve">
+    <value>订阅内容超过 8 MiB 限制。</value>
+  </data>
+  <data name="Subscription_DownloadFailed" xml:space="preserve">
+    <value>无法下载订阅，请检查链接和网络。</value>
+  </data>
+  <data name="Profiles_ChangedDuringOperation" xml:space="preserve">
+    <value>配置或订阅已更改，请重试。</value>
+  </data>
+  <data name="Dns_CacheClearPending" xml:space="preserve">
+    <value>系统 DNS 已刷新，核心缓存将在下次启动时清除。</value>
+  </data>
+  <data name="Dns_SystemCacheClearFailed" xml:space="preserve">
+    <value>无法刷新 Windows 系统 DNS 缓存。</value>
+  </data>
+  <data name="Groups_DomainResolver" xml:space="preserve">
+    <value>成员节点解析器</value>
+  </data>
+  <data name="Groups_DomainResolver_Auto" xml:space="preserve">
+    <value>继承上层组／全局自动</value>
+  </data>
+  <data name="Groups_DomainResolver_Hint" xml:space="preserve">
+    <value>作为成员节点的默认值，节点单独设置优先，共享节点须使用一致的解析器。</value>
+  </data>
+  <data name="Groups_DomainResolver_Summary" xml:space="preserve">
+    <value>成员解析：{0}</value>
+  </data>
+  <data name="DomainResolver_GlobalAuto" xml:space="preserve">
+    <value>解析：全局自动</value>
+  </data>
+  <data name="DomainResolver_Explicit" xml:space="preserve">
+    <value>解析：{0}（节点设置）</value>
+  </data>
+  <data name="DomainResolver_Inherited" xml:space="preserve">
+    <value>解析：{1}（继承自 {0}）</value>
+  </data>
+  <data name="DomainResolver_ConflictSources" xml:space="preserve">
+    <value>解析冲突：{0}</value>
+  </data>
+  <data name="ProfileError_ConflictingDomainResolvers" xml:space="preserve">
+    <value>该节点继承了不同组的冲突解析器，请统一组设置或为节点单独指定解析器。</value>
   </data>
 </root>

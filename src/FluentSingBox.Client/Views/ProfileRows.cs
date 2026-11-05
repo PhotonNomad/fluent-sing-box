@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using FluentSingBox.Client.Services;
 
 namespace FluentSingBox.Client.Views;
 
@@ -47,6 +48,17 @@ public sealed record NodeRow
     public string CopyAutomationId => "Server_Copy_" + Id;
     public string DefaultAutomationId => "Server_Default_" + Id;
     public string ProbeAutomationId => "Server_Probe_" + Id;
+}
+
+public sealed record SubscriptionRow
+{
+    public required string Id { get; init; }
+    public required string Name { get; init; }
+    public required string Description { get; init; }
+    public string RefreshText => Localization.Get("Subscription_Refresh");
+    public string ExpanderAutomationId => "Subscription_Expander_" + Id;
+    public string RefreshAutomationId => "Subscription_Refresh_" + Id;
+    public string DeleteAutomationId => "Subscription_Delete_" + Id;
 }
 
 public sealed record MemberChoice(string Value, string Label);

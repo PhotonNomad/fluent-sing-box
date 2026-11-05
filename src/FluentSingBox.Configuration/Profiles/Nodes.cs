@@ -20,6 +20,8 @@ public abstract class Node
     public required string Name { get; set; }
     public required string Server { get; set; }
     public required int Port { get; set; }
+    // Null inherits the nearest configured membership groups, then the global automatic resolver.
+    public string? DomainResolver { get; set; }
 }
 
 public sealed class VlessNode : Node

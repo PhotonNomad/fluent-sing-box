@@ -10,6 +10,8 @@ public sealed partial class ServersPage : Page
 {
     private readonly ObservableCollection<NodeRow> _nodes = [];
     private readonly ObservableCollection<GroupRow> _groups = [];
+    private readonly ObservableCollection<SubscriptionRow> _subscriptions = [];
+    private readonly HashSet<(string ProfileId, string SubscriptionId)> _refreshingSubscriptions = [];
     private bool _loading;
 
     public ServersPage()
@@ -17,6 +19,7 @@ public sealed partial class ServersPage : Page
         InitializeComponent();
         ServerList.ItemsSource = _nodes;
         GroupList.ItemsSource = _groups;
+        SubscriptionList.ItemsSource = _subscriptions;
         Loaded += (_, _) => { App.State.ProfileChanged += Refresh; Refresh(); };
         Unloaded += (_, _) => App.State.ProfileChanged -= Refresh;
     }
@@ -27,12 +30,14 @@ public sealed partial class ServersPage : Page
     {
         _loading = true;
         var profile = Profile;
+        var resolverPolicy = new DomainResolverPolicy(profile.Groups);
         Rows.Sync(_nodes, profile.Nodes.Select(node => new NodeRow
         {
             Id = node.Id, Name = node.Name,
             Description = string.Join(" · ", new[]
             {
                 ProfileText.Endpoint(node), ProfileText.Protocol(node),
+                DomainResolverText.Describe(profile, resolverPolicy.ForNode(node.Id, node.DomainResolver)),
                 profile.DefaultServer == Target.Node(node.Id) ? Localization.Get("Servers_IsDefault") : null
             }.OfType<string>())
         }).ToArray(), row => row.Id);
@@ -44,12 +49,25 @@ public sealed partial class ServersPage : Page
             {
                 Localization.Get(group is SelectGroup ? "Groups_TypeSelect" : "Groups_TypeUrlTest"),
                 Localization.Format("Groups_MemberCount", group.Members.Count),
+                DomainResolverText.GroupSummary(profile, group),
                 profile.DefaultServer == Target.Group(group.Id) ? Localization.Get("Servers_IsDefault") : null
             }.OfType<string>()),
             Members = group.Members.Select(member => new MemberChoice(member.ToString(), ProfileText.Target(profile, member))).ToArray(),
             Selected = App.State.GroupSelection(group.Id) is { } chosen && group.Members.Any(member => member.ToString() == chosen)
                 ? chosen : group.Members.FirstOrDefault()?.ToString()
         }).ToArray(), row => row.Id, (a, b) => a with { Members = b.Members } == b && a.Members.SequenceEqual(b.Members));
+        SubscriptionsSection.Visibility = profile.Subscriptions.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        Rows.Sync(_subscriptions, profile.Subscriptions.Select(sub => new SubscriptionRow
+        {
+            Id = sub.Id,
+            Name = sub.Name,
+            Description = string.Join(" · ", new[]
+            {
+                Localization.Format("Subscription_ServerCount", sub.NodeIds.Count),
+                sub.LastUpdated is { } time ? Localization.Format("Subscription_LastUpdated", time.ToLocalTime().ToString("g")) : null,
+                Uri.TryCreate(sub.Url, UriKind.Absolute, out var uri) ? uri.Host : null
+            }.OfType<string>())
+        }).ToArray(), row => row.Id);
         // Groups first: picking a group as the default server is the usual way to switch nodes.
         Rows.SetChoices(DefaultServerComboBox, profile.Groups.Select(group => new MemberChoice(Target.Group(group.Id).ToString(), Localization.Format("Target_GroupLabel", group.Name)))
             .Concat(profile.Nodes.Select(node => new MemberChoice(Target.Node(node.Id).ToString(), node.Name))).ToArray(), profile.DefaultServer?.ToString());
@@ -78,6 +96,7 @@ public sealed partial class ServersPage : Page
         {
             NodeRow row => items.FirstOrDefault(item => id(item) == row.Id),
             GroupRow row => items.FirstOrDefault(item => id(item) == row.Id),
+            SubscriptionRow row => items.FirstOrDefault(item => id(item) == row.Id),
             _ => null
         };
 
@@ -169,6 +188,10 @@ public sealed partial class ServersPage : Page
             var result = await NodeProbeService.ProbeAsync(App.State.Settings, Profile, node);
             ShowStatus($"{node.Name}：{result.Message}", result.Success ? InfoBarSeverity.Success : InfoBarSeverity.Error);
         }
+        catch (Exception exception)
+        {
+            ShowStatus(LogReader.Redact(exception.Message), InfoBarSeverity.Error);
+        }
         finally { button.IsEnabled = true; }
     }
 
@@ -199,6 +222,10 @@ public sealed partial class ServersPage : Page
         var type = Editor.Choice(Localization.Get("Groups_Type"),
             [("select", Localization.Get("Groups_TypeSelect")), ("urlTest", Localization.Get("Groups_TypeUrlTest"))],
             group is UrlTestGroup ? "urlTest" : "select", "GroupEditor_Type");
+        var resolver = Editor.Choice(Localization.Get("Groups_DomainResolver"),
+            DomainResolverText.Choices(profile, Localization.Get("Groups_DomainResolver_Auto")),
+            group?.DomainResolver ?? "", "GroupEditor_DomainResolver");
+        var resolverHint = new TextBlock { Text = Localization.Get("Groups_DomainResolver_Hint"), TextWrapping = TextWrapping.Wrap };
         var candidates = profile.Groups.Where(item => item.Id != id).Select(item => (Target.Group(item.Id), Localization.Format("Target_GroupLabel", item.Name)))
             .Concat(profile.Nodes.Select(node => (Target.Node(node.Id), node.Name))).ToArray();
         var members = new ListView { SelectionMode = ListViewSelectionMode.Multiple, MaxHeight = 260, Header = Localization.Get("Groups_Members") };
@@ -221,7 +248,7 @@ public sealed partial class ServersPage : Page
         type.SelectionChanged += (_, _) => UpdateType();
         UpdateType();
         var form = new StackPanel { Spacing = 12, Width = Math.Min(520, Math.Max(240, XamlRoot.Size.Width - 140)) };
-        foreach (var element in new UIElement[] { name, type, members, url, interval, tolerance }) form.Children.Add(element);
+        foreach (var element in new UIElement[] { name, type, resolver, resolverHint, members, url, interval, tolerance }) form.Children.Add(element);
         await Editor.ShowAsync(XamlRoot, Localization.Get(group is null ? "Groups_AddTitle" : "Groups_EditTitle"), form, () =>
         {
             Editor.Require(!string.IsNullOrWhiteSpace(name.Text), "Groups_NameRequired");
@@ -237,6 +264,7 @@ public sealed partial class ServersPage : Page
                 edited = new UrlTestGroup { Id = id, Name = name.Text.Trim(), Members = chosen, Url = url.Text.Trim(), IntervalSeconds = seconds, ToleranceMilliseconds = milliseconds };
             }
             else edited = new SelectGroup { Id = id, Name = name.Text.Trim(), Members = chosen };
+            edited.DomainResolver = Editor.Optional(Editor.Selected<string>(resolver) ?? "");
             return App.State.UpdateAsync(profile =>
             {
                 var index = profile.Groups.FindIndex(item => item.Id == id);
@@ -271,5 +299,64 @@ public sealed partial class ServersPage : Page
             || !Target.TryParse(value, out var member)) return;
         if (await RunAsync(() => App.State.SetGroupSelectionAsync(row.Id, member)) && App.CoreService.IsRunning)
             ShowStatus(Localization.Get("Groups_RestartToApply"), InfoBarSeverity.Informational);
+    }
+
+    private async void AddSubscription_Click(object sender, RoutedEventArgs e) => await RunAsync(AddSubscriptionAsync);
+
+    private async Task AddSubscriptionAsync()
+    {
+        var urlInput = Editor.Text(Localization.Get("Subscription_Url"), "", "Subscription_UrlInput", placeholder: "https://example.com/...");
+        var nameInput = Editor.Text(Localization.Get("Subscription_Name"), "", "Subscription_NameInput");
+        var panel = new StackPanel { Spacing = 12, Width = Math.Min(560, Math.Max(240, XamlRoot.Size.Width - 140)) };
+        panel.Children.Add(urlInput);
+        panel.Children.Add(nameInput);
+
+        Subscription? created = null;
+        var saved = await Editor.ShowAsync(XamlRoot, Localization.Get("Subscription_DialogTitle"), panel, async () =>
+        {
+            var url = urlInput.Text.Trim();
+            Editor.Require(url.Length > 0, "ProfileError_InvalidUrl");
+            var name = nameInput.Text.Trim();
+            created = await SubscriptionService.AddSubscriptionAsync(App.State, url, name);
+        }, "Subscription_Dialog");
+
+        if (saved && created is not null)
+        {
+            ShowStatus(Localization.Format("Subscription_Added", created.Name, created.NodeIds.Count), InfoBarSeverity.Success);
+        }
+    }
+
+    private async void RefreshSubscription_Click(object sender, RoutedEventArgs e)
+    {
+        if (Find(sender, Profile.Subscriptions, sub => sub.Id) is not { } sub) return;
+        var key = (Profile.Id, sub.Id);
+        if (!_refreshingSubscriptions.Add(key)) return;
+        if (sender is Button button) button.IsEnabled = false;
+        try
+        {
+            await SubscriptionService.RefreshSubscriptionAsync(App.State, sub.Id);
+            if (Profile.Id != key.Item1) return;
+            var updated = Profile.Subscriptions.FirstOrDefault(s => s.Id == sub.Id);
+            ShowStatus(Localization.Format("Subscription_Refreshed", updated?.NodeIds.Count ?? 0, sub.Name), InfoBarSeverity.Success);
+        }
+        catch (Exception ex)
+        {
+            ShowStatus(LogReader.Redact(ex.Message), InfoBarSeverity.Error);
+        }
+        finally
+        {
+            _refreshingSubscriptions.Remove(key);
+            if (sender is Button btn) btn.IsEnabled = true;
+        }
+    }
+
+    private async void DeleteSubscription_Click(object sender, RoutedEventArgs e) => await RunAsync(() => DeleteSubscriptionAsync(sender));
+
+    private async Task DeleteSubscriptionAsync(object sender)
+    {
+        var profileId = Profile.Id;
+        if (Find(sender, Profile.Subscriptions, sub => sub.Id) is not { } sub) return;
+        if (!await Editor.ConfirmAsync(XamlRoot, Localization.Format("ServersPage_Delete0", sub.Name), Localization.Format("Subscription_DeleteConfirm", sub.Name), Localization.Get("Editor_Delete"))) return;
+        await SubscriptionService.DeleteSubscriptionAsync(App.State, sub.Id, profileId);
     }
 }

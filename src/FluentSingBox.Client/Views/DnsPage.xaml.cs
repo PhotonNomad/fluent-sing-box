@@ -33,6 +33,8 @@ public sealed partial class DnsPage : Page
         Rows.SetChoices(FinalComboBox, dns.Servers.Select(server => new MemberChoice(server.Id, server.Name)).ToArray(), dns.FinalServerId ?? dns.Servers.FirstOrDefault()?.Id);
         StrategyComboBox.SelectedValue = dns.Strategy.ToString();
         CacheSwitch.IsOn = dns.CacheEnabled;
+        StoreDnsSwitch.IsOn = dns.StoreDns;
+        StoreDnsSwitch.IsEnabled = dns.CacheEnabled;
         Rows.Sync(_servers, dns.Servers.Select(server => new SimpleRow
         {
             Id = server.Id, Name = server.Name, AutomationPrefix = "DnsServer",
@@ -83,14 +85,32 @@ public sealed partial class DnsPage : Page
         if (_loading || !Enum.TryParse<DnsStrategy>(StrategyComboBox.SelectedValue as string, out var strategy)) return;
         var final = FinalComboBox.SelectedValue as string;
         var cache = CacheSwitch.IsOn;
+        var storeDns = StoreDnsSwitch.IsOn;
+        StoreDnsSwitch.IsEnabled = cache;
         var dns = Profile.Dns;
-        if (final == (dns.FinalServerId ?? dns.Servers.FirstOrDefault()?.Id) && strategy == dns.Strategy && cache == dns.CacheEnabled) return;
+        if (final == (dns.FinalServerId ?? dns.Servers.FirstOrDefault()?.Id) && strategy == dns.Strategy && cache == dns.CacheEnabled && storeDns == dns.StoreDns) return;
         await RunAsync(() => App.State.UpdateAsync(profile =>
         {
             profile.Dns.FinalServerId = final;
             profile.Dns.Strategy = strategy;
             profile.Dns.CacheEnabled = cache;
+            profile.Dns.StoreDns = storeDns;
         }));
+    }
+
+    private async void ClearCache_Click(object sender, RoutedEventArgs e)
+    {
+        ClearCacheButton.IsEnabled = false;
+        try
+        {
+            await GuardAsync(async () =>
+            {
+                var cleared = await App.CoreService.ClearDnsCacheAsync();
+                ShowStatus(Localization.Get(cleared ? "Dns_CacheClearedSuccess" : "Dns_CacheClearPending"),
+                    cleared ? InfoBarSeverity.Success : InfoBarSeverity.Informational);
+            });
+        }
+        finally { ClearCacheButton.IsEnabled = true; }
     }
 
     private async void AddServer_Click(object sender, RoutedEventArgs e) => await GuardAsync(() => EditServerAsync(null));

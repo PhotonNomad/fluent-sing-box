@@ -13,6 +13,7 @@
     "name": { "type": "string", "minLength": 1 },
     "nodes": { "type": "array", "items": { "$ref": "#/$defs/node" } },
     "groups": { "type": "array", "items": { "$ref": "#/$defs/group" } },
+    "subscriptions": { "type": "array", "items": { "$ref": "#/$defs/subscription" } },
     "ruleSets": { "type": "array", "items": { "$ref": "#/$defs/ruleSet" } },
     "rules": {
       "description": "Matched top to bottom.",
@@ -51,7 +52,8 @@
         "id": { "$ref": "#/$defs/id" },
         "name": { "type": "string", "minLength": 1 },
         "server": { "type": "string", "minLength": 1 },
-        "port": { "$ref": "#/$defs/port" }
+        "port": { "$ref": "#/$defs/port" },
+        "domainResolver": { "$ref": "#/$defs/id", "description": "Direct DNS server ID. When omitted, inherit the nearest configured groups on each membership path, then use global automatic resolution." }
       },
       "oneOf": [
         { "$ref": "#/$defs/vlessNode" },
@@ -256,6 +258,7 @@
         "id": { "$ref": "#/$defs/id" },
         "name": { "type": "string", "minLength": 1 },
         "members": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/memberTarget" } },
+        "domainResolver": { "$ref": "#/$defs/id", "description": "Default direct DNS server for member nodes. Child groups and explicit node settings override it; shared nodes with conflicting inherited defaults are rejected." },
         "url": { "type": "string", "format": "uri" },
         "intervalSeconds": { "type": "integer", "minimum": 10 },
         "toleranceMilliseconds": { "type": "integer", "minimum": 0 }
@@ -412,7 +415,8 @@
         },
         "finalServerId": { "$ref": "#/$defs/id" },
         "strategy": { "enum": ["asIs", "preferIpv4", "preferIpv6", "ipv4Only", "ipv6Only"] },
-        "cacheEnabled": { "type": "boolean" }
+        "cacheEnabled": { "type": "boolean" },
+        "storeDns": { "type": "boolean" }
       }
     },
 
@@ -455,6 +459,21 @@
       "additionalProperties": false,
       "properties": {
         "logLevel": { "enum": ["trace", "debug", "info", "warn", "error"] }
+      }
+    }
+,
+
+    "subscription": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "url"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "url": { "$ref": "#/$defs/secret" },
+        "lastUpdated": { "type": "string", "format": "date-time" },
+        "groupId": { "$ref": "#/$defs/id" },
+        "nodeIds": { "type": "array", "items": { "$ref": "#/$defs/id" } }
       }
     }
   }

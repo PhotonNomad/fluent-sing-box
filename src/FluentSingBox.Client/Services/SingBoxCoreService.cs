@@ -34,6 +34,13 @@ public sealed class SingBoxCoreService : IDisposable
         finally { _operationGate.Release(); }
     }
 
+    public async Task<bool> ClearDnsCacheAsync()
+    {
+        await _operationGate.WaitAsync();
+        try { return await DnsCachePolicy.ClearNowAsync(IsRunning); }
+        finally { _operationGate.Release(); }
+    }
+
     public async Task StartAsync(AppSettingsData settings, Profile profile)
     {
         settings = JsonSerializer.Deserialize<AppSettingsData>(JsonSerializer.Serialize(settings))!;
